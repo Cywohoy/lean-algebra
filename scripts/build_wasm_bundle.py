@@ -29,6 +29,7 @@ if subprocess.check_output(['git', 'status', '--porcelain'], cwd=ample, text=Tru
 if 'ample-dlsym-lazy-index' not in (toolchain / 'bin/lean.js').read_text():
     raise SystemExit('Run optimize-runtime.py and runtime-tests.cjs before packaging')
 args.output.parent.mkdir(parents=True, exist_ok=True)
+(ROOT / 'tmp').mkdir(parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='browser-bundle-', dir=ROOT / 'tmp') as temporary:
     packs = Path(temporary)
     if args.reuse_library:

@@ -7,6 +7,7 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
+(ROOT / 'tmp').mkdir(parents=True, exist_ok=True)
 LAKE = shutil.which('lake') or str(Path.home() / '.elan/bin' / ('lake.exe' if os.name == 'nt' else 'lake'))
 
 
