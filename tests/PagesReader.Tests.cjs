@@ -25,7 +25,7 @@ async function main() {
     } catch { res.writeHead(404).end(); }
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  const base = `http://127.0.0.1:${server.address().port}${prefix}`;
+  const base = process.env.BOOK_URL || `http://127.0.0.1:${server.address().port}${prefix}`;
   const browser = await playwright.chromium.launch({headless: true,
     executablePath: process.env.CHROME_PATH || (process.platform === 'win32' ? 'C:/Program Files/Google/Chrome/Application/chrome.exe' : undefined)});
   try {
