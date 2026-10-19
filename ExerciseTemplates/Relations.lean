@@ -6,20 +6,20 @@ import AlgebraBook.Tactic.Auto
 open Ample
 open scoped Ample.Auto Classical
 namespace Exercises.Relations
-variable {A B C : Type} {m n : Nat}
 
-theorem exercise_mem_own_equivalenceClass
+theorem exercise_mem_own_equivalenceClass {A : Type}
     (R : Relation A)
     (hR : IsEquivalence R)
     (a : A) :
     a ∈ equivalenceClass R a := by
   sorry
 
-theorem exercise_equal_values_equivalence (f : A → B) :
+theorem exercise_equal_values_equivalence {A B : Type}
+    (f : A → B) :
     IsEquivalence (fun x y : A => f x = f y) := by
   sorry
 
-theorem exercise_relation_of_classes_equal
+theorem exercise_relation_of_classes_equal {A : Type}
     (R : Relation A)
     (hR : IsEquivalence R)
     (a b : A)
@@ -61,7 +61,7 @@ theorem exercise_vertical_class :
 -- (1) 동치관계의 두 동치류가 공통 원소를 가지면 두 동치류가 같음을 증명하라.
 -- (2) 6을 법으로 하는 합동에서 2가 8과 20의 동치류에 모두 속함을 보이라.
 -- (3) 앞의 두 결과를 사용하여 두 동치류가 같음을 보이라.
-theorem exercise_classes_of_common_element
+theorem exercise_classes_of_common_element {A : Type}
     (R : Relation A)
     (hR : IsEquivalence R)
     (a b : A)

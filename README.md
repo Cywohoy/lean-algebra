@@ -100,8 +100,10 @@ python tests/RevisionDocument.Tests.py
 python tests/AutomationTrace.Tests.py
 ```
 
-GitHub Pages용 정적 문서는 `python scripts/prepare_pages.py`로 `_out/pages/`에 준비한다.
-이 출력에서는 로컬 Lean 서버가 필요한 편집 버튼을 숨긴다.
+GitHub Pages용 문서는 `python scripts/prepare_pages.py --download-wasm`으로 `_out/pages/`에 준비한다.
+공개 편집기는 브라우저 안에서 Lean 4.35와 Ample을 실행하며 코드를 실행 서버로 보내지 않는다.
+처음 `편집`을 누르면 실행 파일을 내려받는다. 자동완성은 현재 로컬 미리보기에서 제공한다.
+실행 기능이 없는 읽기 전용 출력은 `python scripts/prepare_pages.py`로 만들 수 있다.
 `python tests/Pages.Tests.py`로 저장소 이름이 붙은 URL에서도 링크가 연결되는지 검사할 수 있다.
 
 Ample의 전술과 수학 모듈은 독립된 공개 라이브러리이며, Ample의 빌드에는 이 교재가 필요하지 않다.

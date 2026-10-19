@@ -22,7 +22,7 @@ class Links(HTMLParser):
             self.base = attrs.get('href')
             return
         if tag == 'meta' and attrs.get('name') == 'book-mode':
-            self.static = attrs.get('content') == 'static'
+            self.static = attrs.get('content') in ('static', 'wasm')
         for key in ('href', 'src'):
             if attrs.get(key): self.urls.append(attrs[key])
         if tag == 'meta' and attrs.get('http-equiv', '').lower() == 'refresh':
@@ -49,5 +49,15 @@ for page in pages:
         checked += 1
 
 assert (site / '.nojekyll').is_file()
+if 'content="wasm"' in (site / 'index.html').read_text(encoding='utf-8'):
+    import json
+    spec = json.loads((root / 'web/wasm-runtime.json').read_text())
+    runtime = site / 'wasm' / spec['sha256'][:16]
+    assert (runtime / 'runtime/lean.wasm').is_file()
+    assert (runtime / 'library.json').is_file()
+    assert (runtime / 'licenses/Lean.txt').is_file()
+    assert (site / 'coi-serviceworker.js').is_file()
+    assert (site / 'assets/web/wasm-reader.js').is_file()
+    assert not any('AlgebraBook.' in item['before'] for item in json.loads((site / 'playground.json').read_text()).values())
 assert not (site / 'operations-and-groups').exists()
 print(f'PASS: {len(pages)} static pages and {checked} local links work below {prefix}')

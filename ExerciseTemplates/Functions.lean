@@ -6,47 +6,46 @@ import AlgebraBook.Tactic.Auto
 open Ample
 open scoped Ample.Auto Classical
 namespace Exercises.Functions
-variable {A B C : Type} {m n : Nat}
 
-theorem exercise_preimage_subset
+theorem exercise_preimage_subset {A B : Type}
     (f : A → B) (S T : Set B)
     (hST : S ⊆ T) :
     preimage f S ⊆ preimage f T := by
   sorry
 
-theorem exercise_injective_of_compose
+theorem exercise_injective_of_compose {A B C : Type}
     (f : A → B) (g : B → C)
     (h : Injective (g ∘ f)) :
     Injective f := by
   sorry
 
-theorem exercise_surjective_of_compose
+theorem exercise_surjective_of_compose {A B C : Type}
     (f : A → B) (g : B → C)
     (h : Surjective (g ∘ f)) :
     Surjective g := by
   sorry
 
-theorem exercise_double_after_successor_at_three :
+theorem exercise_double_after_successor_at_three {n : Nat} :
     (double ∘ (fun n : Nat => n + 1)) 3 = 8 := by
   sorry
 
-theorem exercise_successor_after_double_at_three :
+theorem exercise_successor_after_double_at_three {n : Nat} :
     ((fun n : Nat => n + 1) ∘ double) 3 = 7 := by
   sorry
 
-theorem exercise_double_successor_noncommute :
+theorem exercise_double_successor_noncommute {n : Nat} :
     double ∘ (fun n : Nat => n + 1) ≠
     (fun n : Nat => n + 1) ∘ double := by
   sorry
 
-theorem exercise_inverse_inverse
+theorem exercise_inverse_inverse {A B : Type}
     (f : A → B)
     (hf : Bijective f) :
     inverseMap (inverseMap f hf)
       (inverseMap_bijective f hf) = f := by
   sorry
 
-theorem exercise_setProduct_swap
+theorem exercise_setProduct_swap {A B : Type}
     (S : Set A) (T : Set B) (a : A) (b : B)
     (h : (a, b) ∈ setProduct S T) :
     (b, a) ∈ setProduct T S := by
@@ -93,18 +92,20 @@ theorem exercise_diagonal_not_surjective :
 -- 문제 10: 역상과 집합 연산
 -- 역상은 교집합과 여집합을 보존한다. 다음 두 등식을 증명하라.
 -- 함수의 단사성이나 전사성을 가정하지 않고 증명하라.
-theorem exercise_preimage_inter (f : A → B)
+theorem exercise_preimage_inter {A B : Type} (f : A → B)
     (S T : Set B) :
     preimage f (S ∩ T) = preimage f S ∩ preimage f T := by
   sorry
 
-theorem exercise_preimage_compl (f : A → B) (T : Set B) :
+theorem exercise_preimage_compl {A B : Type}
+    (f : A → B) (T : Set B) :
     preimage f Tᶜ = (preimage f T)ᶜ := by
   sorry
 
 -- 문제 11: 합집합의 상
 -- f(S\cup T)=f(S)\cup f(T)임을 증명하라.
-theorem exercise_image_union (f : A → B) (S T : Set A) :
+theorem exercise_image_union {A B : Type}
+    (f : A → B) (S T : Set A) :
     image f (S ∪ T) = image f S ∪ image f T := by
   sorry
 
@@ -112,14 +113,16 @@ theorem exercise_image_union (f : A → B) (S T : Set A) :
 -- (1) 단사함수 h에 대하여 h\circ f=h\circ g이면 f=g임을 증명하라.
 -- (2) 전사함수 h에 대하여 f\circ h=g\circ h이면 f=g임을 증명하라.
 -- 두 증명에서 단사성과 전사성이 각각 어디에 쓰이는지 주석으로 적으라.
-theorem exercise_cancel_injective (f g : A → B)
+theorem exercise_cancel_injective {A B C : Type}
+    (f g : A → B)
     (h : B → C)
     (hh : Injective h)
     (heq : h ∘ f = h ∘ g) :
     f = g := by
   sorry
 
-theorem exercise_cancel_surjective (f g : B → C)
+theorem exercise_cancel_surjective {A B C : Type}
+    (f g : B → C)
     (h : A → B)
     (hh : Surjective h)
     (heq : f ∘ h = g ∘ h) :

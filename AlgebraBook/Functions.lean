@@ -35,12 +35,7 @@ open scoped Classical
 
 ```savedLean
 namespace Ample
-
-variable {A B C D : Type}
 ```
-
-여러 타입 사이의 함수를 다루기 위해 `variable`로 `A`, `B`, `C`, `D`를 미리 선언했다.
-Lean은 각 정의나 정리에 사용된 타입만 그 정의나 정리의 인수로 넣는다.
 
 # 정의역과 공역
 %%%
@@ -84,7 +79,7 @@ Lean에서는 `identity A`가 $`\operatorname{id}_A`이다.
 정의에 따라 `identity A x = x`이므로 이 등식은 `rfl`로 증명한다.
 
 ```savedLean
-example
+example {A : Type}
     (x : A) :
     identity A x = x := by
   rfl
@@ -99,7 +94,7 @@ tag := "functions-equality"
 앞 절에서 배운 `rw`로 목표의 `x`를 `y`로 바꾸면 이 등식을 증명할 수 있다.
 
 ```savedLean
-example
+example {A B : Type}
     (f : A → B) (x y : A)
     (hxy : x = y) :
     f x = f y := by
@@ -113,7 +108,7 @@ example
 아래에서 `rw [hfg]`로 `f`를 `g`로 바꾸면 목표가 `g x = g x`가 되어 증명이 끝난다.
 
 ```savedLean
-example
+example {A B : Type}
     (f g : A → B)
     (hfg : f = g)
     (x : A) :
@@ -153,7 +148,7 @@ $`y \in f(S)`라는 것은 $`x \in S`이고 $`f(x) = y`인 원소 $`x`가 존재
 따라서 상의 원소 조건은 두 조건의 논리곱과 존재명제 `∃ x, ...`로 나타낸다.
 
 ```savedLean
-def image (f : A → B) (S : Set A) : Set B :=
+def image {A B : Type} (f : A → B) (S : Set A) : Set B :=
   fun y => ∃ x, x ∈ S ∧ f x = y
 ```
 
@@ -195,7 +190,7 @@ Lean에서는 먼저 `intro y hy`로 임의의 원소 `y`와 가정 `hy : y ∈ 
 여기서 `⟨`와 `⟩`는 각각 `\<`, `\>`로 입력한다.
 
 ```savedLean
-theorem image_mono (f : A → B) (S T : Set A)
+theorem image_mono {A B : Type} (f : A → B) (S T : Set A)
     (hST : S ⊆ T) :
     image f S ⊆ image f T := by
   intro y hy
@@ -252,7 +247,7 @@ tag := "functions-preimage"
 역상에 속한다는 조건은 `f x ∈ T`이므로 이 술어로 집합을 정의하자.
 
 ```savedLean
-def preimage (f : A → B) (T : Set B) : Set A :=
+def preimage {A B : Type} (f : A → B) (T : Set B) : Set A :=
   fun x => f x ∈ T
 ```
 
@@ -282,7 +277,8 @@ $`x\in S`이면 $`f(x)\in f(S)`이므로 $`x\in f^{-1}(f(S))`이다.
 *보기* 모든 함수 $`f`와 정의역의 부분집합 $`S`에 대하여 $`S\subseteq f^{-1}(f(S))`이다.
 
 ```savedLean
-theorem subset_preimage_image (f : A → B) (S : Set A) :
+theorem subset_preimage_image {A B : Type}
+    (f : A → B) (S : Set A) :
     S ⊆ preimage f (image f S) := by
   intro x hx
   exists x
@@ -332,7 +328,7 @@ $`f`를 *단사함수*라고 한다.
 단사함수에서는 $`x=y`와 $`f(x)=f(y)`가 서로 동치이다.
 
 ```savedLean
-def Injective : (A → B) → Prop :=
+def Injective {A B : Type} : (A → B) → Prop :=
   fun f => ∀ x y, f x = f y → x = y
 ```
 
@@ -395,7 +391,7 @@ theorem double_injective : Injective double := by
 반대 포함 관계는 앞에서 증명한 `subset_preimage_image`이다.
 
 ```savedLean
-theorem preimage_image_of_injective (f : A → B)
+theorem preimage_image_of_injective {A B : Type} (f : A → B)
     (hf : Injective f)
     (S : Set A) :
     preimage f (image f S) = S := by
@@ -449,7 +445,7 @@ $`y=1`에 대해 $`x=1`을 택한다.
 하나의 `x`에서 얻는 함수값이 공역의 모든 원소와 같아야 하므로 전혀 다른 조건이 된다.
 
 ```savedLean
-def Surjective : (A → B) → Prop :=
+def Surjective {A B : Type} : (A → B) → Prop :=
   fun f => ∀ y, ∃ x, f x = y
 ```
 
@@ -482,18 +478,18 @@ tag := "functions-bijectivity"
 Lean에서는 두 조건을 논리곱으로 묶어 전단사성을 정의한다.
 
 ```savedLean
-def Bijective : (A → B) → Prop :=
+def Bijective {A B : Type} : (A → B) → Prop :=
   fun f => Injective f ∧ Surjective f
 ```
 
 ```savedLean -show
 namespace Bijective
 
-theorem injective
+theorem injective {A B : Type}
     {f : A → B} (hf : Bijective f) : Injective f :=
     hf.left
 
-theorem surjective
+theorem surjective {A B : Type}
     {f : A → B} (hf : Bijective f) : Surjective f :=
     hf.right
 
@@ -628,7 +624,7 @@ attribute [implicit_reducible] Elem
 `//`는 슬래시 두 개를 그대로 입력한다.
 
 ```savedLean
-def functions_element_from_membership
+def functions_element_from_membership {A : Type}
     (S : Set A) (a : A)
     (ha : a ∈ S) :
     Elem S :=
@@ -746,7 +742,7 @@ attribute [ample_norm_hyp] elem_eq_iff
 `indisc at h`로 두 원소의 값이 같음을 얻는다.
 
 ```savedLean
-example
+example {A : Type}
     (S : Set A) (s t : Elem S)
     (h : s = t) :
     s.val = t.val := by
@@ -758,7 +754,7 @@ example
 같은 값 비교를 사용하면 원소를 꺼내는 함수 `fun s => s.val`이 단사임을 보일 수 있다.
 
 ```savedLean
-theorem elem_val_injective (S : Set A) :
+theorem elem_val_injective {A : Type} (S : Set A) :
     Injective (fun s : Elem S => s.val) := by
   intro s t hst
   ext
@@ -863,7 +859,8 @@ $`f`의 $`S`에 대한 *제한*이라고 한다.
 `s : Elem S`에서 원래 원소 `s.val`을 꺼내 `f`에 넣으면 이 함수를 얻는다.
 
 ```savedLean
-def restrict (f : A → B) (S : Set A) : Elem S → B :=
+def restrict {A B : Type}
+    (f : A → B) (S : Set A) : Elem S → B :=
   fun s => f s.val
 example :
     restrict double positives oneInPositives = 2 := by
@@ -879,7 +876,8 @@ example :
 그러므로 두 부분타입의 원소도 같다.
 
 ```savedLean
-theorem restrict_injective (f : A → B) (S : Set A)
+theorem restrict_injective {A B : Type}
+    (f : A → B) (S : Set A)
     (hf : Injective f) :
     Injective (restrict f S) := by
   intro s t hst
@@ -903,13 +901,13 @@ tag := "functions-codomain-image"
 *보기* 함수 $`f:A\to B`로부터 $`A`에서 $`f(A)`로 가는 전사함수를 만들 수 있다.
 
 ```savedLean
-def toImage (f : A → B) (x : A) :
+def toImage {A B : Type} (f : A → B) (x : A) :
     Elem (image f (whole A)) :=
   { val := f x
     property := by
       exists x }
 
-theorem toImage_surjective (f : A → B) :
+theorem toImage_surjective {A B : Type} (f : A → B) :
     Surjective (toImage f) := by
   intro y
   rcases y.property with ⟨x, hx, hxy⟩
@@ -944,7 +942,8 @@ $`A`의 각 원소 $`x`를 $`g(f(x))`에 대응시키는 함수를 두 함수의
 아래의 정의에서는 `f`의 값이 `B`의 원소이므로 `g`를 적용하여 `C`의 원소를 얻는다.
 
 ```savedLean
-def compose (g : B → C) (f : A → B) : A → C :=
+def compose {A B C : Type}
+    (g : B → C) (f : A → B) : A → C :=
   fun x => g (f x)
 local infixr:90 (priority := high) " ∘ " => compose
 ```
@@ -954,7 +953,7 @@ local infixr:90 (priority := high) " ∘ " => compose
 따라서 `(g ∘ f) x = g (f x)`는 정의를 펼쳐 `rfl`로 증명할 수 있다.
 
 ```savedLean
-example
+example {A B C : Type}
     (f : A → B) (g : B → C) (x : A) :
     (g ∘ f) x = g (f x) := by
   rfl
@@ -977,7 +976,7 @@ $`(g \circ f)(4) = 2(4 + 3) = 14`이다.
 공통으로 적용한 `f`의 인수를 비교하는 `g x = h x`가 새 목표가 된다.
 
 ```savedLean
-theorem functions_compose_of_pointwise_equal
+theorem functions_compose_of_pointwise_equal {A B C : Type}
     (f : B → C)
     (g h : A → B)
     (hgh : ∀ x, g x = h x)
@@ -995,7 +994,7 @@ theorem functions_compose_of_pointwise_equal
 앞의 결과를 모든 원소에 적용하면 두 합성함수의 등식도 얻는다.
 
 ```savedLean
-theorem compose_of_pointwise_equal
+theorem compose_of_pointwise_equal {A B C : Type}
     (f : B → C)
     (g h : A → B)
     (hgh : ∀ x, g x = h x) :
@@ -1017,7 +1016,8 @@ $`h \circ (g \circ f) = (h \circ g) \circ f`이다.
 두 함수가 모든 원소에서 같은 값을 가지므로 서로 같다.
 
 ```savedLean
-theorem compose_assoc (f : A → B) (g : B → C)
+theorem compose_assoc {A B C D : Type}
+    (f : A → B) (g : B → C)
     (h : C → D) :
     h ∘ (g ∘ f) = (h ∘ g) ∘ f := by
   ext x
@@ -1035,12 +1035,12 @@ $`f`를 적용하기 전에 항등함수를 적용해도 결과는 $`f(x)`이며
 $`f`를 적용한 뒤에 항등함수를 적용해도 같은 값을 얻는다.
 
 ```savedLean
-theorem compose_identity (f : A → B) :
+theorem compose_identity {A B : Type} (f : A → B) :
     f ∘ identity A = f := by
   ext x
   rfl
 
-theorem identity_compose (f : A → B) :
+theorem identity_compose {A B : Type} (f : A → B) :
     identity B ∘ f = f := by
   ext x
   rfl
@@ -1064,7 +1064,8 @@ $`g`가 단사이므로 $`f(x) = f(y)`이고 여기에 $`f`의 단사성을 사�
 따라서 $`g \circ f`는 단사이다.
 
 ```savedLean
-theorem injective_compose (f : A → B) (g : B → C)
+theorem injective_compose {A B C : Type}
+    (f : A → B) (g : B → C)
     (hf : Injective f)
     (hg : Injective g) :
     Injective (g ∘ f) := by
@@ -1096,7 +1097,8 @@ Lean에서 이 원소들을 택하려면 먼저 전사성의 정의를 펼쳐 �
 이어서 `hf y`에 같은 방법을 쓰면 원소 `x`와 등식 `f x = y`를 얻는다.
 
 ```savedLean
-theorem surjective_compose (f : A → B) (g : B → C)
+theorem surjective_compose {A B C : Type}
+    (f : A → B) (g : B → C)
     (hf : Surjective f)
     (hg : Surjective g) :
     Surjective (g ∘ f) := by
@@ -1122,7 +1124,8 @@ theorem surjective_compose (f : A → B) (g : B → C)
 `hg`도 같은 방식으로 사용한다.
 
 ```savedLean
-theorem bijective_compose (f : A → B) (g : B → C)
+theorem bijective_compose {A B C : Type}
+    (f : A → B) (g : B → C)
     (hf : Bijective f)
     (hg : Bijective g) :
     Bijective (g ∘ f) := by
@@ -1211,7 +1214,7 @@ tag := "functions-pair-comparison"
 순서쌍에서도 `ext`로 두 성분을 각각 비교한다.
 
 ```savedLean
-example (a c : A) (b d : B)
+example {A B : Type} (a c : A) (b d : B)
     (ha : a = c)
     (hb : b = d) :
     (a, b) = (c, d) := by
@@ -1231,7 +1234,7 @@ example (a c : A) (b d : B)
 먼저 각 성분의 등식을 얻어 대입하면 편리하다.
 
 ```savedLean
-example (a c : A) (b d : B)
+example {A B : Type} (a c : A) (b d : B)
     (h : (a, b) = (c, d)) :
     (b, a) = (d, c) := by
   indisc at h with ha hb
@@ -1257,7 +1260,8 @@ example (a c : A) (b d : B)
 순서쌍 `p`가 이 집합에 속하려면 `p.1 ∈ S`와 `p.2 ∈ T`가 모두 성립해야 한다.
 
 ```savedLean
-def setProduct (S : Set A) (T : Set B) : Set (A × B) :=
+def setProduct {A B : Type}
+    (S : Set A) (T : Set B) : Set (A × B) :=
   fun p => p.1 ∈ S ∧ p.2 ∈ T
 ```
 
@@ -1265,7 +1269,7 @@ def setProduct (S : Set A) (T : Set B) : Set (A × B) :=
 원소 조건이 논리곱이므로 `constructor`로 나눈 두 목표에 주어진 증명을 사용하면 된다.
 
 ```savedLean
-example
+example {A B : Type}
     (S : Set A) (T : Set B) (a : A) (b : B)
     (ha : a ∈ S)
     (hb : b ∈ T) :
@@ -1288,7 +1292,8 @@ file := "product-maps"
 $`(a,b)\mapsto(f(a),g(b))`로 $`A\times B`에서 $`C\times D`로 가는 함수를 정의하자.
 
 ```savedLean
-def productMap (f : A → C) (g : B → D) : A × B → C × D :=
+def productMap {A B C D : Type}
+    (f : A → C) (g : B → D) : A × B → C × D :=
   fun p => (f p.1, g p.2)
 ```
 
@@ -1298,7 +1303,8 @@ $`f(a)=f(a')`와 $`g(b)=g(b')`를 얻는다.
 각 함수의 단사성에 따라 $`a=a'`이고 $`b=b'`이므로 원래 순서쌍들도 같다.
 
 ```savedLean
-theorem productMap_injective (f : A → C) (g : B → D)
+theorem productMap_injective {A B C D : Type}
+    (f : A → C) (g : B → D)
     (hf : Injective f)
     (hg : Injective g) :
     Injective (productMap f g) := by
@@ -1318,7 +1324,8 @@ theorem productMap_injective (f : A → C) (g : B → D)
 그러면 $`(a,b)`에서의 함수값이 $`(c,d)`이므로 전사성을 얻는다.
 
 ```savedLean
-theorem productMap_surjective (f : A → C) (g : B → D)
+theorem productMap_surjective {A B C D : Type}
+    (f : A → C) (g : B → D)
     (hf : Surjective f)
     (hg : Surjective g) :
     Surjective (productMap f g) := by
@@ -1342,7 +1349,8 @@ theorem productMap_surjective (f : A → C) (g : B → D)
 그 결과를 사용하여 두 조건을 묶자.
 
 ```savedLean
-theorem productMap_bijective (f : A → C) (g : B → D)
+theorem productMap_bijective {A B C D : Type}
+    (f : A → C) (g : B → D)
     (hf : Bijective f)
     (hg : Bijective g) :
     Bijective (productMap f g) := by
@@ -1377,12 +1385,12 @@ $`g(f(x))=x`와 $`f(g(y))=y`를 만족하면 $`g`를 $`f`의 *역함수*라고 �
 어느 원소에 두 번 적용해도 원래 원소를 얻으므로 다음 두 등식이 성립한다.
 
 ```savedLean
-theorem functions_identity_twice
+theorem functions_identity_twice {A : Type}
     (x : A) :
     identity A (identity A x) = x := by
   rfl
 
-example :
+example {A : Type} :
     identity A ∘ identity A = identity A := by
   ext x
   exact functions_identity_twice x
@@ -1396,8 +1404,8 @@ example :
 $`B\times A`에서 $`A\times B`로 가는 함수 $`(b,a)\mapsto(a,b)`이다.
 
 ```savedLean
-def swapPair (p : A × B) : B × A := (p.2, p.1)
-theorem swapPair_twice (p : A × B) :
+def swapPair {A B : Type} (p : A × B) : B × A := (p.2, p.1)
+theorem swapPair_twice {A B : Type} (p : A × B) :
     swapPair (swapPair p) = p := by
   rfl
 ```
@@ -1412,7 +1420,7 @@ $`p=q`를 얻으므로 단사이다. 공역의 원소 $`q`에 대해서는
 원소 $`\operatorname{swapPair}(q)`를 택하면 그 함수값이 $`q`이므로 전사이다.
 
 ```savedLean
-theorem swapPair_bijective :
+theorem swapPair_bijective {A B : Type} :
     Bijective (swapPair : A × B → B × A) := by
   constructor
   · intro p q hpq
@@ -1444,7 +1452,7 @@ $`f`가 전단사이면 전사성에 따라 $`f(x)=y`인 원소 $`x\in A`가 존
 그 원소가 만족하는 조건과 유일성을 논리곱으로 묶었다.
 
 ```savedLean
-theorem bijective_preimage_unique (f : A → B)
+theorem bijective_preimage_unique {A B : Type} (f : A → B)
     (hf : Bijective f) :
     ∀ y : B, ∃ x : A,
       f x = y ∧ ∀ z : A, f z = y → z = x := by
@@ -1490,11 +1498,11 @@ Lean은 이 두 증명을 같은 명제의 증명으로서 같게 취급한다.
 항등함수를 예로 들어 존재명제의 증명과 부분타입의 원소를 각각 만들어 보자.
 
 ```savedLean
-theorem identity_preimage_exists (y : A) :
+theorem identity_preimage_exists {A : Type} (y : A) :
     ∃ x : A, identity A x = y := by
   exists y
 
-def identityPreimage (y : A) :
+def identityPreimage {A : Type} (y : A) :
     {x : A // identity A x = y} :=
   { val := y, property := by rfl }
 ```
@@ -1504,7 +1512,7 @@ def identityPreimage (y : A) :
 따라서 두 번째 결과에서는 `.val`로 원소를 꺼내 사용할 수 있다.
 
 ```savedLean
-example
+example {A : Type}
     (y : A) :
     (identityPreimage y).val = y := by
   rfl
@@ -1530,7 +1538,7 @@ example
 이 선택을 이용하여 함수를 정의할 때는 `def` 앞에 `noncomputable`을 붙인다.
 
 ```savedLean
-noncomputable def inverseMapData (f : A → B)
+noncomputable def inverseMapData {A B : Type} (f : A → B)
     (hf : Bijective f) :
     { g : B → A // ∀ y, f (g y) = y } :=
   { val := fun y => Classical.choose (hf.surjective y)
@@ -1550,10 +1558,10 @@ noncomputable def inverseMapData (f : A → B)
 후자에 `y`를 넣으면 그 원소에서의 등식을 얻는다.
 
 ```savedLean
-noncomputable def inverseMap (f : A → B)
+noncomputable def inverseMap {A B : Type} (f : A → B)
     (hf : Bijective f) : B → A :=
   (inverseMapData f hf).val
-theorem inverseMap_spec (f : A → B)
+theorem inverseMap_spec {A B : Type} (f : A → B)
     (hf : Bijective f)
     (y : B) :
     f (inverseMap f hf y) = y := by
@@ -1566,7 +1574,7 @@ theorem inverseMap_spec (f : A → B)
 $`f(g(f(x)))=f(x)`이므로 $`f`의 단사성을 사용하면 된다.
 
 ```savedLean
-theorem inverseMap_left (f : A → B)
+theorem inverseMap_left {A B : Type} (f : A → B)
     (hf : Bijective f)
     (x : A) :
     inverseMap f hf (f x) = x := by
@@ -1583,7 +1591,7 @@ theorem inverseMap_left (f : A → B)
 다음 정리는 두 역함수 조건을 만족하는 함수가 존재한다는 증명이다.
 
 ```savedLean
-theorem inverse_exists (f : A → B)
+theorem inverse_exists {A B : Type} (f : A → B)
     (hf : Bijective f) :
     ∃ g : B → A,
       (∀ x, g (f x) = x) ∧ (∀ y, f (g y) = y) := by
@@ -1617,7 +1625,7 @@ Lean에서는 먼저 `g (f (h y)) = h y`에 이름 `hgy`를 붙인다.
 목표인 `g y = h y`의 증명을 얻는다.
 
 ```savedLean
-theorem inverse_function_unique (f : A → B)
+theorem inverse_function_unique {A B : Type} (f : A → B)
     (g h : B → A)
     (hg : (∀ x, g (f x) = x) ∧ (∀ y, f (g y) = y))
     (hh : (∀ x, h (f x) = x) ∧ (∀ y, f (h y) = y)) :
@@ -1640,7 +1648,7 @@ theorem inverse_function_unique (f : A → B)
 두 함수가 같은 역함수 조건을 만족하므로 유일성 정리를 사용할 수 있다.
 
 ```savedLean
-example :
+example {A B : Type} :
     inverseMap (swapPair : A × B → B × A)
       swapPair_bijective =
       swapPair := by
@@ -1667,13 +1675,13 @@ tag := "functions-inverse-laws"
 `ext`로 원소별 등식을 목표로 삼으면 합성함수와 항등함수의 같음을 보일 수 있다.
 
 ```savedLean
-theorem inverseMap_compose (f : A → B)
+theorem inverseMap_compose {A B : Type} (f : A → B)
     (hf : Bijective f) :
     inverseMap f hf ∘ f = identity A := by
   ext x
   exact inverseMap_left f hf x
 
-theorem compose_inverseMap (f : A → B)
+theorem compose_inverseMap {A B : Type} (f : A → B)
     (hf : Bijective f) :
     f ∘ inverseMap f hf = identity B := by
   ext y
@@ -1688,7 +1696,7 @@ $`g(x)=g(y)`이면 양변에 $`f`를 적용하여 $`f(g(x))=f(g(y))`를 얻고
 또한 임의의 $`a\in A`에 대하여 $`g(f(a))=a`이므로 $`g`는 전사이다.
 
 ```savedLean
-theorem inverseMap_bijective (f : A → B)
+theorem inverseMap_bijective {A B : Type} (f : A → B)
     (hf : Bijective f) :
     Bijective (inverseMap f hf) := by
   constructor
@@ -1724,7 +1732,7 @@ file := "exercises"
 *문제 1* $`S \subseteq T`이면 $`f^{-1}(S) \subseteq f^{-1}(T)`임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_preimage_subset
+theorem exercise_preimage_subset {A B : Type}
     (f : A → B) (S T : Set B)
     (hST : S ⊆ T) :
     preimage f S ⊆ preimage f T := by
@@ -1735,7 +1743,7 @@ theorem exercise_preimage_subset
 *문제 2* 합성함수 $`g \circ f`가 단사이면 $`f`도 단사임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_injective_of_compose
+theorem exercise_injective_of_compose {A B C : Type}
     (f : A → B) (g : B → C)
     (h : Injective (g ∘ f)) :
     Injective f := by
@@ -1746,7 +1754,7 @@ theorem exercise_injective_of_compose
 *문제 3* 합성함수 $`g \circ f`가 전사이면 $`g`도 전사임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_surjective_of_compose
+theorem exercise_surjective_of_compose {A B C : Type}
     (f : A → B) (g : B → C)
     (h : Surjective (g ∘ f)) :
     Surjective g := by
@@ -1777,7 +1785,7 @@ theorem exercise_double_successor_noncommute :
 *문제 5* 전단사함수의 역함수에 다시 역함수를 취하면 원래 함수를 얻음을 증명하라.
 
 ```savedLean -keep
-theorem exercise_inverse_inverse
+theorem exercise_inverse_inverse {A B : Type}
     (f : A → B)
     (hf : Bijective f) :
     inverseMap (inverseMap f hf)
@@ -1792,7 +1800,7 @@ theorem exercise_inverse_inverse
 *문제 6* $`(a,b)\in S\times T`이면 $`(b,a)\in T\times S`임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_setProduct_swap
+theorem exercise_setProduct_swap {A B : Type}
     (S : Set A) (T : Set B) (a : A) (b : B)
     (h : (a, b) ∈ setProduct S T) :
     (b, a) ∈ setProduct T S := by
@@ -1855,12 +1863,13 @@ theorem exercise_diagonal_not_surjective :
 함수의 단사성이나 전사성을 가정하지 않고 증명하라.
 
 ```savedLean -keep
-theorem exercise_preimage_inter (f : A → B)
+theorem exercise_preimage_inter {A B : Type} (f : A → B)
     (S T : Set B) :
     preimage f (S ∩ T) = preimage f S ∩ preimage f T := by
   sorry
 
-theorem exercise_preimage_compl (f : A → B) (T : Set B) :
+theorem exercise_preimage_compl {A B : Type}
+    (f : A → B) (T : Set B) :
     preimage f Tᶜ = (preimage f T)ᶜ := by
   sorry
 ```
@@ -1870,7 +1879,8 @@ theorem exercise_preimage_compl (f : A → B) (T : Set B) :
 $`f(S\cup T)=f(S)\cup f(T)`임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_image_union (f : A → B) (S T : Set A) :
+theorem exercise_image_union {A B : Type}
+    (f : A → B) (S T : Set A) :
     image f (S ∪ T) = image f S ∪ image f T := by
   sorry
 ```
@@ -1882,14 +1892,16 @@ theorem exercise_image_union (f : A → B) (S T : Set A) :
 두 증명에서 단사성과 전사성이 각각 어디에 쓰이는지 주석으로 적으라.
 
 ```savedLean -keep
-theorem exercise_cancel_injective (f g : A → B)
+theorem exercise_cancel_injective {A B C : Type}
+    (f g : A → B)
     (h : B → C)
     (hh : Injective h)
     (heq : h ∘ f = h ∘ g) :
     f = g := by
   sorry
 
-theorem exercise_cancel_surjective (f g : B → C)
+theorem exercise_cancel_surjective {A B C : Type}
+    (f g : B → C)
     (h : A → B)
     (hh : Surjective h)
     (heq : f ∘ h = g ∘ h) :

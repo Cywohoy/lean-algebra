@@ -30,7 +30,6 @@ open scoped Classical
 
 ```savedLean
 namespace Ample
-variable {A B C : Type} {m n : Nat}
 local infixr:90 (priority := high) " ∘ " => compose
 ```
 
@@ -84,7 +83,7 @@ theorem sameCardinality_refl (A : Type) :
 주어진 전단사의 역함수를 택하면 된다.
 
 ```savedLean
-theorem sameCardinality_symm
+theorem sameCardinality_symm {A B : Type}
     (h : SameCardinality A B) :
     SameCardinality B A := by
   unpack h with ⟨f, hf⟩
@@ -98,7 +97,7 @@ theorem sameCardinality_symm
 {ref "functions-composition-bijectivity"}[함수의 합성]에서 두 전단사함수의 합성도 전단사임을 증명했으므로 $`g\circ f`를 사용하면 된다.
 
 ```savedLean
-theorem sameCardinality_trans
+theorem sameCardinality_trans {A B C : Type}
     (hAB : SameCardinality A B)
     (hBC : SameCardinality B C) :
     SameCardinality A C := by
@@ -176,14 +175,14 @@ attribute [ample_compare] cardinal_eq_iff
 등식의 증명 `h`가 주어졌을 때는 `(cardinal_eq_iff A B).mp h`로 전단사의 존재를 얻는다.
 
 ```savedLean
-example
+example {A B : Type}
     (f : A → B)
     (hf : Bijective f) :
     cardinal A = cardinal B := by
   ext
   exists f
 
-example
+example {A B : Type}
     (h : cardinal A = cardinal B) :
     ∃ f : A → B, Bijective f := by
   exact (cardinal_eq_iff A B).mp h
@@ -196,11 +195,11 @@ example
 두 집합을 비교할 때도 그 원소 타입의 기수를 사용한다.
 
 ```savedLean -show
-theorem cardinal_eq_of_sameCardinality
+theorem cardinal_eq_of_sameCardinality {A B : Type}
     (h : SameCardinality A B) : cardinal A = cardinal B :=
   (cardinal_eq_iff A B).2 h
 
-theorem sameCardinality_of_cardinal_eq
+theorem sameCardinality_of_cardinal_eq {A B : Type}
     (h : cardinal A = cardinal B) : SameCardinality A B :=
   (cardinal_eq_iff A B).1 h
 
@@ -285,7 +284,7 @@ theorem empty_cardinal (A : Type) :
 먼저 원소 조건 $`x=a`로 이 집합을 정의하자.
 
 ```savedLean
-def singleton (a : A) : Set A := fun x => x = a
+def singleton {A : Type} (a : A) : Set A := fun x => x = a
 ```
 
 유일한 번호 $`0`에 원소 $`a`를 대응시키자.
@@ -299,7 +298,7 @@ def singleton (a : A) : Set A := fun x => x = a
 전사성을 증명할 때 쓰는 번호 `zero`도 같은 방법으로 정의한다.
 
 ```savedLean
-theorem singleton_cardinal (a : A) :
+theorem singleton_cardinal {A : Type} (a : A) :
     cardinal (Elem (singleton a)) = cardinal (Fin 1) := by
   symm
   ext
@@ -421,7 +420,7 @@ tag := "cardinality-transport"
 `rw [← hAB]`는 등식 `hAB`를 반대 방향으로 사용하므로 이 변환을 수행한다.
 
 ```savedLean
-theorem cardinality_finite_transport
+theorem cardinality_finite_transport {A B : Type} {n : Nat}
     (hAB : cardinal A = cardinal B)
     (hA : cardinal A = cardinal (Fin n)) :
     cardinal B = cardinal (Fin n) := by
@@ -450,7 +449,7 @@ Lean은 자연수가 필요한 문맥에서 이 값을 자동으로 꺼낼 수�
 기호 `↑`는 `\u`로 입력한다.
 
 ```savedLean
-example
+example {n : Nat}
     (i : Fin n) :
     (i : Nat) = i.val := by
   rfl
@@ -460,7 +459,7 @@ example
 `hx : x < n`이 주어졌을 때는 다음과 같이 `x`를 값으로 택한다.
 
 ```savedLean
-def cardinality_fin_from_bound
+def cardinality_fin_from_bound {n : Nat}
     (x : Nat)
     (hx : x < n) :
     Fin n :=
@@ -479,7 +478,8 @@ tag := "cardinality-fin-bounds"
 따라서 같은 자연수 값을 사용하여 `Fin (n + 1)`의 원소를 만들 수 있다.
 
 ```savedLean
-def cardinality_fin_embed_succ (i : Fin n) : Fin (n + 1) :=
+def cardinality_fin_embed_succ {n : Nat}
+    (i : Fin n) : Fin (n + 1) :=
   { val := i.val
     isLt := by
       have hi : i.val < n :=
@@ -493,12 +493,12 @@ def cardinality_fin_embed_succ (i : Fin n) : Fin (n + 1) :=
 자연수 값은 `i.val + 1`이다.
 
 ```savedLean
-example
+example {n : Nat}
     (i : Fin n) :
     i.castSucc.val = i.val := by
   rfl
 
-example
+example {n : Nat}
     (i : Fin n) :
     i.succ.val = i.val + 1 := by
   rfl
@@ -513,13 +513,13 @@ example
 `i.castLE h : Fin m`을 사용할 수 있다.
 
 ```savedLean
-def cardinality_fin_castLE
+def cardinality_fin_castLE {m n : Nat}
     (i : Fin n)
     (h : n ≤ m) :
     Fin m := by
   exact i.castLE h
 
-example (i : Fin n)
+example {m n : Nat} (i : Fin n)
     (h : n ≤ m) :
     (i.castLE h).val = i.val := by
   rfl
@@ -532,7 +532,7 @@ example (i : Fin n)
 같은 값을 `Fin n`으로 옮기려면 `i.val < n`의 증명이 필요하다.
 
 ```savedLean
-def cardinality_fin_castLT
+def cardinality_fin_castLT {n : Nat}
     (i : Fin (n + 1))
     (hi : i.val < n) :
     Fin n :=
@@ -543,7 +543,7 @@ def cardinality_fin_castLT
 아래의 결과는 `Fin n`의 원소이며 자연수 값은 원래 번호와 같다.
 
 ```savedLean
-example
+example {n : Nat}
     (i : Fin (n + 1))
     (hi : i.val < n) :
     (i.castLT hi).val = i.val := by
@@ -554,7 +554,7 @@ example
 `i.isLt : i.val < n + 1`과 함께 `i.val < n`을 얻을 수 있다.
 
 ```savedLean
-def cardinality_fin_pred
+def cardinality_fin_pred {n : Nat}
     (i : Fin (n + 1))
     (hi : i.val ≠ n) :
     Fin n :=
@@ -575,7 +575,7 @@ tag := "cardinality-fin-equality"
 거꾸로 `h : i = j`가 주어졌다면 `rw [h]`로 값의 등식을 증명할 수 있다.
 
 ```savedLean
-theorem cardinality_fin_eq_iff_values
+theorem cardinality_fin_eq_iff_values {n : Nat}
     (i j : Fin n) :
     i = j ↔ i.val = j.val := by
   constructor
@@ -592,7 +592,7 @@ theorem cardinality_fin_eq_iff_values
 `i`를 `i.castSucc`로 옮겨 두 번호가 같음을 보일 수 있다.
 
 ```savedLean
-example
+example {n : Nat}
     (i : Fin n) (j : Fin (n + 1))
     (h : i.val = j.val) :
     i.castSucc = j := by
@@ -831,7 +831,8 @@ $`f(i+1)`과 $`f(j+1)`은 모두 지운 번호 $`f(0)`과 다르므로
 이후에는 `hne i`로 해당 번호에서의 증명을 사용할 수 있다.
 
 ```savedLean
-theorem fin_injection_remove (f : Fin (m + 1) → Fin (n + 1))
+theorem fin_injection_remove {m n : Nat}
+    (f : Fin (m + 1) → Fin (n + 1))
     (hf : Injective f) :
     ∃ g : Fin m → Fin n, Injective g := by
   -- 정의역의 0을 지우고 나머지 번호를 i + 1로 쓴다.
@@ -940,7 +941,7 @@ ih : ∀ {m : Nat} (f : Fin m → Fin n),
 코드의 `succ m`에서 새로 붙인 이름 `m`은 이 설명의 $`k`에 해당한다.
 
 ```savedLean
-theorem fin_injective_le (f : Fin m → Fin n)
+theorem fin_injective_le {m n : Nat} (f : Fin m → Fin n)
     (hf : Injective f) :
     m ≤ n := by
   -- 정의역의 크기도 달라질 수 있도록 귀납법을 쓴다.
@@ -1025,7 +1026,7 @@ tag := "cardinality-number-unique"
 따라서 $`m=n`이다.
 
 ```savedLean
-theorem fin_sameCardinality_eq
+theorem fin_sameCardinality_eq {m n : Nat}
     (h : SameCardinality (Fin m) (Fin n)) :
     m = n := by
   -- 양방향의 전단사를 각각 택한다.
@@ -1046,7 +1047,7 @@ theorem fin_sameCardinality_eq
 기수의 등식에서 전단사의 존재를 얻으면 다음과 같이 같은 결론을 사용할 수 있다.
 
 ```savedLean
-theorem cardinal_fin_eq
+theorem cardinal_fin_eq {m n : Nat}
     (h : cardinal (Fin m) = cardinal (Fin n)) :
     m = n := by
   apply fin_sameCardinality_eq
@@ -1060,7 +1061,7 @@ $`|A|=|\operatorname{Fin}(n)|`에서 $`|\operatorname{Fin}(m)|=|\operatorname{Fi
 방금 증명한 정리를 사용하면 $`m=n`이다.
 
 ```savedLean
-theorem finite_cardinal_unique
+theorem finite_cardinal_unique {A : Type} {m n : Nat}
     (hm : cardinal A = cardinal (Fin m))
     (hn : cardinal A = cardinal (Fin n)) :
     m = n := by
@@ -1146,7 +1147,7 @@ theorem cardinality_spec (A : Type)
     cardinal A = cardinality A hA := by
   exact (cardinalityData A hA).property
 
-theorem cardinality_eq
+theorem cardinality_eq {A : Type} {n : Nat}
     (hA : IsFinite A)
     (hn : cardinal A = n) :
     cardinality A hA = n := by
@@ -1222,7 +1223,7 @@ theorem no_injection_nat_fin (n : Nat) (f : Nat → Fin n) :
 다시 `unpack`으로 함수와 전단사성의 증명을 꺼낼 수 있다.
 
 ```savedLean
-theorem infinite_of_nat_injection (f : Nat → A)
+theorem infinite_of_nat_injection {A : Type} (f : Nat → A)
     (hf : Injective f) :
     IsInfinite A := by
   intro hA
@@ -1326,7 +1327,8 @@ file := "exercises"
 *문제 1* 원소가 하나씩 있는 두 집합은 크기가 같음을 증명하라.
 
 ```savedLean -keep
-theorem exercise_singletons_same_cardinal (a : A) (b : B) :
+theorem exercise_singletons_same_cardinal {A B : Type}
+    (a : A) (b : B) :
     cardinal (Elem (singleton a)) =
       cardinal (Elem (singleton b)) := by
   sorry
@@ -1337,7 +1339,7 @@ theorem exercise_singletons_same_cardinal (a : A) (b : B) :
 $`A`의 원소 수가 $`n`이라는 명제와 $`B`의 원소 수가 $`n`이라는 명제가 동치임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_finite_cardinal_transport
+theorem exercise_finite_cardinal_transport {A B : Type} {n : Nat}
     (hAB : cardinal A = cardinal B) :
     cardinal A = n ↔ cardinal B = n := by
   sorry
@@ -1357,7 +1359,7 @@ theorem exercise_fin_succ_not_injective
 *문제 4* 무한집합과 크기가 같은 집합도 무한집합임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_infinite_transport
+theorem exercise_infinite_transport {A B : Type}
     (hA : IsInfinite A)
     (hAB : cardinal A = cardinal B) :
     IsInfinite B := by
@@ -1370,7 +1372,7 @@ theorem exercise_infinite_transport
 함수 절의 `productMap_bijective`를 사용하여 `Fin m × Fin n`에서 `A × B`로 가는 전단사를 구성하라.
 
 ```savedLean -keep
-theorem exercise_cardinal_product
+theorem exercise_cardinal_product {A B : Type} {m n : Nat}
     (hA : cardinal A = m)
     (hB : cardinal B = n) :
     cardinal (A × B) = m * n := by
@@ -1472,12 +1474,12 @@ file := "automation"
 크기가 같은 두 집합은 함께 유한하거나 함께 무한하다.
 
 ```savedLean
-theorem isFinite_of_cardinal_eq
+theorem isFinite_of_cardinal_eq {A : Type} {n : Nat}
     (h : cardinal A = n) :
     IsFinite A := by
   exists n
 
-theorem isFinite_transport
+theorem isFinite_transport {A B : Type}
     (hAB : cardinal A = cardinal B)
     (hA : IsFinite A) :
     IsFinite B := by
@@ -1486,7 +1488,7 @@ theorem isFinite_transport
   rw [← hAB]
   exact hn
 
-theorem isInfinite_transport
+theorem isInfinite_transport {A B : Type}
     (hAB : cardinal A = cardinal B)
     (hA : IsInfinite A) :
     IsInfinite B := by
@@ -1522,7 +1524,7 @@ attribute [ample_card_rules]
 $`B`의 원소 수도 $`n`이다.
 
 ```savedLean
-example
+example {A B : Type} {n : Nat}
     (hAB : cardinal A = cardinal B)
     (hA : cardinal A = n) :
     cardinal B = n := by
@@ -1532,7 +1534,7 @@ example
 *보기* 전단사가 존재한다는 가정은 기수의 등식으로 바꿀 수 있다.
 
 ```savedLean
-example
+example {A B : Type}
     (hAB : SameCardinality A B) :
     cardinal A = cardinal B := by
   card
@@ -1541,7 +1543,7 @@ example
 *보기* 크기가 같은 두 집합 중 하나가 무한하면 다른 하나도 무한하다.
 
 ```savedLean
-example
+example {A B : Type}
     (hA : IsInfinite A)
     (hAB : cardinal A = cardinal B) :
     IsInfinite B := by
@@ -1551,7 +1553,7 @@ example
 *보기* 유한집합 `A`의 원소 수가 `n`이면 `cardinality A hA = n`이다.
 
 ```savedLean
-example
+example {A : Type} {n : Nat}
     (hA : IsFinite A)
     (hn : cardinal A = n) :
     cardinality A hA = n := by
@@ -1575,7 +1577,7 @@ example
 *보기* 같은 집합의 원소 수로 얻은 두 자연수는 같다.
 
 ```savedLean
-example
+example {A : Type} {m n : Nat}
     (hm : cardinal A = m)
     (hn : cardinal A = n) :
     m = n := by

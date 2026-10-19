@@ -1,4 +1,5 @@
-"""Stage the generated book for static hosting, without the local Lean editor."""
+"""Stage the book for static hosting, optionally with its browser Lean runtime."""
+import argparse
 from pathlib import Path
 import shutil
 
@@ -6,7 +7,12 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--wasm-bundle', type=Path)
+    parser.add_argument('--download-wasm', action='store_true')
+    args = parser.parse_args()
     output = (ROOT / '_out').resolve()
+    assert output.parent == ROOT.resolve(), 'Keep generated output inside this checkout'
     source = (output / 'html-multi').resolve()
     destination = (output / 'pages').resolve()
     # Only replace this script's generated staging folder, never the source or workspace.
@@ -17,9 +23,16 @@ def main():
     if destination.exists():
         shutil.rmtree(destination)
     shutil.copytree(source, destination)
+    # Keep Verso's existing SRI-verified dependency on the same origin under COEP.
+    shutil.copyfile(ROOT / 'assets/web/marked.min.js', destination / '-verso-data/marked.min.js')
     marker = '<meta name="book-mode" content="static">'
+    if args.wasm_bundle or args.download_wasm:
+        from wasm_pages import prepare
+        relative = prepare(destination, args.wasm_bundle, args.download_wasm)
+        marker = '<meta name="book-mode" content="wasm">' + f'<meta name="lean-wasm-base" content="{relative}">'
     for page in destination.rglob('*.html'):
         html = page.read_text(encoding='utf-8')
+        html = html.replace('https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js', '-verso-data/marked.min.js')
         assert '</head>' in html, page
         page.write_text(html.replace('</head>', marker + '</head>', 1), encoding='utf-8')
     (destination / '.nojekyll').write_text('', encoding='utf-8')

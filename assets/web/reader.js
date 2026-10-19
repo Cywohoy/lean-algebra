@@ -3,6 +3,8 @@
   'use strict';
   const siteRoot = new URL('.', document.baseURI);
   const staticReading = document.querySelector('meta[name="book-mode"]')?.content === 'static';
+  const browserLean = document.querySelector('meta[name="book-mode"]')?.content === 'wasm';
+  let browserBackend;
   const snippets = new Map();
   let backend;
   let activeEditor;
@@ -56,6 +58,11 @@
     throw new Error('Lean 서버에 연결할 수 없습니다. interactive-preview.bat를 실행해 주세요.');
   }
   async function call(path, payload) {
+    if (browserLean) {
+      browserBackend ||= import(new URL('assets/web/wasm-reader.js', siteRoot))
+        .then(module => module.createBrowserBackend(siteRoot));
+      return (await browserBackend).call(path, payload);
+    }
     const base = await endpoint();
     const response = await fetch(base + path, {
       method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),
@@ -108,6 +115,7 @@
     status.setAttribute('role', 'status');
     let stepButton;
     const editButton = button('편집', () => setMode(mode === 'edit' ? null : 'edit'));
+    if (browserLean) editButton.title = '브라우저에서 Lean을 실행합니다. 첫 실행 시 약 300 MB를 내려받습니다.';
     const copyButton = button('복사', async () => {
       try {
         const text = mode === 'edit' && editor ? editor.input.value : (await snippet(key)).code;
@@ -258,7 +266,11 @@
     output.append(outputHeading, goal, diagnostics);
     columns.append(codePane, output);
     root.append(controls, columns, element('p', 'book-help',
-      '자동 실행 · Ctrl+Space 자동완성 · Ctrl+Enter 즉시 실행 · \\forall + Tab → ∀'));
+      browserLean ? '브라우저 실행 · 첫 실행 시 약 300 MB 다운로드 · Ctrl+Enter 실행 · \\forall + Tab → ∀'
+        : '자동 실행 · Ctrl+Space 자동완성 · Ctrl+Enter 즉시 실행 · \\forall + Tab → ∀'));
+    if (browserLean) window.addEventListener('book-lean-progress', event => {
+      if (busy && root.isConnected) message.textContent = event.detail;
+    });
     let session;
     let version;
     let checkedCode;
@@ -316,7 +328,7 @@
       scheduleCheck();
       const prefix = input.value.slice(0, input.selectionStart);
       if (composing || !input.matches(':focus') || input.selectionStart !== input.selectionEnd || /\\[^\s]*$/.test(prefix)) return;
-      if (/[\p{L}_][\p{L}\p{N}_']{1,}$|[\p{L}\p{N}_']\.$/u.test(prefix)) {
+      if (!browserLean && /[\p{L}_][\p{L}\p{N}_']{1,}$|[\p{L}\p{N}_']\.$/u.test(prefix)) {
         completionTimer = setTimeout(() => complete(false), 220);
       }
     }
@@ -443,6 +455,7 @@
       }, 100);
     }
     async function complete(explicit) {
+      if (browserLean) return;
       clearTimeout(completionTimer);
       const code = input.value;
       const cursor = input.selectionStart;
@@ -573,6 +586,14 @@
   function start() {
     document.querySelectorAll('.book-example').forEach(decorate);
     foldLegacyHints();
+    if (browserLean) {
+      const reopen = sessionStorage.getItem('lean-algebra.reopen');
+      sessionStorage.removeItem('lean-algebra.reopen');
+      if (reopen) {
+        const wrapper = [...document.querySelectorAll('.book-example')].find(node => node.dataset.snippet === reopen);
+        [...(wrapper?.querySelectorAll('.book-button') || [])].find(node => node.textContent === '편집')?.click();
+      }
+    }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();

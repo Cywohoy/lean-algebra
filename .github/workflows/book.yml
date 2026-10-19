@@ -46,14 +46,15 @@ jobs:
         run: |
           lake build Ample
           python experiments/wasm/Frontend.Tests.py
+      - uses: actions/cache@v4
+        with:
+          path: tmp/wasm/downloads
+          key: lean-wasm-${{ hashFiles('web/wasm-runtime.json') }}
       - name: Prepare the static site
         run: |
-          python scripts/prepare_pages.py
+          python scripts/prepare_pages.py --download-wasm
           python tests/Pages.Tests.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: lean-foundations-html
-          path: _out/pages
+      # The Pages artifact already contains the complete downloadable site.
       - uses: actions/upload-pages-artifact@v4
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         with:

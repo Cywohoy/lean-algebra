@@ -30,7 +30,6 @@ open scoped Classical
 
 ```savedLean
 namespace Ample
-variable {A B C : Type} {m n : Nat}
 local infixr:90 (priority := high) " ∘ " => compose
 ```
 

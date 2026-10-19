@@ -28,7 +28,6 @@ open scoped Classical
 
 ```savedLean
 namespace Ample
-variable {A B C : Type} {m n : Nat}
 local infixr:90 (priority := high) " ∘ " => compose
 ```
 
@@ -59,7 +58,7 @@ $`A`와 $`A'`, $`B`와 $`B'`의 크기가 각각 같고 단사함수 $`f:A\to B`
 $`b\circ f\circ a^{-1}:A'\to B'`도 단사이다.
 
 ```savedLean
-theorem cardinalityLE_transport {A' B' : Type}
+theorem cardinalityLE_transport {A B : Type} {A' B' : Type}
     (hA : SameCardinality A A')
     (hB : SameCardinality B B')
     (h : CardinalityLE A B) :
@@ -152,7 +151,7 @@ theorem cardinal_le_refl (A : Type) :
   exists identity A
   exact identity_injective A
 
-theorem cardinal_le_trans
+theorem cardinal_le_trans {A B C : Type}
     (hAB : cardinal A ≤ cardinal B)
     (hBC : cardinal B ≤ cardinal C) :
     cardinal A ≤ cardinal C := by
@@ -265,7 +264,7 @@ def IsCountablyInfinite : Type → Prop :=
 자연수에서 오는 전단사 `toPositive`를 제시하여 증명한다.
 
 ```savedLean
-theorem countablyInfinite_isInfinite
+theorem countablyInfinite_isInfinite {A : Type}
     (hA : IsCountablyInfinite A) :
     IsInfinite A := by
   unpack (cardinal_eq_iff Nat A).mp hA with ⟨f, hf⟩
@@ -359,7 +358,7 @@ def emptyListing (A : Type) : FiniteListing A 0 :=
 조건이 참이면 `hi`를 범위 조건의 증명으로 사용하여 자연수 값이 `i.val`인 `Fin n`의 원소를 만들고 `f`에 넣는다.
 
 ```savedLean
-def appendValue (f : Fin n → A) (a : A)
+def appendValue {A : Type} {n : Nat} (f : Fin n → A) (a : A)
     (i : Fin (n + 1)) :
     A :=
   if hi : i.val < n then
@@ -379,13 +378,13 @@ Lean은 이 형태를 `dite`로 나타내며, 조건에 따라 값을 정리할 
 `appendValue`에서 이 두 경우를 각각 쓰면 다음과 같다.
 
 ```savedLean
-example (f : Fin n → A) (a : A)
+example {A : Type} {n : Nat} (f : Fin n → A) (a : A)
     (i : Fin (n + 1))
     (hi : i.val < n) :
     appendValue f a i = f { val := i.val, isLt := hi } := by
   rw [appendValue, dite_eq_left hi]
 
-example (f : Fin n → A) (a : A)
+example {A : Type} {n : Nat} (f : Fin n → A) (a : A)
     (i : Fin (n + 1))
     (hi : ¬ i.val < n) :
     appendValue f a i = a := by
@@ -402,7 +401,8 @@ example (f : Fin n → A) (a : A)
 `i.castSucc`로 기존 번호를 그대로 새 목록의 범위에 옮긴다.
 
 ```savedLean
-theorem appendValue_old (f : Fin n → A) (a : A)
+theorem appendValue_old {A : Type} {n : Nat}
+    (f : Fin n → A) (a : A)
     (i : Fin n) :
     appendValue f a i.castSucc = f i := by
   have hi : i.castSucc.val < n :=
@@ -421,7 +421,7 @@ theorem appendValue_old (f : Fin n → A) (a : A)
 `step`을 반복하여 모든 자연수 단계의 함수를 만드는 방법은 다음과 같다.
 
 ```savedLean
-def buildListings
+def buildListings {A : Type}
     (step : (n : Nat) → FiniteListing A n →
       FiniteListing A (n + 1)) :
     (n : Nat) → FiniteListing A n
@@ -447,7 +447,7 @@ tag := "cardinality-infinite-lemmas"
 $`f`의 상에 속하지 않는 원소가 $`A`에 존재함을 증명하라.
 
 ```savedLean -keep
-theorem fresh_element_exists
+theorem fresh_element_exists {A : Type} {n : Nat}
     (hA : IsInfinite A)
     (f : Fin n → A)
     (hf : Injective f) :
@@ -462,7 +462,7 @@ theorem fresh_element_exists
 기존 번호의 함수값을 보존하는 목록을 만들 수 있음을 증명하라.
 
 ```savedLean -keep
-theorem finite_listing_extension
+theorem finite_listing_extension {A : Type} {n : Nat}
     (hA : IsInfinite A)
     (s : FiniteListing A n) :
     ∃ t : FiniteListing A (n + 1),
@@ -504,18 +504,19 @@ include extend
 이 둘을 부분타입에 함께 담으면 다음과 같다.
 
 ```savedLean
-noncomputable def nextListingData (hA : IsInfinite A)
+noncomputable def nextListingData {A : Type}
+    (hA : IsInfinite A)
     (n : Nat) (s : FiniteListing A n) :
     {t : FiniteListing A (n + 1) //
       ∀ i : Fin n, t.val i.castSucc = s.val i} :=
   { val := Classical.choose (extend hA s)
     property := Classical.choose_spec (extend hA s) }
 
-noncomputable def nextListing (hA : IsInfinite A)
+noncomputable def nextListing {A : Type} (hA : IsInfinite A)
     (n : Nat) (s : FiniteListing A n) :
     FiniteListing A (n + 1) :=
   (nextListingData extend hA n s).val
-theorem nextListing_spec
+theorem nextListing_spec {A : Type}
     (hA : IsInfinite A)
     (n : Nat) (s : FiniteListing A n) (i : Fin n) :
     (nextListing extend hA n s).val i.castSucc =
@@ -534,10 +535,12 @@ theorem nextListing_spec
 그때의 함수값 $`s_{n+1}(n)`을 $`f(n)`으로 정한다.
 
 ```savedLean
-noncomputable def infiniteListings (hA : IsInfinite A)
+noncomputable def infiniteListings {A : Type}
+    (hA : IsInfinite A)
     (n : Nat) : FiniteListing A n :=
   buildListings (nextListing extend hA) n
-noncomputable def natIntoInfinite (hA : IsInfinite A)
+noncomputable def natIntoInfinite {A : Type}
+    (hA : IsInfinite A)
     (n : Nat) : A :=
   (infiniteListings extend hA (n + 1)).val
     { val := n, isLt := by arith }
@@ -561,7 +564,7 @@ $`s_{n+1}(i)=s_n(i)=f(i)`를 얻는다.
 기존 번호를 `j : Fin n`으로 옮기면 `ih j`를 사용할 수 있다.
 
 ```savedLean
-theorem infiniteListings_value
+theorem infiniteListings_value {A : Type}
     (hA : IsInfinite A)
     (n : Nat) (i : Fin n) :
     (infiniteListings extend hA n).val i =
@@ -615,7 +618,7 @@ $`f(i)=f(j)`라고 가정하고 두 번호보다 큰 $`N=i+j+1`을 택한다.
 $`s_N`이 단사이므로 $`i=j`이다.
 
 ```savedLean
-theorem natIntoInfinite_injective
+theorem natIntoInfinite_injective {A : Type}
     (hA : IsInfinite A) :
     Injective (natIntoInfinite extend hA) := by
   intro i j hij
@@ -639,7 +642,7 @@ theorem natIntoInfinite_injective
 
   exact hVal
 
-theorem infinite_has_nat_injection
+theorem infinite_has_nat_injection {A : Type}
     (hA : IsInfinite A) :
     ∃ f : Nat → A, Injective f := by
   exists natIntoInfinite extend hA
@@ -686,7 +689,7 @@ file := "power-sets"
 즉 $`T\in\mathcal{P}(S)`이라는 것은 $`T\subseteq S`라는 뜻이다.
 
 ```savedLean
-def powerSet (S : Set A) : Set (Set A) :=
+def powerSet {A : Type} (S : Set A) : Set (Set A) :=
   fun T => T ⊆ S
 ```
 
@@ -699,12 +702,12 @@ $`\mathcal{P}(S)=\{\varnothing,\{a\},\{b\},\{a,b\}\}`이다.
 *보기* 모든 집합 $`S`에 대하여 $`\varnothing\in\mathcal{P}(S)`이고 $`S\in\mathcal{P}(S)`이다.
 
 ```savedLean
-example
+example {A : Type}
     (S : Set A) :
     (∅ : Set A) ∈ powerSet S := by
   exact empty_subset S
 
-example
+example {A : Type}
     (S : Set A) :
     S ∈ powerSet S := by
   exact subset_refl S
@@ -719,7 +722,7 @@ example
 `Set A`의 원소들이 바로 전체집합의 부분집합들이다.
 
 ```savedLean
-example
+example {A : Type}
     (T : Set A) :
     T ∈ powerSet (whole A) := by
   exact subset_whole T
@@ -733,7 +736,7 @@ $`A`에서 그 멱집합으로 가는 단사함수를 얻는다.
 $`\{a\}=\{b\}`이면 $`a\in\{b\}`이므로 $`a=b`이다.
 
 ```savedLean
-theorem singleton_injective :
+theorem singleton_injective {A : Type} :
     Injective (singleton : A → Set A) := by
   intro a b hab
   have ha : a ∈ singleton a := by rfl
@@ -800,7 +803,7 @@ $`x\in f(x)`인지를 기록한 칸은 대각선 위에 놓인다.
 `unpack`으로 원소 `a`와 등식 `ha`를 꺼낼 수 있다.
 
 ```savedLean
-theorem cantor_not_surjective (f : A → Set A) :
+theorem cantor_not_surjective {A : Type} (f : A → Set A) :
     ¬ Surjective f := by
   intro hf
   let D : Set A := fun x => x ∉ f x
@@ -937,7 +940,7 @@ file := "exercises"
 *문제 1* $`\{n\in\mathbb{N}:2\leq n\}`이 가산무한집합임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_from_two_countably_infinite :
+theorem exercise_from_two_countably_infinite {n : Nat} :
     IsCountablyInfinite
     (Elem (fun n : Nat => 2 ≤ n)) := by
   sorry
@@ -946,7 +949,7 @@ theorem exercise_from_two_countably_infinite :
 *문제 2* 다음 멱집합의 등식을 증명하라.
 
 ```savedLean -keep
-theorem exercise_powerSet_inter (S T : Set A) :
+theorem exercise_powerSet_inter {A : Type} (S T : Set A) :
     powerSet (S ∩ T) = powerSet S ∩ powerSet T := by
   sorry
 ```
@@ -1000,12 +1003,13 @@ theorem exercise_nat_pairs_infinite :
 $`\mathcal{P}(\{2,3\})\subseteq\mathcal{P}(\mathbb{N}_{>0})`임을 보이라.
 
 ```savedLean -keep
-theorem exercise_powerSet_mono (S T : Set A)
+theorem exercise_powerSet_mono {A : Type} (S T : Set A)
     (hST : S ⊆ T) :
     powerSet S ⊆ powerSet T := by
   sorry
 
-theorem exercise_powerSet_subset_iff (S T : Set A) :
+theorem exercise_powerSet_subset_iff {A : Type}
+    (S T : Set A) :
     powerSet S ⊆ powerSet T ↔ S ⊆ T := by
   sorry
 
@@ -1059,7 +1063,7 @@ attribute [ample_card_rules]
 새로운 단사를 직접 합성하는 대신 이미 주어진 두 크기 관계를 `card`로 연결할 수 있다.
 
 ```savedLean
-theorem infinite_card_comparison
+theorem infinite_card_comparison {A B C : Type}
     (hAB : cardinal A ≤ cardinal B)
     (hBC : cardinal B ≤ cardinal C) :
     cardinal A ≤ cardinal C := by

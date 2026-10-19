@@ -63,3 +63,9 @@ and cursor-goal queries. The experiment uses the upstream browser Worker and
 COI Service Worker from pinned external checkouts; their license notices and
 pins are recorded in `experiments/wasm/README.md`. Those Worker assets are not
 included in the published book.
+
+The static Pages build serves Verso's existing marked 11.1.1 dependency from
+`assets/web/marked.min.js`, with the original SHA-384 integrity value retained.
+It is copied without modification from the version pinned by Verso; its MIT
+copyright and license are preserved in `licenses/Marked-MIT.txt`. Serving this
+file locally avoids a third-party script request in the isolated browser editor.

@@ -6,14 +6,14 @@ import AlgebraBook.Tactic.Auto
 open Ample
 open scoped Ample.Auto Classical
 namespace Exercises.FiniteCardinality
-variable {A B C : Type} {m n : Nat}
 
-theorem exercise_singletons_same_cardinal (a : A) (b : B) :
+theorem exercise_singletons_same_cardinal {A B : Type}
+    (a : A) (b : B) :
     cardinal (Elem (singleton a)) =
       cardinal (Elem (singleton b)) := by
   sorry
 
-theorem exercise_finite_cardinal_transport
+theorem exercise_finite_cardinal_transport {A B : Type} {n : Nat}
     (hAB : cardinal A = cardinal B) :
     cardinal A = n ↔ cardinal B = n := by
   sorry
@@ -23,13 +23,13 @@ theorem exercise_fin_succ_not_injective
     ¬ Injective f := by
   sorry
 
-theorem exercise_infinite_transport
+theorem exercise_infinite_transport {A B : Type}
     (hA : IsInfinite A)
     (hAB : cardinal A = cardinal B) :
     IsInfinite B := by
   sorry
 
-theorem exercise_cardinal_product
+theorem exercise_cardinal_product {A B : Type} {m n : Nat}
     (hA : cardinal A = m)
     (hB : cardinal B = n) :
     cardinal (A × B) = m * n := by

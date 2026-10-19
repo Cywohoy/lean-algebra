@@ -6,7 +6,6 @@ import AlgebraBook.Tactic.Auto
 open Ample
 open scoped Ample.Auto Classical
 namespace Exercises.Preliminaries
-variable {A B C : Type} {m n : Nat}
 local infix:50 (priority := high) " ∣ " => Divides
 local notation:50 a " ≡ " b " [ZMOD " n "]" => Congruent n a b
 theorem exercise_one_add_induction

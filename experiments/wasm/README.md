@@ -2,7 +2,8 @@
 
 This experiment runs Lean inside a browser Web Worker. The HTTP server only
 serves static files; proof text is never submitted to a compiler server. The
-published textbook and its normal Lean toolchain are unchanged.
+same transport is used by the published textbook's browser editor; its normal
+native Lean toolchain remains available for local preview and authoring.
 
 ## Matching Lean 4.35 build
 
@@ -24,7 +25,7 @@ not require a downgrade of the book or changes to Ample's source.
 
 The browser suite also tests cross-origin isolation through a COI Service Worker
 on a server without COOP/COEP headers. This is a local feasibility test; the
-experimental runtime has not been deployed on Pages.
+reader-level tests also exercise editing and goal queries under the Pages prefix.
 
 The frontend uses Lean's info trees and `InfoTree.goalsAt?`, rather than guessing
 goals from diagnostics. Coordinates are zero-based UTF-16, as in LSP. Environment
@@ -38,10 +39,10 @@ The initial matching build prioritizes compatibility. Its artifacts are large:
 
 | Artifact | Bytes |
 | --- | ---: |
-| WASM binary | 122,719,823 |
-| JavaScript runtime glue | 130,538 |
-| Library data, including interpreter code | 465,090,684 |
-| Compressed library packs | 178,292,486 |
+| WASM binary | 122,719,317 |
+| JavaScript runtime glue | 130,275 |
+| Library data, including interpreter code | 465,079,324 |
+| Compressed library packs | 178,288,690 |
 
 Library data is split into 29 gzip packs with SHA-256 and decoded-size checks.
 Only Init is loaded at startup; the remaining libraries are loaded on the first
@@ -80,11 +81,19 @@ network APIs.
 
 The adapter rechecks the entire file and caches imported environments. It does
 not implement incremental LSP sessions, completion, hover, interruption, or a
-long-running memory policy. Its textarea is separate from the book's editor.
-Before public integration, the main work is import/memory profiling, smaller
-library loading, persistent caching, and the remaining editor interfaces. The
-matching runtime removes version incompatibility; it does not yet establish
-acceptable download size or mobile performance for readers.
+long-running memory policy. The remaining work includes smaller downloads,
+persistent caching, mobile profiling, and the remaining editor interfaces.
+
+The browser build uses `EXIT_RUNTIME=0`: the Worker owns the runtime lifetime.
+With CLI-style cleanup enabled, a pthread mailbox callback could close standard
+output between a successful compilation and the next goal query.
+`tests/BrowserReader.Tests.cjs` covers successive requests through the real reader.
+The runtime is distributed as a checksum-pinned release archive; binaries stay
+outside Git. `scripts/build_wasm_bundle.py` includes build metadata and licenses.
+`scripts/prepare_pages.py --download-wasm` stages a content-specific runtime path
+and translates book-only imports. The published reader loads it on first edit.
+Completion still uses the local language server and is not advertised in the
+browser-only editor.
 
 ## Reproduce the matching build
 

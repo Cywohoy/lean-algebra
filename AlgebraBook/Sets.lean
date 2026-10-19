@@ -1043,8 +1043,8 @@ $`T`에 속하는 경우에는 $`S\cap T`에 속하고 $`U`에 속하는 경우�
 두 경우 모두 $`S`에 속하고 $`T\cup U`에도 속하므로 왼쪽 집합의 원소이다.
 
 ```savedLean
-example
-    {A : Type} (S T U : Set A) :
+example {A : Type}
+     (S T U : Set A) :
     S ∩ (T ∪ U) = (S ∩ T) ∪ (S ∩ U) := by
   -- 각 원소에서 두 집합의 원소 조건이 동치임을 보인다.
   ext x
@@ -1158,8 +1158,8 @@ postfix:max "ᶜ" => Complement.complement
 *보기* 한 원소가 $`S`와 그 여집합에 모두 속한다고 가정하면 모순이다.
 
 ```savedLean
-example
-    {A : Type} (S : Set A) (x : A)
+example {A : Type}
+     (S : Set A) (x : A)
     (hx : x ∈ S)
     (hxc : x ∈ Sᶜ) :
     False := by
@@ -1294,8 +1294,8 @@ Lean의 정리 `Classical.not_not`는 `¬¬ P ↔ P`의 증명이므로
 같은 포함 관계를 이중 부정 제거 정리로 증명하면 다음과 같다.
 
 ```savedLean
-example
-    {A : Type} (S : Set A) :
+example {A : Type}
+     (S : Set A) :
     Sᶜᶜ ⊆ S := by
   intro x hxScc
   apply Classical.not_not.mp
@@ -1313,8 +1313,8 @@ Lean에서는 `by_contra`로 귀류법을 시작할 수 있다.
 `False`를 새 목표로 삼아 이 귀류법을 시작한다.
 
 ```savedLean
-example
-    {A : Type} (S : Set A) :
+example {A : Type}
+     (S : Set A) :
     Sᶜᶜ ⊆ S := by
   intro x hxScc
   by_contra hxNotS
@@ -1369,8 +1369,8 @@ open scoped Classical
 ```
 
 ```savedLean
-example
-    {A : Type} (S : Set A) :
+example {A : Type}
+     (S : Set A) :
     Sᶜᶜ ⊆ S := by
   intro x hxScc
   expand at hxScc

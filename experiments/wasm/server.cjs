@@ -50,13 +50,17 @@ async function createServer({isolate = true, basePath = '/'} = {}) {
       }
       let root = __dirname;
       let relative = route.slice(1) || 'index.html';
+      if (route === '/lean-wasm.js') { root = path.resolve(__dirname, '../../assets/web'); relative = 'lean-wasm.js'; }
       if (route === '/upstream-worker.js') { root = path.join(upstream, 'public'); relative = 'lean-worker-persistent.worker.js'; }
       else if (route === '/coi-serviceworker.js') { root = path.resolve(upstream, '../coi-serviceworker'); relative = 'coi-serviceworker.js'; }
       else if (route.startsWith('/runtime/')) {
         root = process.env.LEAN_WASM_RUNTIME ? path.resolve(process.env.LEAN_WASM_RUNTIME)
           : path.join(artifacts, fs.existsSync(path.join(artifacts, 'runtime/lean.js')) ? 'runtime' : 'bin'); relative = route.slice(9);
       }
-      else if (packRoot && route.startsWith('/packs/')) { root = packRoot; relative = route.slice(7); }
+      else if (packRoot && route.startsWith('/packs/')) {
+        root = fs.existsSync(path.join(packRoot, 'packs')) ? path.join(packRoot, 'packs') : packRoot;
+        relative = route.slice(7);
+      }
       else if (probeNative && route === '/library/Ample/Tactic/Classical.olean') {
         root = path.dirname(nativeModule); relative = path.basename(nativeModule);
       } else if (route.startsWith('/library/')) {

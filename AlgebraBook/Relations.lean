@@ -28,7 +28,6 @@ open scoped Classical
 
 ```savedLean
 namespace Ample
-variable {A B C : Type} {m n : Nat}
 local infixr:90 (priority := high) " ∘ " => compose
 ```
 
@@ -719,7 +718,7 @@ file := "exercises"
 *문제 1* 모든 원소는 자신의 동치류에 속함을 증명하라.
 
 ```savedLean -keep
-theorem exercise_mem_own_equivalenceClass
+theorem exercise_mem_own_equivalenceClass {A : Type}
     (R : Relation A)
     (hR : IsEquivalence R)
     (a : A) :
@@ -731,7 +730,8 @@ theorem exercise_mem_own_equivalenceClass
 *문제 2* 함수 $`f:A\to B`에 대하여 $`f(x)=f(y)`로 정한 관계가 동치관계임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_equal_values_equivalence (f : A → B) :
+theorem exercise_equal_values_equivalence {A B : Type}
+    (f : A → B) :
     IsEquivalence (fun x y : A => f x = f y) := by
   sorry
 ```
@@ -740,7 +740,7 @@ theorem exercise_equal_values_equivalence (f : A → B) :
 *문제 3* 동치관계 $`R`에 대하여 $`[a]_R=[b]_R`이면 $`R(a,b)`임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_relation_of_classes_equal
+theorem exercise_relation_of_classes_equal {A : Type}
     (R : Relation A)
     (hR : IsEquivalence R)
     (a b : A)
@@ -796,7 +796,7 @@ theorem exercise_vertical_class :
 (3) 앞의 두 결과를 사용하여 두 동치류가 같음을 보이라.
 
 ```savedLean -keep
-theorem exercise_classes_of_common_element
+theorem exercise_classes_of_common_element {A : Type}
     (R : Relation A)
     (hR : IsEquivalence R)
     (a b : A)

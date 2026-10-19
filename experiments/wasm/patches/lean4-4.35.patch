@@ -1,5 +1,5 @@
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 855b2a8ad1..c5b18c82a0 100644
+index 855b2a8..1e8f5ad 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
 @@ -113,6 +113,15 @@ option(FORCE_GMP "Build against the available GMP even if older than the require
@@ -91,7 +91,7 @@ index 855b2a8ad1..c5b18c82a0 100644
  endif()
  
  # Added for CTest
-@@ -908,9 +967,29 @@ if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
+@@ -908,9 +967,31 @@ if(CMAKE_SYSTEM_NAME MATCHES "Emscripten")
    # We set `ERROR_ON_UNDEFINED_SYMBOLS=0` because our build of LibUV does not
    # define all symbols, see the comment about LibUV on WebAssembly further up
    # in this file.
@@ -106,6 +106,8 @@ index 855b2a8ad1..c5b18c82a0 100644
 +  # just interpreted instead of native. This replaces MAIN_MODULE=1 +
 +  # LINKABLE=1 + EXPORT_ALL=1, whose ~230k-entry export table dominated the
 +  # glue JS and blocked all DCE (WebKit on iPhone dies compiling the result).
++  # The browser host owns the runtime lifetime. EXIT_RUNTIME=0 keeps filesystem
++  # and stdout alive when a pthread mailbox callback finishes between editor requests.
 +  # PTHREAD_POOL_SIZE pre-spawns worker threads so Lean can create threads without
 +  # the main thread blocking (Emscripten can't spawn a worker synchronously); 4
 +  # matched the working 4.28 build. STACK_SIZE=16MB covers whatever import work
@@ -118,11 +120,11 @@ index 855b2a8ad1..c5b18c82a0 100644
    string(
      APPEND LEAN_EXE_LINKER_FLAGS
 -    " ${LIB}/temp/libleanshell.a ${TOOLCHAIN_STATIC_LINKER_FLAGS} ${EMSCRIPTEN_SETTINGS} -lnodefs.js -s EXIT_RUNTIME=1 -s MAIN_MODULE=1 -s LINKABLE=1 -s EXPORT_ALL=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0"
-+    " ${LIB}/temp/libleanshell.a ${TOOLCHAIN_STATIC_LINKER_FLAGS} ${EMSCRIPTEN_SETTINGS} ${EMSCRIPTEN_LINK_SETTINGS} -lnodefs.js -s EXIT_RUNTIME=1 -s MAIN_MODULE=2 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -sEXPORTED_FUNCTIONS=@${CMAKE_BINARY_DIR}/emscripten-exports.txt -sEXPORTED_RUNTIME_METHODS=ccall,callMain,FS,ENV,getValue,setValue,stringToNewUTF8,UTF8ToString -s STACK_SIZE=16777216 -sINITIAL_MEMORY=67108864 -sMAXIMUM_MEMORY=4294967296 -sPTHREAD_POOL_SIZE=4"
++    " ${LIB}/temp/libleanshell.a ${TOOLCHAIN_STATIC_LINKER_FLAGS} ${EMSCRIPTEN_SETTINGS} ${EMSCRIPTEN_LINK_SETTINGS} -lnodefs.js -s EXIT_RUNTIME=0 -s MAIN_MODULE=2 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -sEXPORTED_FUNCTIONS=@${CMAKE_BINARY_DIR}/emscripten-exports.txt -sEXPORTED_RUNTIME_METHODS=ccall,callMain,FS,ENV,getValue,setValue,stringToNewUTF8,UTF8ToString -s STACK_SIZE=16777216 -sINITIAL_MEMORY=67108864 -sMAXIMUM_MEMORY=4294967296 -sPTHREAD_POOL_SIZE=4"
    )
  endif()
  
-@@ -1140,8 +1219,15 @@ endif()
+@@ -1140,8 +1221,15 @@ endif()
  
  # use Bash version for building, use Lean version in bin/ for tests & distribution
  configure_file("${LEAN_SOURCE_DIR}/bin/leanc.in" "${CMAKE_BINARY_DIR}/leanc.sh" @ONLY)
@@ -140,7 +142,7 @@ index 855b2a8ad1..c5b18c82a0 100644
      leanc
      ALL
 diff --git a/src/Lean/Elab/Frontend.lean b/src/Lean/Elab/Frontend.lean
-index 8ec4fec208..3c116cc45d 100644
+index 8ec4fec..3c116cc 100644
 --- a/src/Lean/Elab/Frontend.lean
 +++ b/src/Lean/Elab/Frontend.lean
 @@ -266,6 +266,22 @@ private def setMainModule (snap : Language.Lean.InitialSnapshot) (m : Name) :
@@ -193,7 +195,7 @@ index 8ec4fec208..3c116cc45d 100644
      Runtime.forget compactor
  
 diff --git a/src/Lean/Elab/Import.lean b/src/Lean/Elab/Import.lean
-index 1335a89776..a3908ba93a 100644
+index 1335a89..a3908ba 100644
 --- a/src/Lean/Elab/Import.lean
 +++ b/src/Lean/Elab/Import.lean
 @@ -11,6 +11,7 @@ meta import Lean.Parser.Module
@@ -227,7 +229,7 @@ index 1335a89776..a3908ba93a 100644
      let env ←
        importModules (leakEnv := leakEnv) (loadExts := true) (level := level)
 diff --git a/src/Lean/Environment.lean b/src/Lean/Environment.lean
-index ee36b8e4fc..951c907d05 100644
+index ee36b8e..951c907 100644
 --- a/src/Lean/Environment.lean
 +++ b/src/Lean/Environment.lean
 @@ -22,6 +22,7 @@ public import Lean.PrivateName
@@ -325,7 +327,7 @@ index ee36b8e4fc..951c907d05 100644
        throw <| IO.userError s!"missing data file for module {mod.module}"
      return data
 diff --git a/src/Lean/Shell.lean b/src/Lean/Shell.lean
-index 192d972d2b..0b816aa2d7 100644
+index 192d972..0b816aa 100644
 --- a/src/Lean/Shell.lean
 +++ b/src/Lean/Shell.lean
 @@ -14,6 +14,8 @@ import Lean.Compiler.LCNF.EmitC
@@ -492,7 +494,7 @@ index 192d972d2b..0b816aa2d7 100644
  @[extern "lean_internal_has_address_sanitizer"]
  opaque Internal.hasAddressSanitizer (_ : Unit) : Bool
 diff --git a/src/include/lean/lean.h b/src/include/lean/lean.h
-index 32f869d274..d27762ceed 100644
+index 32f869d..d27762c 100644
 --- a/src/include/lean/lean.h
 +++ b/src/include/lean/lean.h
 @@ -3498,7 +3498,12 @@ static inline lean_obj_res lean_runtime_hold(b_lean_obj_arg a) {
@@ -510,7 +512,7 @@ index 32f869d274..d27762ceed 100644
  #else
  #define LEAN_SCALAR_PTR_LITERAL(b1, b2, b3, b4, b5, b6, b7, b8) (lean_object*)((uint64_t)b1 | ((uint64_t)b2 << 8) | ((uint64_t)b3 << 16) | ((uint64_t)b4 << 24) | ((uint64_t)b5 << 32) | ((uint64_t)b6 << 40) | ((uint64_t)b7 << 48) | ((uint64_t)b8 << 56))
 diff --git a/src/library/ir_interpreter.cpp b/src/library/ir_interpreter.cpp
-index c1912d98ca..ba0678d770 100644
+index c1912d9..ba0678d 100644
 --- a/src/library/ir_interpreter.cpp
 +++ b/src/library/ir_interpreter.cpp
 @@ -1200,7 +1200,7 @@ extern "C" LEAN_EXPORT obj_res lean_run_mod_init_core(b_obj_arg  sym) {
@@ -523,7 +525,7 @@ index c1912d98ca..ba0678d770 100644
          return interp.run_init(TO_REF(name, decl), TO_REF(name, init_decl));
      });
 diff --git a/src/library/module.cpp b/src/library/module.cpp
-index 402e5220e1..e86b9f199a 100644
+index 402e522..e86b9f1 100644
 --- a/src/library/module.cpp
 +++ b/src/library/module.cpp
 @@ -267,7 +267,7 @@ static std::vector<std::pair<size_t, ptrdiff_t>> read_lib_table_from_buffer(char
@@ -554,7 +556,7 @@ index 402e5220e1..e86b9f199a 100644
      size_t full_sz = region_size(region);
      bool is_mmap = lean_ctor_get_uint8(region, sizeof(void*) * 5) != 0;
 diff --git a/src/runtime/compact.cpp b/src/runtime/compact.cpp
-index 73c9a4e187..a3a79f1a3c 100644
+index 73c9a4e..a3a79f1 100644
 --- a/src/runtime/compact.cpp
 +++ b/src/runtime/compact.cpp
 @@ -100,6 +100,15 @@ LEAN_EXPORT std::vector<lib_info> get_loaded_libs() {
@@ -574,7 +576,7 @@ index 73c9a4e187..a3a79f1a3c 100644
      // Linux: use dl_iterate_phdr
      dl_iterate_phdr([](struct dl_phdr_info * info, size_t, void * data) -> int {
 diff --git a/src/runtime/debug.cpp b/src/runtime/debug.cpp
-index ecd5da1bfc..77ea499344 100644
+index ecd5da1..77ea499 100644
 --- a/src/runtime/debug.cpp
 +++ b/src/runtime/debug.cpp
 @@ -146,3 +146,11 @@ extern "C" LEAN_EXPORT void lean_notify_assert(const char * fileName, int line,
@@ -590,7 +592,7 @@ index ecd5da1bfc..77ea499344 100644
 +}
 +#endif
 diff --git a/src/runtime/interrupt.cpp b/src/runtime/interrupt.cpp
-index 4cc6fac154..19df1f5162 100644
+index 4cc6fac..19df1f5 100644
 --- a/src/runtime/interrupt.cpp
 +++ b/src/runtime/interrupt.cpp
 @@ -17,7 +17,7 @@ namespace lean {
@@ -603,7 +605,7 @@ index 4cc6fac154..19df1f5162 100644
      return lean_box(LEAN_DEFAULT_MAX_HEARTBEAT);
  #else
 diff --git a/src/runtime/io.cpp b/src/runtime/io.cpp
-index 422e31c831..e07631bb16 100644
+index 422e31c..e07631b 100644
 --- a/src/runtime/io.cpp
 +++ b/src/runtime/io.cpp
 @@ -1258,7 +1258,7 @@ extern "C" LEAN_EXPORT obj_res lean_io_hard_link(b_obj_arg orig, b_obj_arg link)
@@ -659,7 +661,7 @@ index 422e31c831..e07631bb16 100644
      object * appPathLean = mk_string(appPath);
      free(appPath);
 diff --git a/src/runtime/memory.cpp b/src/runtime/memory.cpp
-index 0a723690f3..3bde0c1436 100644
+index 0a72369..3bde0c1 100644
 --- a/src/runtime/memory.cpp
 +++ b/src/runtime/memory.cpp
 @@ -114,7 +114,7 @@ namespace lean {
@@ -672,7 +674,7 @@ index 0a723690f3..3bde0c1436 100644
      return lean_box(LEAN_DEFAULT_MAX_MEMORY);
  #else
 diff --git a/src/runtime/thread.cpp b/src/runtime/thread.cpp
-index 19bc81212c..d01fa99395 100644
+index 19bc812..d01fa99 100644
 --- a/src/runtime/thread.cpp
 +++ b/src/runtime/thread.cpp
 @@ -22,7 +22,10 @@ Author: Leonardo de Moura
@@ -688,7 +690,7 @@ index 19bc81212c..d01fa99395 100644
  #else
  #define LEAN_DEFAULT_THREAD_STACK_SIZE 1024*1024*1024 // 1GB for 64-bit
 diff --git a/src/runtime/uv/event_loop.cpp b/src/runtime/uv/event_loop.cpp
-index f39848bb5a..58a442bdd9 100644
+index f39848b..58a442b 100644
 --- a/src/runtime/uv/event_loop.cpp
 +++ b/src/runtime/uv/event_loop.cpp
 @@ -139,6 +139,7 @@ void initialize_libuv_loop() {
@@ -700,7 +702,7 @@ index f39848bb5a..58a442bdd9 100644
  /* Std.Internal.UV.Loop.configure (options : Loop.Options) : BaseIO Unit */
  extern "C" LEAN_EXPORT lean_obj_res lean_uv_event_loop_configure(b_obj_arg options) {
 diff --git a/src/runtime/uv/system.cpp b/src/runtime/uv/system.cpp
-index f81561e1bb..232f41e38b 100644
+index f81561e..232f41e 100644
 --- a/src/runtime/uv/system.cpp
 +++ b/src/runtime/uv/system.cpp
 @@ -633,7 +633,7 @@ extern "C" LEAN_EXPORT lean_obj_res lean_uv_os_get_passwd() {
@@ -713,7 +715,7 @@ index f81561e1bb..232f41e38b 100644
          false && ("Please build a version of Lean4 with libuv to invoke this.")
      );
 diff --git a/src/stdlib.make.in b/src/stdlib.make.in
-index 9b562738bd..89e2dfed34 100644
+index 9b56273..89e2dfe 100644
 --- a/src/stdlib.make.in
 +++ b/src/stdlib.make.in
 @@ -194,6 +194,9 @@ lake: $(OUTBIN)/lake$(EXE)
@@ -727,7 +729,7 @@ index 9b562738bd..89e2dfed34 100644
  
  lean: $(OUTBIN)/lean$(EXE)
 diff --git a/src/util/io.h b/src/util/io.h
-index c648a52d1a..faef5f0800 100644
+index c648a52..faef5f0 100644
 --- a/src/util/io.h
 +++ b/src/util/io.h
 @@ -51,4 +51,15 @@ template<typename T> T get_io_scalar_result(object * o) {
@@ -747,7 +749,7 @@ index c648a52d1a..faef5f0800 100644
 +
  }
 diff --git a/src/util/shell.cpp b/src/util/shell.cpp
-index 29b859887e..0bcec4f62b 100644
+index 29b8598..0bcec4f 100644
 --- a/src/util/shell.cpp
 +++ b/src/util/shell.cpp
 @@ -215,7 +215,7 @@ int run_shell_main(int argc, char* argv[], object_ref const & shell_opts) {
@@ -769,7 +771,7 @@ index 29b859887e..0bcec4f62b 100644
          return true;
      }
 diff --git a/stage0/src/include/lean/lean.h b/stage0/src/include/lean/lean.h
-index 32f869d2740de59bd52b1e4108904d1a1fad1aa1..139e22793379ef981ae12856b96f07c5db2575a9 100644
+index 32f869d..139e227 100644
 --- a/stage0/src/include/lean/lean.h
 +++ b/stage0/src/include/lean/lean.h
 @@ -3498,7 +3498,7 @@ static inline lean_obj_res lean_runtime_hold(b_lean_obj_arg a) {
@@ -782,7 +784,7 @@ index 32f869d2740de59bd52b1e4108904d1a1fad1aa1..139e22793379ef981ae12856b96f07c5
  #else
  #define LEAN_SCALAR_PTR_LITERAL(b1, b2, b3, b4, b5, b6, b7, b8) (lean_object*)((uint64_t)b1 | ((uint64_t)b2 << 8) | ((uint64_t)b3 << 16) | ((uint64_t)b4 << 24) | ((uint64_t)b5 << 32) | ((uint64_t)b6 << 40) | ((uint64_t)b7 << 48) | ((uint64_t)b8 << 56))
 diff --git a/stage0/src/runtime/thread.cpp b/stage0/src/runtime/thread.cpp
-index 19bc81212c438206a3e0be08028c62aedc8e5e40..e99dce98c5d8a3dfa314bf803399c0540b3b0125 100644
+index 19bc812..e99dce9 100644
 --- a/stage0/src/runtime/thread.cpp
 +++ b/stage0/src/runtime/thread.cpp
 @@ -22,7 +22,7 @@ Author: Leonardo de Moura
@@ -795,7 +797,7 @@ index 19bc81212c438206a3e0be08028c62aedc8e5e40..e99dce98c5d8a3dfa314bf803399c054
  #else
  #define LEAN_DEFAULT_THREAD_STACK_SIZE 1024*1024*1024 // 1GB for 64-bit
 diff --git a/stage0/src/util/io.h b/stage0/src/util/io.h
-index c648a52d1a583c6868ebc237460e56499cd1ff7d..faef5f0800d49207e6a9a2fee06d7a8997bcd9f2 100644
+index c648a52..faef5f0 100644
 --- a/stage0/src/util/io.h
 +++ b/stage0/src/util/io.h
 @@ -51,4 +51,15 @@ template<typename T> T get_io_scalar_result(object * o) {
@@ -815,7 +817,7 @@ index c648a52d1a583c6868ebc237460e56499cd1ff7d..faef5f0800d49207e6a9a2fee06d7a89
 +
  }
 diff --git a/stage0/src/util/shell.cpp b/stage0/src/util/shell.cpp
-index 29b859887e2ca380b30216242fa02c95f291cb1a..0bcec4f62b391a86f7a660134111be71e1f106ac 100644
+index 29b8598..0bcec4f 100644
 --- a/stage0/src/util/shell.cpp
 +++ b/stage0/src/util/shell.cpp
 @@ -215,7 +215,7 @@ int run_shell_main(int argc, char* argv[], object_ref const & shell_opts) {

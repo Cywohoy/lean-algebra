@@ -1,0 +1,8 @@
+{
+  "sha256": "b6e6fc7932736c1f0f79d38df2482629e5534827256d20defc22fc6761ce1e37",
+  "bytes": 198364803,
+  "ampleCommit": "8e1f77983e4ba2d02bd59c666539e1a2b0ea731c",
+  "schemaVersion": 1,
+  "leanVersion": "4.35.0",
+  "url": "https://github.com/Cywohoy/lean-algebra/releases/download/wasm-4.35.0-ample-8e1f779-r2/lean-browser-4.35.0-ample-8e1f779-r2.tar.gz"
+}

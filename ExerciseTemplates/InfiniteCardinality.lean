@@ -6,11 +6,10 @@ import AlgebraBook.Tactic.Auto
 open Ample
 open scoped Ample.Auto Classical
 namespace Exercises.InfiniteCardinality
-variable {A B C : Type} {m n : Nat}
 
 -- Advanced 보조정리, 문제 1: 무한집합 A로 가는 단사함수 f : Fin n → A가 주어졌다고 하자.
 -- f의 상에 속하지 않는 원소가 A에 존재함을 증명하라.
-theorem fresh_element_exists
+theorem fresh_element_exists {A : Type} {n : Nat}
     (hA : IsInfinite A)
     (f : Fin n → A)
     (hf : Injective f) :
@@ -19,19 +18,19 @@ theorem fresh_element_exists
 
 -- Advanced 보조정리, 문제 2: 무한집합 A의 유한한 목록에 새 원소를 하나 덧붙여
 -- 기존 번호의 함수값을 보존하는 목록을 만들 수 있음을 증명하라.
-theorem finite_listing_extension
+theorem finite_listing_extension {A : Type} {n : Nat}
     (hA : IsInfinite A)
     (s : FiniteListing A n) :
     ∃ t : FiniteListing A (n + 1),
       ∀ i : Fin n, t.val i.castSucc = s.val i := by
   sorry
 
-theorem exercise_from_two_countably_infinite :
+theorem exercise_from_two_countably_infinite {n : Nat} :
     IsCountablyInfinite
     (Elem (fun n : Nat => 2 ≤ n)) := by
   sorry
 
-theorem exercise_powerSet_inter (S T : Set A) :
+theorem exercise_powerSet_inter {A : Type} (S T : Set A) :
     powerSet (S ∩ T) = powerSet S ∩ powerSet T := by
   sorry
 
@@ -73,12 +72,13 @@ theorem exercise_nat_pairs_infinite :
 -- (2) 반대 방향도 증명하여 이 두 포함 관계가 동치임을 보이라.
 -- (3) 첫 결과와 twoThree_subset_positives를 사용하여
 -- \mathcal{P}(\{2,3\})\subseteq\mathcal{P}(\mathbb{N}_{>0})임을 보이라.
-theorem exercise_powerSet_mono (S T : Set A)
+theorem exercise_powerSet_mono {A : Type} (S T : Set A)
     (hST : S ⊆ T) :
     powerSet S ⊆ powerSet T := by
   sorry
 
-theorem exercise_powerSet_subset_iff (S T : Set A) :
+theorem exercise_powerSet_subset_iff {A : Type}
+    (S T : Set A) :
     powerSet S ⊆ powerSet T ↔ S ⊆ T := by
   sorry
 
