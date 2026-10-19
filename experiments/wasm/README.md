@@ -1,112 +1,208 @@
-# Browser Lean feasibility experiment
+# Browser Lean experiment
 
-This directory tests browser-side compilation separately from the published book.
-It does not change the book's Lean toolchain, add a server backend, or enable a
-partially compatible editor on GitHub Pages. The HTTP server serves static files
-on loopback; all proof checking runs inside a browser Web Worker.
+This experiment runs Lean inside a browser Web Worker. The HTTP server only
+serves static files; proof text is never submitted to a compiler server. The
+published textbook and its normal Lean toolchain are unchanged.
 
-## Result: 20 October 2026
+## Matching Lean 4.35 build
 
-Tested in desktop Chrome with the pinned runtime below, using both ordinary
-COOP/COEP response headers and a Service Worker on a server without those headers.
+The experiment builds Lean 4.35.0 for WASM, rebuilds all 44 public Ample modules
+with a matching native 32-bit compiler, and executes Ample in Chrome. It does
+not require a downgrade of the book or changes to Ample's source.
 
-| Probe | Observed result |
+| Check | Result |
 | --- | --- |
-| `intro`, `apply`, `exact` | Accepted a complete implication proof |
-| Arithmetic | Accepted `2 * n ≠ 5` using the runtime's built-in `omega` |
-| Textbook mathematics | Accepted the actual `Set`, membership, `Subset`, and `subset_trans` source extracted from Ample |
-| False equality | Rejected `2 + 2 = 5` proved by `rfl` |
-| Incomplete proof | Reported `P Q : Prop`, `hp : P`, and goal `Q` |
-| Explicit proof-state trace | Returned assumptions and goal at `trace_state` |
-| User-defined tactic macro | Defined and executed `finish_trivial` in the submitted source |
-| `import Lean` | Failed: the minimal downloaded fixture contains only the Init library closure |
-| Existing Ample build | Rejected `Ample.Tactic.Classical.olean` with `incompatible header` |
-| Isolation without server headers | The pinned COI Service Worker changed `crossOriginIsolated` from false to true; the same compiler probes then ran |
+| Core proofs | `intro`, `apply`, `exact`, a tactic macro, and the actual subset-transitivity source run successfully |
+| Invalid proof | `rfl` rejects `2 + 2 = 5` |
+| Imports | `import Lean`, `import Ample.Tactic.Classical`, and `import Ample` succeed |
+| Ample tactics | `by_contra`, `arith`, `expand`, `ext`, `indisc`, and `card` execute successfully |
+| Automatic normalization | `open scoped Ample.Auto` works in the browser |
+| Cursor queries | Show assumptions and goals before and after tactics, including an empty `by` block and a completed proof |
+| Editing | Automatically checks after edits; distinguishes an unfinished proof and `sorry` from a completed proof |
+| Matching native regressions | All 39 existing Ample regression files pass on the native 32-bit toolchain |
+| Frontend regressions | Ten checks cover cursor positions, UTF-16, module headers, errors, placeholders, and Ample proof states |
 
-The last two import failures are compatibility boundaries, not successful Ample
-tests. No complete Ample tactic module has been rebuilt or executed in this
-experiment. The mathematical-source probe uses core tactics; it does not test
-`arith`, `ext`, `indisc`, `expand`, or automatic normalization.
+The browser suite also tests cross-origin isolation through a COI Service Worker
+on a server without COOP/COEP headers. This is a local feasibility test; the
+experimental runtime has not been deployed on Pages.
 
-The tested compiler Worker exposes compilation and diagnostic messages. This
-adapter does not implement the book editor's cursor-based goal queries, hover,
-completion, cancellation, or incremental LSP/RPC session. An unsolved-goal
-diagnostic or a manually inserted `trace_state` is not a replacement for those
-features.
+The frontend uses Lean's info trees and `InfoTree.goalsAt?`, rather than guessing
+goals from diagnostics. Coordinates are zero-based UTF-16, as in LSP. Environment
+caches distinguish ordinary files from `module` files and retain full import
+specifications. Treating an ordinary Ample import as a `module` import would
+be rejected by Lean 4.35.
 
-Local boot, including the first Init import, took about 2.5–4 seconds. These tiny
-proofs subsequently took about 4–150 milliseconds. This was a desktop loopback
-test, not a cold internet download or a mobile benchmark. The full WASM binary
-is 100,838,905 bytes, and the Init library fixture is 79,760,876 bytes before
-transport compression. The upstream Worker initially requests a 2 GiB shared
-WebAssembly memory on desktop; this is not a measurement of resident RAM.
+## Performance and remaining work
 
-## Compatibility decision
+The initial matching build prioritizes compatibility. Its artifacts are large:
 
-Browser execution is feasible, but this runtime is not a drop-in replacement for
-the current Lean 4.35 editor. The downloaded fork is based on Lean 4.33 and uses
-32-bit WASM library artifacts. The existing Ample artifacts use the native
-64-bit Lean 4.35 toolchain. They cannot be mixed; the observed header rejection
-does not isolate version mismatch from word-size mismatch.
+| Artifact | Bytes |
+| --- | ---: |
+| WASM binary | 122,719,823 |
+| JavaScript runtime glue | 130,538 |
+| Library data, including interpreter code | 465,090,684 |
+| Compressed library packs | 178,292,486 |
 
-Further WASM integration should proceed in this order:
+Library data is split into 29 gzip packs with SHA-256 and decoded-size checks.
+Only Init is loaded at startup; the remaining libraries are loaded on the first
+explicit import. This version does not compute a minimal closure per import.
 
-1. Build a WASM Lean and its matching Init/Std/Lean libraries for the book's
-   pinned version, or evaluate a deliberate version migration separately.
-2. Rebuild Ample for that exact toolchain, including the interpreter artifacts
-   and initialization support required by its metaprogramming code. Run the
-   existing tactic and proof-state regressions against the result.
-3. Implement the editor's goal, hover, completion, interruption, and diagnostic
-   interfaces. Preserve the distinction between an incomplete proof and an
-   invalid proof.
-4. Measure cold downloads, memory, caching, and mobile behavior. Validate the
-   isolated experiment under the actual `/lean-algebra/` GitHub Pages prefix;
-   the Service Worker test here uses localhost, not the deployed site.
+Profiling found that Emscripten 4.0.22 enumerated roughly 228,000 exports on
+every dynamic symbol lookup, including failed lookups and functions already
+registered in the WASM table. This accounted for almost all of a 61–63 second
+boot. `optimize-runtime.py` moves that enumeration into the one branch that
+needs its index: registering a new table function for pthread catch-up. It
+preserves the index protocol and does not assume that exports never change.
+Unexpected SDK output fails the transform rather than receiving a guessed edit.
+`runtime-tests.cjs` checks missing, non-enumerable, inherited, stub, data, existing,
+new, and subsequently appended exports against the actual generated function.
 
-If matching-toolchain builds or editor support require substantial maintenance,
-the next alternatives remain a Lean server connected to the book editor, or
-Codespaces with the existing project and toolchain. Neither is provisioned by
-this experiment.
+After that change, a fresh Chrome context on loopback produced these timings:
 
-## Reproduction
+| Stage | Observed time |
+| --- | ---: |
+| Boot, including initial library transfer and Init import | 4.04 seconds |
+| First `import Lean`, including remaining library transfer | 2.65 seconds |
+| First `import Ample` and arithmetic proof | 0.90 seconds |
+| Later Ample proof checks | 10–19 milliseconds |
 
-Requirements: Node, Git, tar, Chrome, Playwright, and the sibling Ample checkout
-with its native `Ample.Tactic.Classical` build. Run from the Textbook root.
-The scripts use a regular `playwright` installation; in this workspace they can
-also find the bundled runtime installation. Binary downloads and generated
-reports stay under ignored `tmp/wasm/`.
+The whole proof suite, cursor queries, and automatic checking pass after the
+optimization, including the Service Worker path under `/lean-algebra/wasm/`.
+These are local desktop observations, not internet or mobile benchmarks. The
+complete current payload is still about 301 MB before compressing the WASM
+binary; cold network transfer remains an important deployment concern.
 
-```text
+The upstream Worker reserves 2 GiB of shared WASM memory on desktop. This is a
+virtual-memory configuration, not a resident-RAM measurement. Mobile behavior
+and memory exhaustion have not been validated. Some LibUV networking functions
+are unavailable; these proofs do not establish support for arbitrary OS or
+network APIs.
+
+The adapter rechecks the entire file and caches imported environments. It does
+not implement incremental LSP sessions, completion, hover, interruption, or a
+long-running memory policy. Its textarea is separate from the book's editor.
+Before public integration, the main work is import/memory profiling, smaller
+library loading, persistent caching, and the remaining editor interfaces. The
+matching runtime removes version incompatibility; it does not yet establish
+acceptable download size or mobile performance for readers.
+
+## Reproduce the matching build
+
+The tested environment is x86 Linux in WSL, with a native 32-bit bootstrap and
+Emscripten **4.0.22**. Keep the build cache on the Linux filesystem. Generated
+artifacts belong in the isolated cache and ignored `tmp/wasm/`, not Ample's
+normal Lake output. Expect a large build and several gigabytes of temporary
+files.
+
+On the tested Ubuntu installation the native dependencies were `build-essential`,
+`clang`, `cmake`, `ninja-build`, `gcc-multilib`, `g++-multilib`,
+`libuv1-dev:i386`, `libssl-dev:i386`, `pkg-config`, `python3`, `git`, `curl`,
+`ca-certificates`, `xz-utils`, and `zstd`, with i386 enabled. Browser checks need
+Node.js, Playwright, and desktop Chrome; build scripts need Python 3.10 or newer.
+Run from Textbook in Linux/WSL. The sibling Ample checkout should match the book's
+pinned Ample version.
+
+```bash
+export AMPLE_WASM_ROOT="$HOME/.cache/ample-wasm"
+mkdir -p "$AMPLE_WASM_ROOT"
+git clone https://github.com/emscripten-core/emsdk.git "$AMPLE_WASM_ROOT/emsdk"
+git -C "$AMPLE_WASM_ROOT/emsdk" checkout 3b3963d86a5c97adaf6eaa845cdfe0b811c2f960
+"$AMPLE_WASM_ROOT/emsdk/emsdk" install 4.0.22
+"$AMPLE_WASM_ROOT/emsdk/emsdk" activate 4.0.22
+bash experiments/wasm/build-toolchain.sh
+
+LEAN_SOURCE="$AMPLE_WASM_ROOT/lean4-4.35"
+python3 experiments/wasm/build-ample.py \
+  --lean "$LEAN_SOURCE/build/wasm/stage0/bin/lean" \
+  --lean-lib "$LEAN_SOURCE/build/wasm/stage1/lib/lean" \
+  --ample ../Ample --output "$AMPLE_WASM_ROOT/ample-4.35/lib/lean"
+python3 experiments/wasm/verify-native.py \
+  --lean "$LEAN_SOURCE/build/wasm/stage0/bin/lean" \
+  --lean-lib "$LEAN_SOURCE/build/wasm/stage1/lib/lean" \
+  --ample ../Ample --output "$AMPLE_WASM_ROOT/ample-4.35/lib/lean"
+python3 experiments/wasm/pack-library.py \
+  --lean-lib "$LEAN_SOURCE/build/wasm/stage1/lib/lean" \
+  --ample-lib "$AMPLE_WASM_ROOT/ample-4.35/lib/lean" \
+  --output tmp/wasm/packs435
+```
+
+`build-toolchain.sh` checks the official Lean base commit, applies the port
+without resetting other files, installs the frontend, and builds the native
+32-bit bootstrap and WASM stage1. It uses the make-based stdlib driver because
+this cross build's Lake bootstrap inherits host C flags. `generate-exports.py`
+derives C exports from the actual linked libraries, including ordinary, runtime,
+and meta initializers. Keeping those initializers avoids duplicate environment
+extension registration. The current export set is conservative, not minimal.
+The build then applies the deferred-index transform to generated glue and runs
+its focused runtime tests. The Emscripten checkout itself is not modified.
+
+Fetch the pinned browser hosts. The matching build needs no old binary fixture:
+
+```bash
 git clone https://github.com/cauli/lean4-wasm-in-browser.git tmp/wasm/upstream
 git -C tmp/wasm/upstream checkout 017c835ecf0ac8c74745a867c65faeac0baf6654
-node tmp/wasm/upstream/tests/fetch-artifacts.mjs
 git clone https://github.com/gzuidhof/coi-serviceworker.git tmp/wasm/coi-serviceworker
 git -C tmp/wasm/coi-serviceworker checkout 7b1d2a092d0d2dd2b7270b6f12f13605de26f214
-node experiments/wasm/browser-tests.cjs
-node experiments/wasm/browser-tests.cjs --service-worker
+
+export LEAN_WASM_ARTIFACTS="$LEAN_SOURCE/build/wasm/stage1"
+export AMPLE_WASM_LIBRARY="$AMPLE_WASM_ROOT/ample-4.35/lib/lean"
+export LEAN_WASM_PACKS="$(pwd)/tmp/wasm/packs435"
+node experiments/wasm/browser-tests.cjs --matching-toolchain
+node experiments/wasm/browser-tests.cjs --matching-toolchain --service-worker
 node experiments/wasm/server.cjs
 ```
 
-The final command prints a local URL for manual editing. Press **Start Lean**,
-then **Check proof**. Diagnostic JSON is intentionally shown directly in this
-developer experiment. The public book does not include this UI.
+The last command prints a local URL. Press **Start Lean**. Edits are checked
+automatically, and clicking in a proof queries its goals. **Check proof** triggers
+an immediate check. If Node runs on Windows with Linux build artifacts, use
+corresponding `\\wsl.localhost\Ubuntu\...` paths for artifact/library variables.
+`LEAN_WASM_RUNTIME` can point to local copies of `lean.js` and `lean.wasm`;
+otherwise the server reads the build's `bin/`.
 
-Reports are written to `tmp/wasm/browser-results.json` and
-`tmp/wasm/browser-results-sw.json`. They include the exact submitted sources,
-diagnostics, timing, and browser version. Non-GET requests fail the test: proof
-text is sent only to the Worker, not to an HTTP compiler endpoint.
+The frontend can also be tested with the book's ordinary native toolchain:
 
-## Upstream pins and licenses
+```text
+lake build Ample
+python experiments/wasm/Frontend.Tests.py
+```
 
-- [Lean WASM experiment](https://github.com/cauli/lean4-wasm-in-browser),
-  commit `017c835ecf0ac8c74745a867c65faeac0baf6654`, Apache-2.0.
-  Its [runtime manifest](https://github.com/cauli/lean4-wasm-in-browser/blob/017c835ecf0ac8c74745a867c65faeac0baf6654/deploy/runtime-release.json)
-  pins Lean commit `62b6a2291302d4bbeace37642a066b7510d0145c` and Emscripten
-  4.0.22. The fixture fetcher verifies archive and runtime SHA-256 checksums.
-- [COI Service Worker](https://github.com/gzuidhof/coi-serviceworker),
-  commit `7b1d2a092d0d2dd2b7270b6f12f13605de26f214`, MIT.
+Reports are saved to `tmp/wasm/browser-results-435.json` and
+`browser-results-435-sw.json`; build records and native regression reports go
+beside the isolated Ample library. Browser reports include sources, diagnostics,
+timings, and browser version. HTTP proof submission fails the test.
+`--project-path` tests under `/lean-algebra/wasm/`.
+`--profile-boot --boot-only` records a Chrome Worker CPU profile and boot report
+without the full proof suite.
 
-The experiment serves upstream files from their checked-out directories without
-modifying or copying them into this repository. Their notices and licenses
-remain in those directories. Retain the notices and applicable licenses if
-these assets are later packaged for public deployment.
+## Historical 4.33 baseline
+
+The previous downloaded fixture ran core proofs but rejected the book's native
+64-bit Lean 4.35 Ample artifacts. It also lacked the Lean library closure and
+cursor queries. Those failures motivated the matching build; do not reuse the
+old fixture as its library.
+
+For that baseline only, unset the four artifact/runtime environment variables,
+run `node tmp/wasm/upstream/tests/fetch-artifacts.mjs`, and invoke
+`browser-tests.cjs` without `--matching-toolchain`. The fixture fetcher checks
+upstream SHA-256 values. The deliberate incompatible-header probe needs a
+normal native build of Ample.
+
+## Pins and licenses
+
+- [Lean 4.35.0](https://github.com/leanprover/lean4/tree/v4.35.0), base commit
+  `eb6cafb7290e8bd5f2937522d8d804f58f02bafc`, Apache-2.0.
+- [cauli's browser port](https://github.com/cauli/lean4), based on changes between
+  `ecf55de08b9d855e749f80c491c6f294dd307e60` and `dfe4953168`, adapted in
+  `patches/lean4-4.35.patch`, Apache-2.0.
+- [Browser Worker](https://github.com/cauli/lean4-wasm-in-browser), commit
+  `017c835ecf0ac8c74745a867c65faeac0baf6654`, Apache-2.0. Its historical fixture
+  pins Lean `62b6a2291302d4bbeace37642a066b7510d0145c` and Emscripten 4.0.22.
+- [COI Service Worker](https://github.com/gzuidhof/coi-serviceworker), commit
+  `7b1d2a092d0d2dd2b7270b6f12f13605de26f214`, MIT.
+- [Emscripten SDK](https://github.com/emscripten-core/emsdk), commit
+  `3b3963d86a5c97adaf6eaa845cdfe0b811c2f960`, SDK 4.0.22.
+
+The port keeps the source's notices; `licenses/Apache-2.0.txt` preserves the
+license. Worker scripts are served from pinned external checkouts without
+copying them into this repository. Retain their notices and licenses when
+packaging assets for deployment.

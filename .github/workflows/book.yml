@@ -42,6 +42,10 @@ jobs:
         run: |
           python tests/AutomationTrace.Tests.py
           python tests/LibraryDocumentation.Tests.py
+      - name: Check browser frontend proof states with native Lean
+        run: |
+          lake build Ample
+          python experiments/wasm/Frontend.Tests.py
       - name: Prepare the static site
         run: |
           python scripts/prepare_pages.py

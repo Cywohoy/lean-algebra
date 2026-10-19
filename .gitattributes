@@ -4,3 +4,5 @@
 *.ttf binary
 *.otf binary
 *.pdf binary
+# Unified diff context markers are data, including spaces on otherwise empty lines.
+experiments/wasm/patches/*.patch -whitespace

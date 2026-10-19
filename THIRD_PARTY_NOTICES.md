@@ -51,3 +51,15 @@ records are retained in the font; `licenses/CascadiaCode-OFL.txt` also applies.
 `web/build_quotient_font.py` reproduces it from the bundled source font using
 fonttools[woff]. This font is used only for the quotient brackets; the rest of
 the code continues to use the original code and math fonts.
+
+The optional browser experiment in `experiments/wasm/` includes a patch against
+[Lean 4.35.0](https://github.com/leanprover/lean4/tree/v4.35.0), based in part on
+the browser port in [cauli/lean4](https://github.com/cauli/lean4) at commit
+`dfe4953168`. Lean and the port are distributed under Apache-2.0; the license is
+preserved in `licenses/Apache-2.0.txt`, and the original file headers remain in
+the patched source checkout. Local changes include the 4.35 adaptation, correct
+32-bit exit-code decoding, an export table generated from the matching build,
+and cursor-goal queries. The experiment uses the upstream browser Worker and
+COI Service Worker from pinned external checkouts; their license notices and
+pins are recorded in `experiments/wasm/README.md`. Those Worker assets are not
+included in the published book.
