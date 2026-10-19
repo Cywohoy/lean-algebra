@@ -11,3 +11,4 @@ Exercises/
 .env
 .env.*
 *.local
+web/wasm-runtime.local.json

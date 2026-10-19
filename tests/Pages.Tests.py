@@ -51,8 +51,14 @@ for page in pages:
 assert (site / '.nojekyll').is_file()
 if 'content="wasm"' in (site / 'index.html').read_text(encoding='utf-8'):
     import json
-    spec = json.loads((root / 'web/wasm-runtime.json').read_text())
-    runtime = site / 'wasm' / spec['sha256'][:16]
+    import re
+    runtime_path = re.search(r'<meta name="lean-wasm-base" content="([^"]+)">',
+                             (site / 'index.html').read_text(encoding='utf-8')).group(1)
+    runtime = site / runtime_path
+    assert runtime.parent == site / 'wasm'
+    metadata = json.loads((runtime / 'runtime.json').read_text())
+    assert metadata['version'] == '4.35.0'
+    assert len(metadata['ampleCommit']) == 40
     assert (runtime / 'runtime/lean.wasm').is_file()
     assert (runtime / 'library.json').is_file()
     assert (runtime / 'licenses/Lean.txt').is_file()

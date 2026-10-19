@@ -27,5 +27,6 @@ shutil.copyfile(HERE / 'generate-exports.py', source / 'script/generate-wasm-exp
 record = {'baseCommit': BASE, 'inputs': {name: hashlib.sha256((HERE / name).read_bytes()).hexdigest()
     for name in ['patches/lean4-4.35.patch', 'Frontend.lean', 'install-frontend.py',
                  'generate-exports.py', 'optimize-runtime.py', 'runtime-tests.cjs', 'build-toolchain.sh']}}
+record['inputs']['worker.js'] = hashlib.sha256((HERE / 'worker.js').read_bytes()).hexdigest()
 (source / '.ample-wasm-port.json').write_text(json.dumps(record, indent=2) + '\n', encoding='utf-8')
 print(f'Prepared isolated Lean browser source: {source}')

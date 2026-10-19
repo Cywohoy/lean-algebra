@@ -83,6 +83,9 @@
 .book-exercise-statement p { margin: .35rem 0; }
 .book-exercise-workspace .book-reader-panel { padding: 0; border: 0; max-width: none; width: 100%; }
 .book-proof-controls { display: flex; gap: 1.2rem; margin: .3rem 0; }
+.book-exercise-support { margin: .6rem 0; }
+.book-exercise-support > summary { cursor: pointer; color: #666; font-size: .9rem; }
+.book-exercise-support[hidden] { display: none; }
 .book-proof-controls[hidden], .book-exercise-declaration[hidden] { display: none; }
 .book-proof-controls .book-button[aria-pressed="true"] { color: #111; text-decoration: underline; text-underline-offset: 4px; }
 .book-exercise-declaration { box-sizing: border-box; padding: 12px 0; margin: 0; border: 0; background: transparent; white-space: pre-wrap; overflow-wrap: anywhere; font: 16px/1.8 var(--verso-code-font-family); }

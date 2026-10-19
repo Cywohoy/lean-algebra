@@ -1,29 +1,40 @@
-// The pilot has explicit, top-level theorem declarations with tactic proofs.
-// Keep their statements immutable in proof mode and preserve the complete draft.
+// Split checked textbook declarations into fixed context and editable tactic proofs.
+// Complete helper definitions remain in place, including between dependent results.
 export function exerciseModel(original, draft = original) {
-  const starts = [...original.matchAll(/^theorem (exercise_\w+)\b/gm)];
-  if (!starts.length) throw new Error('No exercise declarations found.');
-  const parts = starts.map((match, index) => {
-    const text = original.slice(match.index, starts[index + 1]?.index ?? original.length);
+  const declarations = [...original.matchAll(/^(?:(?:noncomputable|private|protected) )*(theorem|lemma|def|example)\b([^\n]*)/gm)];
+  const parts = [];
+  let cursor = 0;
+  for (const [index, match] of declarations.entries()) {
+    const next = declarations[index + 1]?.index ?? original.length;
+    const text = original.slice(match.index, next);
+    if (!/\bsorry\b/.test(text)) continue;
     const boundary = /:= by[^\S\n]*\n/.exec(text);
     if (!boundary) throw new Error('The exercise requires a multiline tactic proof.');
     const end = boundary.index + boundary[0].length;
-    return {name: match[1], header: text.slice(0, end), body: text.slice(end).trimEnd() || '  '};
-  });
+    const raw = text.slice(end);
+    const body = raw.trimEnd();
+    const name = match[1] === 'example' ? `example_${parts.length + 1}` : match[2].trim().split(/\s|[({:]/)[0];
+    parts.push({name, prefix: original.slice(cursor, match.index), header: text.slice(0, end),
+      body: body || '  ', separator: raw.slice(body.length)});
+    cursor = next;
+  }
+  if (!parts.length) throw new Error('No exercise declarations found.');
+  const tail = original.slice(cursor);
   function parse(source) {
     const bodies = [];
     let cursor = 0;
     for (const [index, part] of parts.entries()) {
-      if (!source.startsWith(part.header, cursor)) return null;
-      cursor += part.header.length;
+      const marker = part.prefix + part.header;
+      if (!source.startsWith(marker, cursor)) return null;
+      cursor += marker.length;
       const next = parts[index + 1];
-      const end = next ? source.indexOf('\n' + next.header, cursor) : source.length;
+      const end = next ? source.indexOf(next.prefix + next.header, cursor)
+        : tail ? (source.endsWith(tail) ? source.length - tail.length : -1) : source.length;
       if (end < 0) return null;
       const body = source.slice(cursor, end).trimEnd();
-      // Top-level helpers belong in the complete-code view.
       if (body.split('\n').some(line => line && !/^\s|^--/.test(line))) return null;
       bodies.push(body || '  ');
-      cursor = end + (next ? 1 : 0);
+      cursor = end;
     }
     return bodies;
   }
@@ -32,10 +43,11 @@ export function exerciseModel(original, draft = original) {
     parts, parse, bodies: bodies || parts.map(part => part.body), full: !bodies,
     editorBody(body) { return body.split('\n').map(line => line.startsWith('  ') ? line.slice(2) : line).join('\n'); },
     sourceBody(body) { return body.split('\n').map(line => '  ' + line).join('\n'); },
-    source(values) { return parts.map((part, i) => part.header + values[i]).join('\n\n'); },
+    source(values) { return parts.map((part, i) => part.prefix + part.header + values[i] + part.separator).join('') + tail; },
     start(values, index) {
-      return parts.slice(0, index).reduce((n, part, i) => n + part.header.length + values[i].length + 2, 0)
-        + parts[index].header.length;
+      return parts.slice(0, index).reduce((n, part, i) =>
+        n + part.prefix.length + part.header.length + values[i].length + part.separator.length, 0)
+        + parts[index].prefix.length + parts[index].header.length;
     },
   };
 }

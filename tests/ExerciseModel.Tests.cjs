@@ -5,11 +5,12 @@ const fs = require('node:fs');
   const source = fs.readFileSync('assets/web/exercise-model.js', 'utf8');
   const {exerciseModel} = await import('data:text/javascript;base64,' + Buffer.from(source).toString('base64'));
   const manifest = JSON.parse(fs.readFileSync('_out/pages/playground.json', 'utf8'));
-  const exercises = Object.values(manifest).filter(item => /^theorem exercise_/.test(item.code)
-    && /namespace ProofExamples\b/.test(item.before));
-  assert.equal(exercises.length, 8);
+  const exercises = Object.values(manifest).filter(item => item.exercise);
+  assert.equal(exercises.length, 65);
+  let proofs = 0;
   for (const item of exercises) {
     const model = exerciseModel(item.code);
+    proofs += model.parts.length;
     assert(!model.full);
     assert.equal(model.editorBody(model.parts[0].body), 'sorry');
     const nested = 'constructor\n· intro h\n  exact h';
@@ -17,7 +18,7 @@ const fs = require('node:fs');
     assert.deepEqual(model.parse(model.source(model.bodies)), model.bodies);
     for (let i = 0; i < model.parts.length; ++i) {
       const code = model.source(model.bodies);
-      assert.equal(code.slice(model.start(model.bodies, i), model.start(model.bodies, i) + 7), '  sorry');
+      assert(code.slice(model.start(model.bodies, i)).startsWith(model.parts[i].body));
     }
     // Keep blank proof indentation and trailing lines: cursor offsets depend on it.
     model.bodies[0] = '  \n  ';
@@ -28,5 +29,6 @@ const fs = require('node:fs');
     const saved = exerciseModel(item.code, 'def helper := 1\n' + code);
     assert(saved.full, 'A noncanonical draft must remain intact in complete-code mode');
   }
-  console.log('PASS: eight exercise models, statement preservation, subproof offsets, and draft compatibility');
+  assert.equal(proofs, 105);
+  console.log('PASS: all 65 exercise blocks / 105 proofs, fixed helper definitions, subproof offsets, and drafts');
 })().catch(error => { console.error(error); process.exitCode = 1; });

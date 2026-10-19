@@ -18,20 +18,19 @@ namespace AlgebraBook
 -- Reader controls are HTML-only; the checked code and print output stay shared.
 block_extension Block.playground
     (file : String) (source : String) (key : String)
-    (keep : Bool) (visible : Bool) where
-  data := .arr #[.str file, .str source, .str key, .bool keep, .bool visible]
+    (keep : Bool) (visible : Bool) (exercise : Bool) where
+  data := .arr #[.str file, .str source, .str key, .bool keep, .bool visible, .bool exercise]
   traverse _ _ _ := pure none
   toTeX := some fun _ goB _ _ contents => contents.mapM goB
   toHtml :=
     open Verso.Output.Html in
     some fun _ goB _ data contents => do
-      let .arr #[.str file, .str source, .str key, .bool keep, .bool visible] := data
+      let .arr #[_, _, .str key, _, .bool visible, .bool exercise] := data
         | Verso.reportError "Invalid playground metadata" *> pure .empty
       let contents ← contents.mapM goB
       if !visible then return contents
-      let pilot := !keep && file.endsWith "Proofs.lean" && source.startsWith "theorem exercise_"
       return {{<div class="book-example" data-snippet={{key}}
-        data-exercise-unit={{if pilot then "proofs" else ""}}>{{contents}}</div>}}
+        data-exercise-unit={{if exercise then "exercises" else ""}}>{{contents}}</div>}}
 
 block_extension Block.readerDisclosure (title : String) where
   data := .str title
@@ -89,8 +88,9 @@ def savedLean : CodeBlockExpanderOf InlineLean.LeanBlockConfig
     let pos := (← getFileMap).toPosition ((← getRef).getPos?.getD 0)
     let key := toString (hash (file, pos.line, pos.column))
     let saved ← ``(Block.other (Block.savedLean $(quote file) $(quote code.getString)) #[$underlying])
+    let exercise := !args.keep && code.getString.contains "sorry"
     ``(Block.other (Block.playground $(quote file) $(quote code.getString)
-      $(quote key) $(quote args.keep) $(quote args.show)) #[$saved])
+      $(quote key) $(quote args.keep) $(quote args.show) $(quote exercise)) #[$saved])
 
 /-- Checked scratch examples, including intentionally unfinished attempts, without exporting them. -/
 @[code_block tryLean]
@@ -101,7 +101,7 @@ def tryLean : CodeBlockExpanderOf InlineLean.LeanBlockConfig
     let pos := (← getFileMap).toPosition ((← getRef).getPos?.getD 0)
     let key := toString (hash (file, pos.line, pos.column))
     ``(Block.other (Block.playground $(quote file) $(quote code.getString)
-      $(quote key) false $(quote args.show)) #[$underlying])
+      $(quote key) false $(quote args.show) false) #[$underlying])
 
 /--
 An import of some other module, to be located in the saved code. Not rendered.

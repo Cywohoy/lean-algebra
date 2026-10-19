@@ -140,5 +140,12 @@ export function createLeanRuntime(baseURL, onProgress = () => {}) {
     }
     throw new Error('Lean returned no goal response');
   }
-  return {boot, compile, goalsAt, get pending() { return !!pending; }, get ready() { return ready; }};
+  async function addFiles(files) {
+    const missing = files.filter(file => !loadedFiles.has(file.name));
+    if (!missing.length) return;
+    const result = await request({type: 'add_files', files: missing}, 'files_added', 180000, missing.map(file => file.data));
+    if (result.count !== missing.length) throw new Error('Not all context files could be staged');
+    missing.forEach(file => loadedFiles.add(file.name));
+  }
+  return {boot, compile, goalsAt, addFiles, get pending() { return !!pending; }, get ready() { return ready; }};
 }

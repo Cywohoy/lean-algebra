@@ -95,12 +95,23 @@ async function main() {
     assert(await wrapper.locator('dialog').isVisible());
     assert.equal(await wrapper.getByRole('button', {name: '단계', exact: true}).count(), 0);
     assert((await wrapper.locator('.book-exercise-statement').innerText()).includes('문제 1'));
-    assert((await wrapper.locator('.book-exercise-declaration').innerText()).includes('a + 3 < b + 3'));
+    assert((await wrapper.locator('.book-live-editor > .book-exercise-declaration').innerText()).includes('a + 3 < b + 3'));
     assert.equal(await wrapper.locator('textarea').inputValue(), 'sorry');
     assert(await wrapper.locator('..').locator('.book-solve-button').evaluate(button => {
       const rect = button.getBoundingClientRect(); return rect.height >= 44 && rect.width <= 120;
     }));
     assert(await wrapper.locator('.book-editor-controls').evaluate(controls => controls.getBoundingClientRect().height < 90));
+    for (const malformed of ['nonsense', 'nonsense\nnonsense']) {
+      await wrapper.locator('textarea').fill(malformed);
+      await status(wrapper, '오류');
+      assert((await wrapper.locator('.book-diagnostics').innerText()).includes('unknown tactic'));
+      await wrapper.locator('textarea').evaluate(input => {
+        input.setSelectionRange(input.value.length, input.value.length);
+        input.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      await page.waitForFunction(() => document.querySelector('.book-live-goal')?.textContent.includes('⊢ a + 3 < b + 3'));
+      if (malformed.includes('\n')) assert((await wrapper.locator('.book-live-output > .book-panel-heading').innerText()).includes('남은 목표'));
+    }
     await wrapper.locator('textarea').fill('');
     await page.waitForFunction(() => document.querySelector('.book-live-goal')?.textContent.includes('⊢ a + 3 < b + 3'), null, {timeout: 120000});
     await wrapper.locator('textarea').fill('apply Nat.add_lt_add_right (k := 3)\nexact h');
@@ -111,6 +122,9 @@ async function main() {
     const canonical = await wrapper.locator('textarea').inputValue();
     await wrapper.locator('textarea').fill('theorem exercise_add_three_preserves_lt : True := by\n  trivial');
     await status(wrapper, '코드 검사 통과');
+    await wrapper.locator('textarea').fill('axiom unproved : True\ntheorem exercise_add_three_preserves_lt : True := by\n  exact unproved');
+    await status(wrapper, '미완성 · 허용되지 않은 공리');
+    assert(!await wrapper.locator('.book-run-status').evaluate(node => node.classList.contains('book-success')));
     await wrapper.locator('textarea').fill(canonical);
     await wrapper.getByRole('button', {name: '증명만 편집', exact: true}).click();
     await status(wrapper, '풀이 완료');
@@ -150,7 +164,7 @@ async function main() {
     wrapper = await open(chain);
     await status(wrapper, '증명 중');
     await wrapper.locator('textarea').fill('apply Nat.add_lt_add_right (k := c)\nexact hab');
-    await status(wrapper, '증명 중');
+    await status(wrapper, '증명 완료 (1/2 완료)');
     await wrapper.getByRole('button', {name: '(2)', exact: true}).click();
     await wrapper.locator('textarea').fill('apply exercise_shift_lt\napply exercise_shift_lt\nexact hab');
     await status(wrapper, '풀이 완료');
@@ -168,8 +182,38 @@ async function main() {
     assert.equal(await wrapper.locator('textarea').evaluate(input => input.selectionStart),
       (await wrapper.locator('textarea').inputValue()).indexOf('\n') + 1);
     assert((await wrapper.locator('.book-diagnostics').innerText()).includes('2:1'));
+    await wrapper.locator('textarea').fill('sorry');
+    await status(wrapper, '증명 중');
+    await wrapper.getByRole('button', {name: '(2)', exact: true}).click();
+    await status(wrapper, '증명 중');
+    assert((await wrapper.locator('.book-diagnostics').innerText()).includes('미완성 정리'));
+    assert(!await wrapper.locator('.book-run-status').evaluate(node => node.classList.contains('book-success')));
+    await wrapper.getByRole('button', {name: '(1)', exact: true}).click();
+    await wrapper.locator('textarea').fill('apply Nat.add_lt_add_right (k := c)\nexact hab');
+    await status(wrapper, '풀이 완료');
     await page.keyboard.press('Escape');
-    console.log('PASS: dependent subproblems, combined checking, and diagnostic cursor mapping');
+    console.log('PASS: dependent subproblems, transitive admission checks, and diagnostic cursor mapping');
+
+    const repeated = example(code => code.startsWith('theorem exercise_from_two_countably_infinite '));
+    wrapper = await open(repeated);
+    await status(wrapper, '증명 중');
+    // A pthread mailbox callback used to shut the runtime down between edits.
+    // Leave the event loop idle, then exercise each way of checking new code.
+    await page.waitForTimeout(2500);
+    await wrapper.locator('textarea').fill('expand');
+    await wrapper.locator('textarea').press('Control+Enter');
+    await page.waitForFunction(key => document.querySelector(`[data-snippet="${key}"] .book-live-goal`)?.textContent.includes('⊢ cardinal Nat = cardinal'), repeated.key);
+    await page.waitForTimeout(2500);
+    await wrapper.locator('textarea').fill('unknown_tactic');
+    await wrapper.getByRole('button', {name:'검사', exact:true}).click();
+    await status(wrapper, '오류');
+    assert((await wrapper.locator('.book-diagnostics').innerText()).includes('unknown tactic'));
+    await page.waitForTimeout(2500);
+    await wrapper.locator('textarea').fill('expand');
+    await status(wrapper, '증명 중');
+    assert((await wrapper.locator('.book-live-goal').innerText()).includes('⊢ cardinal Nat = cardinal'));
+    await page.keyboard.press('Escape');
+    console.log('PASS: automatic checking, check button, and Ctrl+Enter survive idle periods without reloading');
 
     const cantor = example(code => code.startsWith('theorem cantor_not_surjective '));
     const concrete = example(code => code.startsWith('theorem cardinal_fin '));

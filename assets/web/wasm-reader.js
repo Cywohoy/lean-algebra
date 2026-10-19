@@ -15,6 +15,7 @@ export function createBrowserBackend(siteRoot) {
   let serial = 0;
   const sessions = new Map();
   const snippets = new Map();
+  const loadedContexts = new Set();
 
   async function isolate(key) {
     if (crossOriginIsolated) return;
@@ -60,10 +61,19 @@ export function createBrowserBackend(siteRoot) {
     document.result = result;
     return result;
   }
-  async function goals(document, position) {
+  async function goals(document, position, range) {
     await compile(document);
     const state = await runtime.goalsAt(document.offset + position.line, position.character);
-    return state.found ? state.goals : null;
+    if (state.found) return {goal: state.goals};
+    // Parser recovery may leave no info tree at a malformed line. Use Lean's
+    // unsolved-goal messages from this exact declaration, never a stale state.
+    if (range && Number.isSafeInteger(range.startLine) && Number.isSafeInteger(range.endLine)) {
+      const unfinished = (document.unsolved || []).filter(item =>
+        item.line >= range.startLine && item.line <= range.endLine);
+      if (unfinished.length) return {goal: [...new Set(unfinished.map(item => item.text))],
+        goalNote: '오류가 난 증명의 남은 목표'};
+    }
+    return {goal: null};
   }
   async function execute(path, payload) {
     if (path === '/api/lean/check') {
@@ -75,11 +85,30 @@ export function createBrowserBackend(siteRoot) {
         if (!response.ok) throw new Error('예제의 실행 환경을 불러오지 못했습니다.');
         snippets.set(payload.snippet, await response.json());
       }
-      const prefix = snippets.get(payload.snippet).before.trimEnd() + '\n\n';
+      const snippet = snippets.get(payload.snippet);
+      const files = [];
+      for (const item of snippet.contextFiles || []) {
+        if (loadedContexts.has(item.sha256)) continue;
+        const response = await fetch(new URL(item.url, siteRoot));
+        if (!response.ok) throw new Error('검사 문맥을 불러오지 못했습니다.');
+        const data = await response.arrayBuffer();
+        const digest = [...new Uint8Array(await crypto.subtle.digest('SHA-256', data))]
+          .map(byte => byte.toString(16).padStart(2, '0')).join('');
+        if (data.byteLength !== item.bytes || digest !== item.sha256) throw new Error('The checked exercise context is corrupt.');
+        files.push({name: item.name, data});
+      }
+      await runtime.addFiles(files);
+      for (const item of snippet.contextFiles || []) loadedContexts.add(item.sha256);
+      const prefix = snippet.before.trimEnd() + '\n\n';
       const token = sessions.has(payload.session) ? payload.session : `wasm-${++serial}`;
       const previous = sessions.get(token);
       const source = prefix + payload.code + (payload.code.endsWith('\n') ? '' : '\n');
-      const document = {source: source + closeScopes(source), code: payload.code,
+      // Ask Lean itself for transitive axiom dependencies, including dependencies
+      // inherited from earlier unfinished lemmas. No source-text heuristic can
+      // distinguish a complete proof from one that uses an admitted theorem.
+      const names = [...new Set(payload.proofNames || [])].filter(name => /^[A-Za-z_][A-Za-z0-9_'.]*$/.test(name));
+      const audit = names.map(name => `#print axioms ${name}\n`).join('');
+      const document = {source: source + audit + closeScopes(source), code: payload.code,
         offset: prefix.split('\n').length - 1, version: (previous?.version || 0) + 1};
       // The public reader has one active editor. Bound retained source strings.
       sessions.clear();
@@ -87,26 +116,35 @@ export function createBrowserBackend(siteRoot) {
       const result = await compile(document);
       const diagnostics = [];
       const contextErrors = [];
+      const proofs = [];
+      document.unsolved = [];
       for (const line of result.output) {
         let item;
         try { item = JSON.parse(line); } catch { continue; }
         const row = (item.pos?.line || 1) - document.offset;
+        if (row - 1 >= source.split('\n').length - 1 - document.offset) {
+          const match = /^'([^']+)' (?:depends on axioms: \[([^\]]*)\]|does not depend on any axioms)/s.exec(item.data || '');
+          if (match) proofs.push({name: match[1], axioms: match[2]?.split(',').map(name => name.trim()).filter(Boolean) || []});
+          continue;
+        }
         if (row < 1) {
           if (item.severity === 'error') contextErrors.push(item.data);
           continue;
         }
         const unfinished = item.kind === 'Tactic.unsolvedGoals' || item.kind === 'hasSorry'
           || /declaration uses [`']sorry[`']/.test(item.data || '');
+        if (item.kind === 'Tactic.unsolvedGoals') document.unsolved.push({line: row - 1,
+          text: item.data.replace(/^unsolved goals\s*\n/, '')});
         diagnostics.push({line: row, column: (item.pos?.column || 0) + 1,
           severity: item.severity === 'error' ? 1 : item.severity === 'warning' ? 2 : 3,
           kind: unfinished ? 'unfinished' : 'diagnostic', message: item.data, isSilent: item.isSilent});
       }
-      return {session: token, version: document.version, diagnostics, contextErrors,
-        goal: await goals(document, payload.position || {line: 0, character: 0})};
+      return {session: token, version: document.version, diagnostics, contextErrors, proofs,
+        ...await goals(document, payload.position || {line: 0, character: 0}, payload.proofRange)};
     }
     const document = sessions.get(payload.session);
     if (!document || document.version !== payload.version) throw new Error('The code changed. Run this example again.');
-    if (path === '/api/lean/goal') return {goal: await goals(document, payload.position)};
+    if (path === '/api/lean/goal') return goals(document, payload.position, payload.proofRange);
     throw new Error('This browser editor does not yet provide Lean completion.');
   }
   return {call(path, payload) {

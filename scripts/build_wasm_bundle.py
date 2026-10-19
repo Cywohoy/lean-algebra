@@ -17,6 +17,7 @@ parser.add_argument('--ample-lib', type=Path, required=True)
 parser.add_argument('--upstream', type=Path, default=ROOT / 'tmp/wasm/upstream')
 parser.add_argument('--coi', type=Path, default=ROOT / 'tmp/wasm/coi-serviceworker')
 parser.add_argument('--output', type=Path, required=True)
+parser.add_argument('--contexts', type=Path, help='Checked wasm32 exercise prefixes from build_wasm_contexts.py')
 parser.add_argument('--reuse-library', type=Path,
                     help='Reuse packs after host/linker-only changes; never after Lean source changes')
 args = parser.parse_args()
@@ -62,6 +63,15 @@ with tempfile.TemporaryDirectory(prefix='browser-bundle-', dir=ROOT / 'tmp') as 
         'licenses/COI.txt': args.coi / 'LICENSE',
         'licenses/Emscripten.txt': source.parent / 'emsdk/upstream/emscripten/LICENSE',
     })
+    if args.contexts:
+        files['contexts.json'] = args.contexts / 'contexts.json'
+        contexts = json.loads(files['contexts.json'].read_text())
+        for context in contexts.values():
+            for item in context['files']:
+                file = args.contexts / item['name']
+                if hashlib.sha256(file.read_bytes()).hexdigest() != item['sha256']:
+                    raise ValueError('A checked context file changed: ' + str(file))
+                files['contexts/' + item['name']] = file
     if (source / 'LICENSES').is_file():
         files['licenses/Lean-dependencies.txt'] = source / 'LICENSES'
     else:

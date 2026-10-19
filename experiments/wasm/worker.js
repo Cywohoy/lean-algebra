@@ -7,6 +7,11 @@ self.importScripts = (...urls) => {
     const initialize = module.onRuntimeInitialized;
     module.onRuntimeInitialized = function (...args) {
       mark('native-initialize-start');
+      // This is an embedded runtime, with no main() keeping it alive. An idle
+      // pthread mailbox callback otherwise calls maybeExit() and destroys the
+      // entire task pool between edits. The host terminates this Worker when
+      // its lifetime ends, so hold one keepalive reference for that lifetime.
+      runtimeKeepalivePush();
       const result = initialize.apply(this, args);
       mark('native-initialize-end');
       return result;

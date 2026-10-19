@@ -29,13 +29,13 @@ where
   block : Block Manual → StateT PlaygroundBuildState (BuildLogT IO) Unit
     | .other which contents => do
       if which.name == ``Block.playground then
-        let .arr #[.str file, .str code, .str key, .bool keep, .bool visible] := which.data
+        let .arr #[.str file, .str code, .str key, .bool keep, .bool visible, .bool exercise] := which.data
           | reportError "Invalid playground export data"
         let before := (← get).contexts[file]?.getD ""
         if visible then
           modify fun st => { st with snippets := st.snippets.push (key, json%{
             "code": $code, "before": $before,
-            "exercise": $(!keep && code.contains "sorry")
+            "exercise": $exercise
           }) }
         if keep then
           modify fun st => { st with contexts := st.contexts.insert file (before ++ code ++ "\n") }

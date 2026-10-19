@@ -44,7 +44,24 @@ def elaborate (code fileName : String) (cachedEnv? : Option Environment := none)
     let mut trees := #[]
     let mut done := false
     while !done do
-      done ← Elab.Frontend.processCommand
+      -- Top-level elaboration resets its message log. Capture parser errors
+      -- before that reset, just as the standard snapshot frontend does.
+      Elab.Frontend.updateCmdPos
+      let commandState ← Elab.Frontend.getCommandState
+      let parserState ← Elab.Frontend.getParserState
+      let scope := commandState.scopes.head!
+      let parserContext := {
+        env := commandState.env
+        options := scope.opts
+        currNamespace := scope.currNamespace
+        openDecls := scope.openDecls }
+      let (command, nextParserState, parserMessages) :=
+        Parser.parseCommand inputCtx parserContext parserState {}
+      messages := messages ++ parserMessages
+      Elab.Frontend.setParserState nextParserState
+      Elab.Frontend.setMessages parserMessages
+      Elab.Frontend.elabCommandAtFrontend command
+      done := Parser.isTerminalCommand command
       let state ← Elab.Frontend.getCommandState
       messages := messages ++ state.messages
       trees := trees ++ state.infoState.trees.toArray.map

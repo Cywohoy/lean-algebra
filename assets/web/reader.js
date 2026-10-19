@@ -72,7 +72,7 @@
     if (!/\b(def|theorem|lemma|example|structure|inductive|instance)\b/.test(plain(source))) return;
     wrapper.dataset.readerReady = 'true';
     const key = wrapper.dataset.snippet;
-    const exercise = wrapper.dataset.exerciseUnit === 'proofs';
+    const exercise = !!wrapper.dataset.exerciseUnit;
     wrapper.classList.toggle('book-exercise', exercise);
     const steps = proofSteps(source);
     const toolbar = element('div', 'book-toolbar');
@@ -152,10 +152,13 @@
       number?.remove();
       editButton.classList.add('book-solve-button');
       if (!staticReading) heading.append(editButton);
-      const disclosure = wrapper.nextElementSibling;
+      const disclosures = [];
+      for (let next = wrapper.nextElementSibling; next?.matches('details.book-disclosure'); next = next.nextElementSibling) {
+        disclosures.push(next);
+      }
       wrapper.before(card);
       card.append(heading, ...problemParagraphs, wrapper);
-      if (disclosure?.matches('details.book-disclosure')) card.append(disclosure);
+      card.append(...disclosures);
     }
     toolbar.append(copyButton, status);
     if (exercise) openEditors.set(key, () => setMode('edit'));
@@ -279,6 +282,9 @@
     let fullCode = exercise?.full || false;
     let selectedProof = 0;
     const declaration = element('pre', 'book-exercise-declaration');
+    const support = element('details', 'book-exercise-support');
+    const supportCode = element('pre', 'book-exercise-declaration');
+    support.append(element('summary', '', '사용할 정의'), supportCode);
     const proofControls = element('div', 'book-proof-controls');
     function currentCode() {
       if (!exercise || fullCode) return input.value;
@@ -289,6 +295,8 @@
     function loadProof() {
       input.value = exercise.editorBody(exercise.bodies[selectedProof]);
       declaration.textContent = exercise.parts[selectedProof].header.trimEnd();
+      supportCode.textContent = exercise.parts.slice(0, selectedProof + 1).map(part => part.prefix).join('').trim();
+      support.hidden = fullCode || !supportCode.textContent;
       declaration.hidden = fullCode;
       proofControls.hidden = fullCode || exercise.parts.length === 1;
       input.setAttribute('aria-label', fullCode ? '연습문제 전체 코드' : `풀이 ${selectedProof + 1}`);
@@ -329,13 +337,14 @@
         if (fullCode) input.value = source;
         else loadProof();
         declaration.hidden = fullCode;
+        support.hidden = fullCode || !supportCode.textContent;
         proofControls.hidden = fullCode || exercise.parts.length === 1;
         toggle.textContent = fullCode ? '증명만 편집' : '전체 코드';
         input.setAttribute('aria-label', fullCode ? '연습문제 전체 코드' : `풀이 ${selectedProof + 1}`);
         input.focus(); changed();
       });
       const download = button('풀이 내려받기', () => {
-        let source = original.before.trimEnd() + '\n\n' + currentCode() + '\n';
+        let source = (original.sourceBefore || original.before).trimEnd() + '\n\n' + currentCode() + '\n';
         const scopes = [];
         for (const line of source.split('\n')) {
           const open = /^(namespace|section)(?:\s+(\S+))?\s*$/.exec(line);
@@ -349,8 +358,9 @@
       });
       controls.insertBefore(toggle, message);
       controls.insertBefore(download, message);
-      root.append(proofControls, declaration);
+      root.append(proofControls, support, declaration);
       declaration.hidden = fullCode;
+      support.hidden = fullCode || !supportCode.textContent;
       proofControls.hidden = fullCode || exercise.parts.length === 1;
     }
     const columns = element('div', 'book-editor-columns');
@@ -384,7 +394,8 @@
     function documentCall(path, code, payload) {
       const task = documentQueue.catch(() => {}).then(async () => {
         if (currentCode() !== code || !root.isConnected) return null;
-        const result = await call(path, {snippet: key, code, session: session || tabSession(), ...payload});
+        const result = await call(path, {snippet: key, code, session: session || tabSession(),
+          proofRange: proofRange(), proofNames: exercise?.parts.map(part => part.name), ...payload});
         session = result.session;
         tabSession(session);
         version = result.version;
@@ -399,6 +410,14 @@
       const before = currentCode().slice(0, editableStart() + offset);
       const lines = before.split('\n');
       return {line: lines.length - 1, character: lines.at(-1).length};
+    }
+    function proofRange() {
+      if (!exercise || fullCode) return null;
+      const source = currentCode();
+      const start = editableStart() - exercise.parts[selectedProof].header.length;
+      const end = editableStart() + exercise.bodies[selectedProof].length;
+      return {startLine: source.slice(0, start).split('\n').length - 1,
+        endLine: source.slice(0, end).split('\n').length - 1};
     }
     function lines() {
       gutter.textContent = Array.from({length: input.value.split('\n').length}, (_, i) => i + 1).join('\n');
@@ -415,12 +434,14 @@
       store(storageKey, currentCode());
       message.textContent = '수정됨';
       message.className = 'book-run-status';
+      outputHeading.textContent = '이전 검사 결과 · 수정 내용 검사 대기 중';
       ++requestNumber;
       lines();
       scheduleCheck();
 
     }
-    function showGoal(value) {
+    function showGoal(value, note) {
+      outputHeading.textContent = note || '가정과 목표';
       goal.textContent = value === null ? '이 위치에는 표시할 목표가 없습니다.'
         : value.length ? value.join('\n\n') : '남은 목표 없음';
     }
@@ -438,10 +459,10 @@
         if (!result) return;
         checkedCode = code;
         if (code !== currentCode()) return;
-        showGoal(result.goal);
+        showGoal(result.goal, result.goalNote);
         diagnostics.replaceChildren();
         for (const item of result.diagnostics) {
-          if (item.kind === 'unfinished' || item.isSilent) continue;
+          if (item.kind === 'unfinished' || (item.isSilent && item.severity !== 1)) continue;
           const start = code.split('\n').slice(0, item.line - 1).reduce((n, line) => n + line.length + 1, 0) + item.column - 1;
           const proofIndex = exercise && !fullCode
             ? exercise.parts.findLastIndex((_, i) => exercise.start(exercise.bodies, i) <= start) : -1;
@@ -468,10 +489,32 @@
         }
         const errors = result.diagnostics.filter(item => item.severity === 1 && item.kind !== 'unfinished');
         const holes = result.diagnostics.some(item => item.kind === 'unfinished');
-        message.textContent = errors.length ? `오류 ${errors.length}개` : holes ? '증명 중'
-          : exercise ? (exercise.parse(code) ? '풀이 완료' : '코드 검사 통과') : '오류 없음';
+        const allowed = new Set(['propext', 'Classical.choice', 'Quot.sound']);
+        const bodies = exercise?.parse(code);
+        const audited = exercise?.parts.map(part => result.proofs?.find(proof =>
+          proof.name === part.name || proof.name.endsWith('.' + part.name)));
+        const forbidden = proof => proof?.axioms.filter(name => !allowed.has(name)) || [];
+        const complete = audited?.map(proof => !!proof && !forbidden(proof).length) || [];
+        const count = complete.filter(Boolean).length;
+        const selected = audited?.[selectedProof];
+        const blocked = forbidden(selected);
+        let success = false;
+        if (errors.length) message.textContent = `오류 ${errors.length}개`;
+        else if (bodies && count === exercise.parts.length) {
+          message.textContent = '풀이 완료'; success = true;
+        } else if (bodies && complete[selectedProof]) {
+          message.textContent = `증명 완료 (${count}/${exercise.parts.length} 완료)`; success = true;
+        } else if (blocked.some(name => name !== 'sorryAx')) {
+          message.textContent = '미완성 · 허용되지 않은 공리: ' + blocked.join(', ');
+        } else if (holes || blocked.includes('sorryAx')) message.textContent = '증명 중';
+        else if (exercise && !bodies) message.textContent = '코드 검사 통과';
+        else message.textContent = exercise ? '완결 여부 확인 불가' : '오류 없음';
+        if (blocked.includes('sorryAx') && !errors.length) {
+          diagnostics.append(element('p', 'book-warning',
+            '이 증명은 sorry 또는 미완성 정리에 의존하므로 아직 완결되지 않았습니다.'));
+        }
         message.classList.toggle('book-error', !!errors.length);
-        message.classList.toggle('book-success', !errors.length && !holes);
+        message.classList.toggle('book-success', success);
       } catch (error) {
         if (code === currentCode()) {
           message.textContent = '실행 실패';
@@ -490,8 +533,8 @@
       const current = ++requestNumber;
       timer = setTimeout(async () => {
         try {
-          const result = await call('/api/lean/goal', {session, version, position: position()});
-          if (current === requestNumber && checkedCode === currentCode()) showGoal(result.goal);
+          const result = await call('/api/lean/goal', {session, version, position: position(), proofRange: proofRange()});
+          if (current === requestNumber && checkedCode === currentCode()) showGoal(result.goal, result.goalNote);
         } catch (error) {
           if (root.isConnected && /Run this example|code changed/.test(error.message)) {
             checkedCode = undefined;
@@ -563,8 +606,8 @@
     }
   }
   function start() {
-    document.querySelectorAll('.book-example').forEach(decorate);
     foldLegacyHints();
+    document.querySelectorAll('.book-example').forEach(decorate);
     if (browserLean) {
       const reopen = sessionStorage.getItem('lean-algebra.reopen');
       sessionStorage.removeItem('lean-algebra.reopen');

@@ -60,3 +60,8 @@ check('Ample ext subgoals', 'import Ample\nopen Ample\n'
       'ext with first second', ['⊢ x.fst = y.fst', '⊢ x.snd = y.snd'])
 check('error remains visible', 'example : 2 + 2 = 5 := by\n  rfl\n',
       'rfl', ['⊢ 2 + 2 = 5'], diagnostic='failed')
+check('unknown tactic parser error', 'example (P : Prop) : P → P := by\n  nonsense\n',
+      'nonsense', ['⊢ P → P'], diagnostic='unknown tactic')
+check('two unknown tactics retain parser diagnostics',
+      'example (P : Prop) : P → P := by\n  nonsense\n  nonsense\n',
+      'nonsense\n  nonsense', [], found=False, diagnostic='unknown tactic')

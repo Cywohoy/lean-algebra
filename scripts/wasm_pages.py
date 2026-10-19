@@ -10,8 +10,8 @@ import urllib.request
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def prepare(site, bundle=None, download=False):
-    spec = json.loads((ROOT / 'web/wasm-runtime.json').read_text(encoding='utf-8'))
+def prepare(site, bundle=None, download=False, config=None):
+    spec = json.loads((config or ROOT / 'web/wasm-runtime.json').read_text(encoding='utf-8'))
     if download:
         cache = ROOT / 'tmp/wasm/downloads'
         cache.mkdir(parents=True, exist_ok=True)
@@ -63,8 +63,18 @@ def prepare(site, bundle=None, download=False):
 
     manifest_path = site / 'playground.json'
     manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    contexts_path = target / 'contexts.json'
+    contexts = json.loads(contexts_path.read_text()) if contexts_path.is_file() else {}
     for key, snippet in manifest.items():
         snippet['before'] = translate(snippet['before'])
+        digest = hashlib.sha256(snippet['before'].encode()).hexdigest()
+        if snippet.get('exercise') and digest in contexts:
+            context = contexts[digest]
+            snippet['sourceBefore'] = snippet['before']
+            snippet['contextFiles'] = [dict(item, url=relative + 'contexts/' + item['name'])
+                                       for item in context['files']]
+            snippet['before'] = ('import ' + context['module'] + '\nimport Ample.Tactic.Unfold\n\n'
+                'register_expand_module AmpleBrowserContext\n' + context['scope'] + '\n')
         (site / 'playground' / (key + '.json')).write_text(json.dumps(snippet, ensure_ascii=False), encoding='utf-8')
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False), encoding='utf-8')
     return relative
