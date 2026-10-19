@@ -1,0 +1,11 @@
+port = 8000
+banner = "Korean Algebra / Lean + Verso"
+directory_listing = false
+
+[[mounts]]
+path = "/"
+dir = "_out/html-multi"
+
+[[mounts]]
+path = "/example-code"
+dir = "_out/example-code"

@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "교재 생성",
+      "type": "process",
+      "command": "lake",
+      "args": ["exe", "textbook"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "교재 미리보기",
+      "type": "process",
+      "command": "lake",
+      "args": ["exe", "verso-serve", "--port", "8000", "--strict-port"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "dependsOn": ["교재 생성"],
+      "problemMatcher": []
+    }
+  ]
+}

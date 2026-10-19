@@ -1,0 +1,13 @@
+.lake/
+**/.lake/
+_out/
+.verso/
+*.log
+output/
+tmp/
+exercise-backups/
+__pycache__/
+Exercises/
+.env
+.env.*
+*.local
