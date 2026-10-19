@@ -41,7 +41,7 @@ async function main() {
     const proof = page.locator('.book-example').filter({hasText: '@[ext] theorem set_ext'});
     await proof.locator('.tactic > label').filter({hasText: /^funext x$/}).click();
     assert.ok((await proof.locator('.book-step-state').innerText()).includes('S x = T x'));
-    assert.ok(await page.getByRole('button', {name: '편집', exact: true}).count());
+    assert.ok(await proof.getByRole('button', {name: '단계', exact: true}).isVisible());
     await proof.getByRole('button', {name: '복사', exact: true}).click();
     await page.waitForFunction(() => document.body.textContent.includes('복사됨'));
     assert.ok((await page.evaluate(() => navigator.clipboard.readText())).includes('theorem set_ext'));

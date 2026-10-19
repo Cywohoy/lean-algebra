@@ -30,6 +30,8 @@ export function exerciseModel(original, draft = original) {
   const bodies = parse(draft);
   return {
     parts, parse, bodies: bodies || parts.map(part => part.body), full: !bodies,
+    editorBody(body) { return body.split('\n').map(line => line.startsWith('  ') ? line.slice(2) : line).join('\n'); },
+    sourceBody(body) { return body.split('\n').map(line => '  ' + line).join('\n'); },
     source(values) { return parts.map((part, i) => part.header + values[i]).join('\n\n'); },
     start(values, index) {
       return parts.slice(0, index).reduce((n, part, i) => n + part.header.length + values[i].length + 2, 0)

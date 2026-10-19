@@ -66,7 +66,7 @@ async function main() {
       await page.goto(new URL(selected.url, base).href);
       const wrapper = page.locator(`[data-snippet="${selected.key}"]`);
       await wrapper.hover();
-      await wrapper.getByRole('button', {name: /^(편집|풀기)$/}).click();
+      await wrapper.locator('..').getByRole('button', {name: '풀기', exact: true}).click();
       await wrapper.locator('textarea').waitFor();
       return wrapper;
     }
@@ -82,23 +82,12 @@ async function main() {
       catch (error) { console.error(await wrapper.locator('.book-live-editor').innerText()); throw error; }
     }
     const selected = example(code => code.startsWith('example {A : Type _} {S T : Set A}') && code.includes('funext x'));
-    let wrapper = await open(selected);
-    await status(wrapper, '증명 중');
-    assert(await page.evaluate(() => crossOriginIsolated));
-    const proof = 'example {A : Type _} {S T : Set A}\n    (h : ∀ x, x ∈ S ↔ x ∈ T) : S = T := by\n  funext x\n  apply propext\n  exact h x';
-    await wrapper.locator('textarea').fill(proof);
-    await status(wrapper, '오류 없음');
-    await wrapper.locator('textarea').evaluate(input => {
-      const position = input.value.indexOf('funext x') + 'funext x'.length;
-      input.setSelectionRange(position, position); input.dispatchEvent(new MouseEvent('click', {bubbles: true}));
-    });
-    await page.waitForFunction(() => document.querySelector('.book-live-goal')?.textContent.includes('S x = T x'));
-    await wrapper.locator('textarea').fill(proof.replace('exact h x', 'exact h'));
-    await status(wrapper, '오류 1개');
-    assert((await wrapper.locator('.book-diagnostics').innerText()).includes('Type mismatch'));
-    await wrapper.getByRole('button', {name: '초기화', exact: true}).click();
-    assert.equal((await wrapper.locator('textarea').inputValue()).trimEnd(), selected.data.code.trimEnd());
-    console.log('PASS: public editing, real errors, cursor goals, and reset');
+    await page.goto(new URL(selected.url, base).href);
+    let wrapper = page.locator(`[data-snippet="${selected.key}"]`);
+    assert.equal(await page.getByRole('button', {name: '편집', exact: true}).count(), 0);
+    await wrapper.getByRole('button', {name: '단계', exact: true}).click();
+    assert(await wrapper.locator('.book-step-state').isVisible());
+    console.log('PASS: visible proof steps and no standalone edit controls');
 
     const exercise = example(code => code.startsWith('theorem exercise_add_three_preserves_lt'));
     wrapper = await open(exercise);
@@ -107,10 +96,14 @@ async function main() {
     assert.equal(await wrapper.getByRole('button', {name: '단계', exact: true}).count(), 0);
     assert((await wrapper.locator('.book-exercise-statement').innerText()).includes('문제 1'));
     assert((await wrapper.locator('.book-exercise-declaration').innerText()).includes('a + 3 < b + 3'));
-    assert.equal((await wrapper.locator('textarea').inputValue()).trim(), 'sorry');
-    await wrapper.locator('textarea').fill('  ');
+    assert.equal(await wrapper.locator('textarea').inputValue(), 'sorry');
+    assert(await wrapper.locator('..').locator('.book-solve-button').evaluate(button => {
+      const rect = button.getBoundingClientRect(); return rect.height >= 44 && rect.width <= 120;
+    }));
+    assert(await wrapper.locator('.book-editor-controls').evaluate(controls => controls.getBoundingClientRect().height < 90));
+    await wrapper.locator('textarea').fill('');
     await page.waitForFunction(() => document.querySelector('.book-live-goal')?.textContent.includes('⊢ a + 3 < b + 3'), null, {timeout: 120000});
-    await wrapper.locator('textarea').fill('  apply Nat.add_lt_add_right (k := 3)\n  exact h');
+    await wrapper.locator('textarea').fill('apply Nat.add_lt_add_right (k := 3)\nexact h');
     await status(wrapper, '풀이 완료');
     // Full-source mode preserves the proof, and changed statements are not marked solved.
     await wrapper.getByRole('button', {name: '전체 코드', exact: true}).click();
@@ -147,7 +140,7 @@ async function main() {
     await page.keyboard.press('Escape');
     await page.reload();
     wrapper = page.locator(`[data-snippet="${exercise.key}"]`);
-    await wrapper.getByRole('button', {name: '풀기', exact: true}).click();
+    await wrapper.locator('..').getByRole('button', {name: '풀기', exact: true}).click();
     assert((await wrapper.locator('textarea').inputValue()).includes('exact h'));
     await status(wrapper, '풀이 완료');
     await page.keyboard.press('Escape');
@@ -156,40 +149,60 @@ async function main() {
     const chain = example(code => code.startsWith('theorem exercise_shift_lt '));
     wrapper = await open(chain);
     await status(wrapper, '증명 중');
-    await wrapper.locator('textarea').fill('  apply Nat.add_lt_add_right (k := c)\n  exact hab');
+    await wrapper.locator('textarea').fill('apply Nat.add_lt_add_right (k := c)\nexact hab');
     await status(wrapper, '증명 중');
     await wrapper.getByRole('button', {name: '(2)', exact: true}).click();
-    await wrapper.locator('textarea').fill('  apply exercise_shift_lt\n  apply exercise_shift_lt\n  exact hab');
+    await wrapper.locator('textarea').fill('apply exercise_shift_lt\napply exercise_shift_lt\nexact hab');
     await status(wrapper, '풀이 완료');
     await wrapper.getByRole('button', {name: '(1)', exact: true}).click();
     assert((await wrapper.locator('textarea').inputValue()).includes('(k := c)'));
     await status(wrapper, '풀이 완료');
-    await wrapper.locator('textarea').fill('  exact True.intro');
+    await wrapper.locator('textarea').fill('exact True.intro');
     await status(wrapper, '오류 1개');
     await wrapper.locator('.book-diagnostics .book-error').first().click();
-    assert.equal(await wrapper.locator('textarea').evaluate(input => input.selectionStart), 2);
+    assert.equal(await wrapper.locator('textarea').evaluate(input => input.selectionStart), 0);
+    assert((await wrapper.locator('.book-diagnostics').innerText()).includes('1:1'));
+    await wrapper.locator('textarea').fill('apply Nat.add_lt_add_right (k := c)\nexact True.intro');
+    await status(wrapper, '오류 1개');
+    await wrapper.locator('.book-diagnostics .book-error').first().click();
+    assert.equal(await wrapper.locator('textarea').evaluate(input => input.selectionStart),
+      (await wrapper.locator('textarea').inputValue()).indexOf('\n') + 1);
+    assert((await wrapper.locator('.book-diagnostics').innerText()).includes('2:1'));
     await page.keyboard.press('Escape');
     console.log('PASS: dependent subproblems, combined checking, and diagnostic cursor mapping');
 
     const cantor = example(code => code.startsWith('theorem cantor_not_surjective '));
-    wrapper = await open(cantor);
-    await status(wrapper, '오류 없음');
-    console.log('PASS: the infinite-cardinality chapter and diagonal argument');
-
     const concrete = example(code => code.startsWith('theorem cardinal_fin '));
-    wrapper = await open(concrete);
-    await status(wrapper, '오류 없음');
-    await wrapper.locator('textarea').evaluate(input => {
-      input.setSelectionRange(input.value.indexOf('rfl'), input.value.indexOf('rfl'));
-      input.dispatchEvent(new MouseEvent('click', {bubbles: true}));
-    });
-    await page.waitForFunction(() => document.querySelector('.book-live-goal')?.textContent.includes('n : Nat'));
-    const state = await wrapper.locator('.book-live-goal').innerText();
-    assert(!/\b[A-C] : Type|\bm : Nat/.test(state), state);
-    await page.screenshot({path: 'tmp/public-browser-editor.png'});
+    await page.goto(new URL(concrete.url, base).href);
+    const inverse = `example {A B : Type} (f : A → B) (hf : Bijective f) (x : A) (y : B) :
+    inverseMap f hf (f x) = x ∧ f (inverseMap f hf y) = y := by
+  have hI : Injective f := hf.inj
+  have hS : Surjective f := hf.surj
+  constructor
+  · exact inverseMap_left f hf x
+  · exact inverseMap_right f hf y`;
+    const checks = await page.evaluate(async ({base, tests}) => {
+      const {createBrowserBackend} = await import(new URL('assets/web/wasm-reader.js', base));
+      const backend = createBrowserBackend(base);
+      const results = [];
+      for (const test of tests) results.push(await backend.call('/api/lean/check', test));
+      return results;
+    }, {base, tests: [
+      {snippet: cantor.key, code: cantor.data.code},
+      {snippet: concrete.key, code: concrete.data.code,
+        position: {line: concrete.data.code.split('\n').findIndex(line => line.includes('rfl')), character: 2}},
+      {snippet: concrete.key, code: inverse},
+    ]});
+    for (const check of checks) {
+      assert.deepEqual(check.contextErrors, []);
+      assert(!check.diagnostics.some(item => item.severity === 1), JSON.stringify(check));
+    }
+    const state = checks[1].goal.join('\n');
+    assert(state.includes('n : Nat') && !/\b[A-C] : Type|\bm : Nat/.test(state), state);
     assert.deepEqual(uploads, [], 'Proof text must stay in the browser');
     assert.deepEqual(errors, []);
-    console.log('PASS: actual cardinality context, required variables only, no compiler server');
+    console.log('PASS: diagonal argument, cardinality context, concise accessors, inverse identities, and browser-only compilation');
+
   } finally {
     await browser.close(); server.closeAllConnections();
     await new Promise(resolve => server.close(resolve));

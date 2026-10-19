@@ -11,6 +11,9 @@ const fs = require('node:fs');
   for (const item of exercises) {
     const model = exerciseModel(item.code);
     assert(!model.full);
+    assert.equal(model.editorBody(model.parts[0].body), 'sorry');
+    const nested = 'constructor\n· intro h\n  exact h';
+    assert.equal(model.editorBody(model.sourceBody(nested)), nested);
     assert.deepEqual(model.parse(model.source(model.bodies)), model.bodies);
     for (let i = 0; i < model.parts.length; ++i) {
       const code = model.source(model.bodies);

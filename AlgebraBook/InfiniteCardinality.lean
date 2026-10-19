@@ -70,12 +70,12 @@ theorem cardinalityLE_transport {A B : Type} {A' B' : Type}
   -- 먼저 A'에서 A를 거쳐 B로 가는 단사를 얻는다.
   have hFirst : Injective (f ∘ inverseMap a ha) := by
     apply injective_compose
-    · exact (inverseMap_bijective a ha).injective
+    · exact (inverseMap_bijective a ha).inj
     · exact hf
 
   -- B에서 B'로 가는 전단사를 이어 붙인다.
   exists b ∘ f ∘ inverseMap a ha
-  exact injective_compose _ _ hFirst hb.injective
+  exact injective_compose _ _ hFirst hb.inj
 ```
 
 역방향은 두 전단사의 방향을 바꾸어 같은 정리를 사용하면 된다.
@@ -268,7 +268,7 @@ theorem countablyInfinite_isInfinite {A : Type}
     (hA : IsCountablyInfinite A) :
     IsInfinite A := by
   unpack (cardinal_eq_iff Nat A).mp hA with ⟨f, hf⟩
-  exact infinite_of_nat_injection f hf.injective
+  exact infinite_of_nat_injection f hf.inj
 
 theorem positives_countablyInfinite :
     IsCountablyInfinite (Elem positives) := by
@@ -881,7 +881,7 @@ theorem powerSet_not_sameCardinality (A : Type) :
     ¬ SameCardinality A (Set A) := by
   intro h
   unpack h with ⟨f, hf⟩
-  exact cantor_not_surjective f hf.surjective
+  exact cantor_not_surjective f hf.surj
 
 ```
 

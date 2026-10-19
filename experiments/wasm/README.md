@@ -92,8 +92,7 @@ The runtime is distributed as a checksum-pinned release archive; binaries stay
 outside Git. `scripts/build_wasm_bundle.py` includes build metadata and licenses.
 `scripts/prepare_pages.py --download-wasm` stages a content-specific runtime path
 and translates book-only imports. The published reader loads it on first edit.
-Completion still uses the local language server and is not advertised in the
-browser-only editor.
+Both the local textbook preview and public reader use WASM. Completion is not yet provided.
 
 ## Reproduce the matching build
 

@@ -1037,9 +1037,9 @@ theorem fin_sameCardinality_eq {m n : Nat}
 
   -- 각 단사성에서 두 번호 수 사이의 부등식을 얻는다.
   have hmn : m ≤ n :=
-    fin_injective_le f hf.injective
+    fin_injective_le f hf.inj
   have hnm : n ≤ m :=
-    fin_injective_le g hg.injective
+    fin_injective_le g hg.inj
   -- m ≤ n과 n ≤ m을 합치면 m = n이다.
   arith
 ```
@@ -1233,7 +1233,7 @@ theorem infinite_of_nat_injection {A : Type} (f : Nat → A)
 
   -- 두 단사함수를 합성하면 Nat에서 Fin n으로 가는 단사이다.
   apply no_injection_nat_fin n (r ∘ f)
-  exact injective_compose f r hf hr.injective
+  exact injective_compose f r hf hr.inj
 ```
 
 자연수의 항등함수에 이 정리를 사용하면 자연수 전체가 무한집합임을 얻는다.

@@ -7,6 +7,7 @@
   let browserBackend;
   const snippets = new Map();
   let activeEditor;
+  const openEditors = new Map();
   let panelCounter = 0;
   const element = (tag, className, text) => {
     const node = document.createElement(tag);
@@ -76,8 +77,6 @@
     const steps = proofSteps(source);
     const toolbar = element('div', 'book-toolbar');
     toolbar.setAttribute('aria-label', '예제 도구');
-    const kind = element('span', 'book-example-kind', /\bsorry\b/.test(plain(source)) ? '연습문제' : 'Lean');
-    toolbar.append(kind);
     const body = element('div', 'book-example-body');
     source.before(body);
     body.append(source);
@@ -87,6 +86,7 @@
     panel.hidden = true;
     body.append(panel);
     let workspace;
+    const problemParagraphs = [];
     if (exercise) {
       workspace = element('dialog', 'book-exercise-workspace');
       const heading = element('div', 'book-exercise-heading');
@@ -95,12 +95,11 @@
       workspace.setAttribute('aria-labelledby', title.id);
       heading.append(title, button('본문으로', () => setMode(null)));
       const statement = element('div', 'book-exercise-statement');
-      const paragraphs = [];
       for (let node = wrapper.previousElementSibling; node?.tagName === 'P'; node = node.previousElementSibling) {
-        paragraphs.unshift(node);
+        problemParagraphs.unshift(node);
         if (/^문제\s*\d/.test(node.textContent.trim())) break;
       }
-      for (const paragraph of paragraphs) {
+      for (const paragraph of problemParagraphs) {
         const clone = paragraph.cloneNode(true);
         clone.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
         statement.append(clone);
@@ -116,21 +115,44 @@
     const status = element('span', 'book-toolbar-status');
     status.setAttribute('role', 'status');
     let stepButton;
-    const editButton = button(exercise ? '풀기' : '편집', () => setMode(mode === 'edit' ? null : 'edit'));
-    if (browserLean) editButton.title = '브라우저에서 Lean을 실행합니다. 첫 실행 시 약 300 MB를 내려받습니다.';
-    const copyButton = button('복사', async () => {
+    const editButton = exercise ? button('풀기', () => setMode(mode === 'edit' ? null : 'edit')) : null;
+    if (editButton && browserLean) editButton.title = '브라우저에서 Lean을 실행합니다. 첫 실행 시 약 300 MB를 내려받습니다.';
+    const copyButton = button('', async () => {
       try {
         const text = mode === 'edit' && editor ? editor.code() : (await snippet(key)).code;
         await navigator.clipboard.writeText(text);
         status.textContent = '복사됨';
       } catch { status.textContent = '복사 실패'; }
     }, 'book-copy');
+    copyButton.setAttribute('aria-label', '복사');
+    copyButton.title = '코드 복사';
+    const copyIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    copyIcon.setAttribute('viewBox', '0 0 24 24');
+    copyIcon.setAttribute('width', '16'); copyIcon.setAttribute('height', '16');
+    copyIcon.setAttribute('fill', 'none'); copyIcon.setAttribute('stroke', 'currentColor');
+    copyIcon.setAttribute('stroke-width', '1.5'); copyIcon.setAttribute('aria-hidden', 'true');
+    const outline = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    outline.setAttribute('d', 'M8 8h12v13H8z M16 8V3H3v13h5');
+    copyIcon.append(outline); copyButton.append(copyIcon);
     if (steps.length && !exercise) {
       stepButton = button('단계', () => setMode(mode === 'steps' ? null : 'steps'));
-      toolbar.append(stepButton);
+      toolbar.prepend(stepButton);
     }
-    if (!staticReading) toolbar.append(editButton);
+    if (exercise) {
+      const card = element('section', 'book-exercise-card');
+      const heading = element('div', 'book-exercise-card-heading');
+      const number = problemParagraphs[0]?.querySelector('strong');
+      heading.append(element('strong', '', number?.textContent || '연습문제'));
+      number?.remove();
+      editButton.classList.add('book-solve-button');
+      if (!staticReading) heading.append(editButton);
+      const disclosure = wrapper.nextElementSibling;
+      wrapper.before(card);
+      card.append(heading, ...problemParagraphs, wrapper);
+      if (disclosure?.matches('details.book-disclosure')) card.append(disclosure);
+    }
     toolbar.append(copyButton, status);
+    if (exercise) openEditors.set(key, () => setMode('edit'));
     for (const control of [stepButton, editButton].filter(Boolean)) {
       control.setAttribute('aria-controls', panel.id);
       control.setAttribute('aria-expanded', 'false');
@@ -189,7 +211,7 @@
       }
       panel.hidden = !mode;
       if (stepButton) stepButton.setAttribute('aria-expanded', String(mode === 'steps'));
-      editButton.setAttribute('aria-expanded', String(mode === 'edit'));
+      editButton?.setAttribute('aria-expanded', String(mode === 'edit'));
       source.querySelectorAll('.tactic-toggle').forEach(toggle => { toggle.checked = false; });
       source.querySelectorAll('.book-current-step').forEach(node => node.classList.remove('book-current-step'));
       panel.replaceChildren();
@@ -254,12 +276,12 @@
     const proofControls = element('div', 'book-proof-controls');
     function currentCode() {
       if (!exercise || fullCode) return input.value;
-      exercise.bodies[selectedProof] = input.value;
+      exercise.bodies[selectedProof] = exercise.sourceBody(input.value);
       return exercise.source(exercise.bodies);
     }
     function editableStart() { return exercise && !fullCode ? exercise.start(exercise.bodies, selectedProof) : 0; }
     function loadProof() {
-      input.value = exercise.bodies[selectedProof];
+      input.value = exercise.editorBody(exercise.bodies[selectedProof]);
       declaration.textContent = exercise.parts[selectedProof].header.trimEnd();
       declaration.hidden = fullCode;
       proofControls.hidden = fullCode || exercise.parts.length === 1;
@@ -366,7 +388,9 @@
       return task;
     }
     function position() {
-      const before = currentCode().slice(0, editableStart() + input.selectionStart);
+      const visible = input.value.slice(0, input.selectionStart);
+      const offset = exercise && !fullCode ? exercise.sourceBody(visible).length : input.selectionStart;
+      const before = currentCode().slice(0, editableStart() + offset);
       const lines = before.split('\n');
       return {line: lines.length - 1, character: lines.at(-1).length};
     }
@@ -418,13 +442,16 @@
           const row = proofIndex < 0 ? item.line
             : code.slice(exercise.start(exercise.bodies, proofIndex), start).split('\n').length;
           const label = proofIndex >= 0 && exercise.parts.length > 1 ? `풀이 (${proofIndex + 1}) ` : '';
-          const diagnostic = button(`${label}${row}:${item.column}  ${item.message}`, () => {
+          const column = proofIndex < 0 ? item.column : Math.max(1, item.column - 2);
+          const diagnostic = button(`${label}${row}:${column}  ${item.message}`, () => {
             if (exercise && !fullCode) {
               const index = exercise.parts.findLastIndex((_, i) => exercise.start(exercise.bodies, i) <= start);
               if (index >= 0) { selectedProof = index; loadProof(); lines(); }
             }
             input.focus();
-            const cursor = Math.max(0, start - editableStart());
+            const offset = Math.max(0, start - editableStart());
+            const cursor = exercise && !fullCode
+              ? exercise.editorBody(exercise.bodies[selectedProof].slice(0, offset)).length : offset;
             input.setSelectionRange(cursor, cursor);
             updateGoal();
           }, item.severity === 1 ? 'book-error' : 'book-warning');
@@ -535,10 +562,7 @@
     if (browserLean) {
       const reopen = sessionStorage.getItem('lean-algebra.reopen');
       sessionStorage.removeItem('lean-algebra.reopen');
-      if (reopen) {
-        const wrapper = [...document.querySelectorAll('.book-example')].find(node => node.dataset.snippet === reopen);
-        [...(wrapper?.querySelectorAll('.book-button') || [])].find(node => ['편집', '풀기'].includes(node.textContent))?.click();
-      }
+      if (reopen) openEditors.get(reopen)?.();
     }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);

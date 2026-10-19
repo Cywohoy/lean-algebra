@@ -52,7 +52,7 @@ python web/serve.py --port 8000
 ```
 
 증명의 전술을 누르면 그 단계의 가정과 목표를 볼 수 있다.
-`편집`에서는 코드를 바꾸어 Lean으로 확인할 수 있으며, 입력을 잠시 멈추면 자동으로 검사한다.
+연습문제의 `풀기`에서는 증명을 작성하여 Lean으로 확인할 수 있으며, 입력을 잠시 멈추면 자동으로 검사한다.
 사용법은 [상호작용 미리보기](web/README.md)에 정리했다.
 본문을 수정한 뒤에는 `lake exe textbook`으로 다시 만들고 서버를 재시작하라.
 
@@ -103,7 +103,7 @@ python tests/AutomationTrace.Tests.py
 
 GitHub Pages용 문서는 `python scripts/prepare_pages.py`로 `_out/pages/`에 준비한다.
 공개 편집기는 브라우저 안에서 Lean 4.35와 Ample을 실행하며 코드를 실행 서버로 보내지 않는다.
-처음 `편집` 또는 `풀기`를 누르면 실행 파일을 불러온다. 현재 자동완성은 제공하지 않는다.
+처음 `풀기`를 누르면 실행 파일을 불러온다. 현재 자동완성은 제공하지 않는다.
 `python scripts/prepare_pages.py`도 같은 WASM 실행 환경을 준비한다.
 `python tests/Pages.Tests.py`로 저장소 이름이 붙은 URL에서도 링크가 연결되는지 검사할 수 있다.
 

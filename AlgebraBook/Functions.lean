@@ -485,19 +485,19 @@ def Bijective {A B : Type} : (A → B) → Prop :=
 ```savedLean -show
 namespace Bijective
 
-theorem injective {A B : Type}
+theorem inj {A B : Type}
     {f : A → B} (hf : Bijective f) : Injective f :=
     hf.left
 
-theorem surjective {A B : Type}
+theorem surj {A B : Type}
     {f : A → B} (hf : Bijective f) : Surjective f :=
     hf.right
 
 end Bijective
 ```
 
-`hf : Bijective f`가 주어지면 `hf.injective`로 단사성의 증명을,
-`hf.surjective`로 전사성의 증명을 꺼내 사용할 수 있다.
+`hf : Bijective f`가 주어지면 `hf.inj`로 단사성의 증명을,
+`hf.surj`로 전사성의 증명을 꺼내 사용할 수 있다.
 
 *보기* 항등함수는 전단사이다.
 단사성과 전사성을 앞에서 각각 증명했으므로 `constructor`로 나뉜 목표에 두 정리를 사용하면 된다.
@@ -1120,7 +1120,7 @@ theorem surjective_compose {A B C : Type}
 {anchor "functions-composition-bijectivity"}[]*정리* 전단사함수 두 개를 합성하면 전단사함수를 얻는다.
 
 *증명* `constructor`로 목표를 단사성과 전사성으로 나누어 앞의 두 정리를 사용한다.
-가정 `hf : Bijective f`에서는 `hf.injective`로 단사성의 증명을, `hf.surjective`로 전사성의 증명을 꺼내며
+가정 `hf : Bijective f`에서는 `hf.inj`로 단사성의 증명을, `hf.surj`로 전사성의 증명을 꺼내며
 `hg`도 같은 방식으로 사용한다.
 
 ```savedLean
@@ -1130,8 +1130,8 @@ theorem bijective_compose {A B C : Type}
     (hg : Bijective g) :
     Bijective (g ∘ f) := by
   constructor
-  · exact injective_compose f g hf.injective hg.injective
-  · exact surjective_compose f g hf.surjective hg.surjective
+  · exact injective_compose f g hf.inj hg.inj
+  · exact surjective_compose f g hf.surj hg.surj
 ```
 
 # 집합의 곱과 함수
@@ -1355,9 +1355,9 @@ theorem productMap_bijective {A B C D : Type}
     (hg : Bijective g) :
     Bijective (productMap f g) := by
   constructor
-  · exact productMap_injective f g hf.injective hg.injective
+  · exact productMap_injective f g hf.inj hg.inj
   · exact productMap_surjective f g
-      hf.surjective hg.surjective
+      hf.surj hg.surj
 ```
 
 뒤에서 집합의 크기를 다룰 때는 이 결과로 두 집합의 곱 사이에 전단사함수를 만든다.
@@ -1458,18 +1458,18 @@ theorem bijective_preimage_unique {A B : Type} (f : A → B)
       f x = y ∧ ∀ z : A, f z = y → z = x := by
   intro y
   -- 전사성으로 f x = y인 원소를 얻는다.
-  unpack hf.surjective y with ⟨x, hx⟩
+  unpack hf.surj y with ⟨x, hx⟩
   exists x
   constructor
   · exact hx
   · intro z hz
     -- 같은 함수값을 갖는 원소는 단사성으로 같다.
-    apply hf.injective
+    apply hf.inj
     rw [hz, hx]
 ```
 
-`hf.surjective y`는 `∃ x, f x = y`의 증명이므로 `unpack`으로 원소 `x`와 등식 `hx`를 얻는다.
-유일성을 보이는 부분에서 `apply hf.injective`를 쓰면 목표가 `f z = f x`가 되고,
+`hf.surj y`는 `∃ x, f x = y`의 증명이므로 `unpack`으로 원소 `x`와 등식 `hx`를 얻는다.
+유일성을 보이는 부분에서 `apply hf.inj`를 쓰면 목표가 `f z = f x`가 되고,
 `rw [hz, hx]`는 대괄호 안의 등식을 왼쪽부터 차례로 사용한다.
 먼저 `hz`로 `f z`를 `y`로 바꾸고 이어서 `hx`로 `f x`를 `y`로 바꾸면 양변이 같아진다.
 
@@ -1484,7 +1484,7 @@ Lean에서도 존재한다는 사실을 바탕으로 원소를 고른 뒤,
 그 원소가 조건을 만족한다는 증명을 사용하여 역함수의 성질을 보인다.
 
 먼저 존재명제의 증명과 함수값으로 사용할 원소를 구별하자.
-`hf.surjective y`는 `∃ x, f x = y`의 증명이다.
+`hf.surj y`는 `∃ x, f x = y`의 증명이다.
 이 명제를 `unpack`이나 `rcases`로 분해하여 다른 명제를 증명할 수는 있지만,
 그 안의 원소를 꺼내 `A`의 값으로 반환할 수는 없다.
 예를 들어 `∃ n : Nat, True`는 $`0`을 제시해서도, $`1`을 제시해서도 증명할 수 있다.
@@ -1519,7 +1519,7 @@ example {A : Type}
 ```
 
 항등함수에서는 필요한 원소가 `y`임을 알고 있으므로 `identityPreimage`에서 그 값을 직접 넣었다.
-일반적인 전단사 `f`에 대해서는 `hf.surjective y`로 존재성을 확인한 뒤
+일반적인 전단사 `f`에 대해서는 `hf.surj y`로 존재성을 확인한 뒤
 조건을 만족하는 원소를 택해야 한다.
 술어 `P : A → Prop`와 존재명제의 증명 `h : ∃ x, P x`가 주어졌을 때
 `Classical.choose h`는 `P`를 만족하는 `A`의 원소 하나를 정한다.
@@ -1530,7 +1530,7 @@ example {A : Type}
 선택한 원소로 추론하려면 그 원소가 조건을 만족한다는 증명도 필요하다.
 `Classical.choose h`의 타입은 `A`이고,
 `Classical.choose_spec h`는 바로 그 원소에 대한 `P (Classical.choose h)`의 증명이다.
-역함수에서는 각 `y`에 대해 `hf.surjective y`를 `Classical.choose`와 `Classical.choose_spec`에 넣는다.
+역함수에서는 각 `y`에 대해 `hf.surj y`를 `Classical.choose`와 `Classical.choose_spec`에 넣는다.
 선택한 원소들을 함수값으로 삼고 $`f(g(y))=y`의 증명을 함께 담으면
 함수 $`g:B\to A`와 그 성질을 하나의 부분타입으로 구성할 수 있다.
 
@@ -1541,19 +1541,19 @@ example {A : Type}
 noncomputable def inverseMapData {A B : Type} (f : A → B)
     (hf : Bijective f) :
     { g : B → A // ∀ y, f (g y) = y } :=
-  { val := fun y => Classical.choose (hf.surjective y)
+  { val := fun y => Classical.choose (hf.surj y)
     property := by
       intro y
-      exact Classical.choose_spec (hf.surjective y) }
+      exact Classical.choose_spec (hf.surj y) }
 ```
 
 `val`에는 선택한 원소를 함수값으로 삼는 함수를 넣는다.
 `property`에서는 임의의 `y`를 택한 뒤
-같은 존재성의 증명 `hf.surjective y`에 `choose_spec`을 적용한다.
+같은 존재성의 증명 `hf.surj y`에 `choose_spec`을 적용한다.
 이로써 `val`에 넣은 함수가 모든 `y`에서 $`f(g(y))=y`를 만족함을 보인다.
 
 이제 `inverseMapData`에서 함수를 꺼내 `inverseMap`으로 정의하고,
-그 성질을 `inverseMap_spec`이라는 정리로 사용하자.
+그 성질을 `inverseMap_right`라는 정리로 사용하자.
 `.val`은 함수이며 `.property`는 모든 `y`에서 성립하는 등식의 증명이므로
 후자에 `y`를 넣으면 그 원소에서의 등식을 얻는다.
 
@@ -1561,7 +1561,7 @@ noncomputable def inverseMapData {A B : Type} (f : A → B)
 noncomputable def inverseMap {A B : Type} (f : A → B)
     (hf : Bijective f) : B → A :=
   (inverseMapData f hf).val
-theorem inverseMap_spec {A B : Type} (f : A → B)
+theorem inverseMap_right {A B : Type} (f : A → B)
     (hf : Bijective f)
     (y : B) :
     f (inverseMap f hf y) = y := by
@@ -1578,13 +1578,16 @@ theorem inverseMap_left {A B : Type} (f : A → B)
     (hf : Bijective f)
     (x : A) :
     inverseMap f hf (f x) = x := by
-  apply hf.injective
-  exact inverseMap_spec f hf (f x)
+  apply hf.inj
+  exact inverseMap_right f hf (f x)
 ```
 
-`apply hf.injective`는 두 원소가 같다는 목표를 그 함수값이 같다는 목표로 바꾼다.
+`apply hf.inj`는 두 원소가 같다는 목표를 그 함수값이 같다는 목표로 바꾼다.
 남은 목표 `f (inverseMap f hf (f x)) = f x`는
-`inverseMap_spec`에 공역의 원소 `f x`를 넣어 얻는다.
+`inverseMap_right`에 공역의 원소 `f x`를 넣어 얻는다.
+
+이름의 `left`와 `right`는 합성에서 역함수가 놓이는 위치를 가리킨다.
+`inverseMap_left`는 $`g(f(x))=x`를, `inverseMap_right`는 $`f(g(y))=y`를 나타낸다.
 
 이제 역함수의 존재를 하나의 명제로 정리하자.
 `inverseMap`은 함수 자체의 정의이고,
@@ -1601,7 +1604,7 @@ theorem inverse_exists {A B : Type} (f : A → B)
     exact inverseMap_left f hf x
 
   · intro y
-    exact inverseMap_spec f hf y
+    exact inverseMap_right f hf y
 ```
 
 `exists`로 앞에서 정의한 함수를 제시한 뒤 두 조건을 각각 증명했다.
@@ -1655,7 +1658,7 @@ example {A B : Type} :
   apply inverse_function_unique swapPair
   · constructor
     · exact inverseMap_left swapPair swapPair_bijective
-    · exact inverseMap_spec swapPair swapPair_bijective
+    · exact inverseMap_right swapPair swapPair_bijective
 
   · constructor
     · exact swapPair_twice
@@ -1671,7 +1674,7 @@ example {A B : Type} :
 tag := "functions-inverse-laws"
 %%%
 
-`inverseMap_left`와 `inverseMap_spec`은 각각의 원소에서 성립하는 등식이므로
+`inverseMap_left`와 `inverseMap_right`은 각각의 원소에서 성립하는 등식이므로
 `ext`로 원소별 등식을 목표로 삼으면 합성함수와 항등함수의 같음을 보일 수 있다.
 
 ```savedLean
@@ -1685,7 +1688,7 @@ theorem compose_inverseMap {A B : Type} (f : A → B)
     (hf : Bijective f) :
     f ∘ inverseMap f hf = identity B := by
   ext y
-  exact inverseMap_spec f hf y
+  exact inverseMap_right f hf y
 ```
 
 {anchor "functions-inverse-bijectivity"}[]*정리* 전단사함수의 역함수도 전단사이다.
@@ -1707,7 +1710,7 @@ theorem inverseMap_bijective {A B : Type} (f : A → B)
       rw [hxy]
 
     -- f와 역함수를 차례로 적용하면 원래 원소이다.
-    rw [inverseMap_spec f hf x, inverseMap_spec f hf y] at h
+    rw [inverseMap_right f hf x, inverseMap_right f hf y] at h
     exact h
 
   · intro x
@@ -1717,7 +1720,7 @@ theorem inverseMap_bijective {A B : Type} (f : A → B)
 ```
 
 단사성을 보일 때는 `hxy`로 두 함수값의 등식 `h`를 얻은 뒤
-`inverseMap_spec`을 `x`와 `y`에 각각 적용한 등식으로 양변을 바꾼다.
+`inverseMap_right`을 `x`와 `y`에 각각 적용한 등식으로 양변을 바꾼다.
 전사성을 보일 때는 `exists (f x)`로 원소를 택하면
 남은 목표가 `inverseMap f hf (f x) = x`가 되므로 `inverseMap_left`를 사용한다.
 
@@ -1794,7 +1797,7 @@ theorem exercise_inverse_inverse {A B : Type}
 ```
 
 *힌트* `ext x`로 원소별 등식을 보인 뒤 역함수의 단사성을 사용하라.
-남은 두 함수값은 `inverseMap_spec`과 `inverseMap_left`로 각각 `x`가 된다.
+남은 두 함수값은 `inverseMap_right`과 `inverseMap_left`로 각각 `x`가 된다.
 
 
 *문제 6* $`(a,b)\in S\times T`이면 $`(b,a)\in T\times S`임을 증명하라.
