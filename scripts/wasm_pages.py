@@ -38,7 +38,8 @@ def prepare(site, bundle=None, download=False):
     shutil.copyfile(target / 'coi-serviceworker.js', site / 'coi-serviceworker.js')
     (site / 'assets/web').mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT / 'assets/web/reader.js', site / '-verso-data/reader.js')
-    for name in ['lean-wasm.js', 'wasm-reader.js']:
+    shutil.copyfile(ROOT / 'assets/web/reader.css', site / '-verso-data/reader.css')
+    for name in ['lean-wasm.js', 'wasm-reader.js', 'exercise-model.js']:
         shutil.copyfile(ROOT / 'assets/web' / name, site / 'assets/web' / name)
     loader = importlib.util.spec_from_file_location('book_math_export', ROOT / 'scripts/sync_ample.py')
     exporter = importlib.util.module_from_spec(loader)

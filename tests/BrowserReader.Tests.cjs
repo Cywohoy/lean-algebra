@@ -66,7 +66,7 @@ async function main() {
       await page.goto(new URL(selected.url, base).href);
       const wrapper = page.locator(`[data-snippet="${selected.key}"]`);
       await wrapper.hover();
-      await wrapper.getByRole('button', {name: '편집', exact: true}).click();
+      await wrapper.getByRole('button', {name: /^(편집|풀기)$/}).click();
       await wrapper.locator('textarea').waitFor();
       return wrapper;
     }
@@ -103,11 +103,72 @@ async function main() {
     const exercise = example(code => code.startsWith('theorem exercise_add_three_preserves_lt'));
     wrapper = await open(exercise);
     await status(wrapper, '증명 중');
-    await wrapper.locator('textarea').fill(exercise.data.code.replace('sorry', ''));
+    assert(await wrapper.locator('dialog').isVisible());
+    assert((await wrapper.locator('.book-exercise-statement').innerText()).includes('문제 1'));
+    assert((await wrapper.locator('.book-exercise-declaration').innerText()).includes('a + 3 < b + 3'));
+    assert.equal((await wrapper.locator('textarea').inputValue()).trim(), 'sorry');
+    await wrapper.locator('textarea').fill('  ');
     await page.waitForFunction(() => document.querySelector('.book-live-goal')?.textContent.includes('⊢ a + 3 < b + 3'), null, {timeout: 120000});
-    await wrapper.locator('textarea').fill(exercise.data.code.replace('sorry', 'apply Nat.add_lt_add_right (k := 3)\n  exact h'));
-    await status(wrapper, '오류 없음');
-    console.log('PASS: introductory imports, empty proof, and automatic checking');
+    await wrapper.locator('textarea').fill('  apply Nat.add_lt_add_right (k := 3)\n  exact h');
+    await status(wrapper, '풀이 완료');
+    // Full-source mode preserves the proof, and changed statements are not marked solved.
+    await wrapper.getByRole('button', {name: '전체 코드', exact: true}).click();
+    assert((await wrapper.locator('textarea').inputValue()).startsWith('theorem exercise_'));
+    const canonical = await wrapper.locator('textarea').inputValue();
+    await wrapper.locator('textarea').fill('theorem exercise_add_three_preserves_lt : True := by\n  trivial');
+    await status(wrapper, '코드 검사 통과');
+    await wrapper.locator('textarea').fill(canonical);
+    await wrapper.getByRole('button', {name: '증명만 편집', exact: true}).click();
+    await status(wrapper, '풀이 완료');
+    assert(await wrapper.locator('.book-reader-panel').evaluate(panel => panel.getBoundingClientRect().width > 1000));
+    const downloadEvent = page.waitForEvent('download');
+    await wrapper.getByRole('button', {name: '풀이 내려받기', exact: true}).click();
+    const download = await downloadEvent;
+    assert(download.suggestedFilename().endsWith('.lean'));
+    await download.saveAs('tmp/browser-exercise-download.lean');
+    const downloaded = fs.readFileSync('tmp/browser-exercise-download.lean', 'utf8');
+    assert(downloaded.includes('import Ample.') && downloaded.includes('exact h'));
+    await page.keyboard.press('Escape');
+    assert.equal(await wrapper.locator('dialog').isVisible(), false);
+    await wrapper.getByRole('button', {name: '풀기', exact: true}).click();
+    assert((await wrapper.locator('textarea').inputValue()).includes('exact h'));
+    await status(wrapper, '풀이 완료');
+    await page.screenshot({path: 'tmp/exercise-workspace-desktop.png'});
+    await page.setViewportSize({width: 390, height: 844});
+    const layout = await wrapper.locator('dialog').evaluate(dialog => ({
+      width: dialog.getBoundingClientRect().width, overflow: dialog.scrollWidth > dialog.clientWidth,
+      code: dialog.querySelector('textarea').getBoundingClientRect().bottom,
+      goals: dialog.querySelector('.book-live-output').getBoundingClientRect().top,
+    }));
+    assert(layout.width <= 390 && !layout.overflow && layout.goals >= layout.code, JSON.stringify(layout));
+    await page.screenshot({path: 'tmp/exercise-workspace-mobile.png'});
+    await page.setViewportSize({width: 1360, height: 1000});
+    await page.keyboard.press('Escape');
+    await page.reload();
+    wrapper = page.locator(`[data-snippet="${exercise.key}"]`);
+    await wrapper.getByRole('button', {name: '풀기', exact: true}).click();
+    assert((await wrapper.locator('textarea').inputValue()).includes('exact h'));
+    await status(wrapper, '풀이 완료');
+    await page.keyboard.press('Escape');
+    console.log('PASS: proof-only exercise workspace, draft, download, mode switch, and responsive layout');
+
+    const chain = example(code => code.startsWith('theorem exercise_shift_lt '));
+    wrapper = await open(chain);
+    await status(wrapper, '증명 중');
+    await wrapper.locator('textarea').fill('  apply Nat.add_lt_add_right (k := c)\n  exact hab');
+    await status(wrapper, '증명 중');
+    await wrapper.getByRole('button', {name: '(2)', exact: true}).click();
+    await wrapper.locator('textarea').fill('  apply exercise_shift_lt\n  apply exercise_shift_lt\n  exact hab');
+    await status(wrapper, '풀이 완료');
+    await wrapper.getByRole('button', {name: '(1)', exact: true}).click();
+    assert((await wrapper.locator('textarea').inputValue()).includes('(k := c)'));
+    await status(wrapper, '풀이 완료');
+    await wrapper.locator('textarea').fill('  exact True.intro');
+    await status(wrapper, '오류 1개');
+    await wrapper.locator('.book-diagnostics .book-error').first().click();
+    assert.equal(await wrapper.locator('textarea').evaluate(input => input.selectionStart), 2);
+    await page.keyboard.press('Escape');
+    console.log('PASS: dependent subproblems, combined checking, and diagnostic cursor mapping');
 
     const cantor = example(code => code.startsWith('theorem cantor_not_surjective '));
     wrapper = await open(cantor);

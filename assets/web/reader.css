@@ -34,12 +34,6 @@
 .book-run-status { color: #888; }
 .book-editor-columns { display: block; }
 .book-edit-code { position: relative; display: flex; min-width: 0; padding: .8rem 0; }
-.book-completion[hidden] { display: none; }
-.book-completion { position: absolute; z-index: 5; box-sizing: border-box; max-width: 100%; background: white; border: 1px solid #bbb; font: 15px/1.6 var(--verso-code-font-family); }
-.book-completion-list { position: relative; max-height: 11rem; overflow-y: auto; overscroll-behavior: contain; }
-.book-completion-option { padding: .2rem .65rem; cursor: pointer; overflow-wrap: anywhere; }
-.book-completion-option[aria-selected="true"] { background: #ededed; color: #111; }
-.book-completion-detail { border: 0; border-top: 1px solid #ddd; margin: 0; padding: .5rem .65rem; max-height: 9rem; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: white; font: 14px/1.65 var(--verso-code-font-family); }
 .book-line-numbers { color: #aaa; background: white; border: 0; font: 16px/28px var(--verso-code-font-family); padding: 0 .7rem 0 0; margin: 0; text-align: right; overflow: hidden; max-height: 680px; user-select: none; }
 .book-code-input { display: block; width: 100%; min-width: 0; box-sizing: border-box; border: 0; border-radius: 0; resize: vertical; color: #171717; background: white; font: 16px/28px var(--verso-code-font-family); padding: 0 .8rem 0 0; tab-size: 2; overflow: auto; }
 .book-live-output { padding: 1rem .75rem; min-width: 0; border-top: 1px solid #ddd; }
@@ -69,3 +63,33 @@
   .book-example-body > .hl.lean.block { display: block !important; }
   .book-current-step { background: transparent !important; }
 }
+
+/* Exercise workspace: keep the problem above a wide proof/state split. */
+.book-exercise > .book-toolbar { position: static; justify-content: flex-end; opacity: 1; margin-bottom: .3rem; }
+.book-solving { overflow: hidden; }
+.book-exercise-workspace { box-sizing: border-box; width: min(1280px, calc(100vw - 48px)); max-width: none; height: calc(100dvh - 48px); max-height: none; margin: auto; padding: 0 28px 20px; border: 1px solid #bbb; color: #171717; background: white; overflow: auto; font-family: var(--verso-text-font-family); }
+.book-exercise-workspace::backdrop { background: rgb(0 0 0 / .28); }
+.book-exercise-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 18px 0 14px; border-bottom: 1px solid #ddd; }
+.book-exercise-heading strong { font-size: 1rem; font-weight: 500; }
+.book-exercise-heading .book-button { font-size: .9rem; }
+.book-exercise-statement { max-width: 58rem; padding: 12px 0; font-size: 1rem; line-height: 1.85; }
+.book-exercise-statement p { margin: .35rem 0; }
+.book-exercise-workspace .book-reader-panel { padding: 0; border: 0; max-width: none; width: 100%; }
+.book-proof-controls { display: flex; gap: 1.2rem; margin: .3rem 0; }
+.book-proof-controls[hidden], .book-exercise-declaration[hidden] { display: none; }
+.book-proof-controls .book-button[aria-pressed="true"] { color: #111; text-decoration: underline; text-underline-offset: 4px; }
+.book-exercise-declaration { box-sizing: border-box; padding: 12px 0; margin: 0; border: 0; background: transparent; white-space: pre-wrap; overflow-wrap: anywhere; font: 16px/1.8 var(--verso-code-font-family); }
+.book-exercise-workspace .book-editor-columns { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); min-height: 300px; }
+.book-exercise-workspace .book-live-output { border-top: 0; border-left: 1px solid #ddd; padding: 16px 0 16px 24px; }
+.book-exercise-workspace .book-edit-code { padding: 16px 16px 16px 0; align-self: start; }
+.book-exercise-workspace .book-code-input { min-height: 280px; border: 0; border-radius: 0; }
+.book-exercise-workspace .book-editor-controls { font-size: .85rem; gap: 1.4rem; }
+.book-exercise-workspace .book-help { font-size: .8rem; }
+@media (max-width: 850px) {
+  .book-exercise-workspace { width: calc(100vw - 20px); height: calc(100dvh - 20px); padding: 0 16px 16px; }
+  .book-exercise-workspace .book-editor-columns { display: block; }
+  .book-exercise-workspace .book-live-output { border-left: 0; border-top: 1px solid #ddd; padding: 16px 0; }
+  .book-exercise-workspace .book-edit-code { padding-right: 0; }
+  .book-exercise-workspace .book-code-input { min-height: 220px; }
+}
+@media print { .book-exercise-workspace { display: none !important; } }

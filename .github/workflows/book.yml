@@ -52,8 +52,10 @@ jobs:
           key: lean-wasm-${{ hashFiles('web/wasm-runtime.json') }}
       - name: Prepare the static site
         run: |
-          python scripts/prepare_pages.py --download-wasm
+          python scripts/prepare_pages.py
           python tests/Pages.Tests.py
+          python tests/Preview.Tests.py
+          node tests/ExerciseModel.Tests.cjs
       # The Pages artifact already contains the complete downloadable site.
       - uses: actions/upload-pages-artifact@v4
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'

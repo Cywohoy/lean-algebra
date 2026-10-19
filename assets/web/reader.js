@@ -1,4 +1,4 @@
-/* Interactive reading and a local Lean playground. No third-party scripts. */
+/* Interactive reading and browser-local Lean execution. */
 (() => {
   'use strict';
   const siteRoot = new URL('.', document.baseURI);
@@ -6,7 +6,6 @@
   const browserLean = document.querySelector('meta[name="book-mode"]')?.content === 'wasm';
   let browserBackend;
   const snippets = new Map();
-  let backend;
   let activeEditor;
   let panelCounter = 0;
   const element = (tag, className, text) => {
@@ -43,33 +42,11 @@
       return sessionStorage.getItem('lean-algebra.session');
     } catch { return null; }
   }
-  async function endpoint() {
-    if (backend) return backend;
-    const candidates = [location.origin];
-    if (['127.0.0.1', 'localhost'].includes(location.hostname)) {
-      candidates.push(`http://${location.hostname}:8001`);
-    }
-    for (const candidate of new Set(candidates)) {
-      try {
-        const response = await fetch(`${candidate}/api/lean/status`, {signal: AbortSignal.timeout(2500)});
-        if (response.ok && (await response.json()).available) return (backend = candidate);
-      } catch { /* Try the local companion server, when present. */ }
-    }
-    throw new Error('Lean 서버에 연결할 수 없습니다. interactive-preview.bat를 실행해 주세요.');
-  }
   async function call(path, payload) {
-    if (browserLean) {
-      browserBackend ||= import(new URL('assets/web/wasm-reader.js', siteRoot))
-        .then(module => module.createBrowserBackend(siteRoot));
-      return (await browserBackend).call(path, payload);
-    }
-    const base = await endpoint();
-    const response = await fetch(base + path, {
-      method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload),
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Lean request failed.');
-    return data;
+    if (!browserLean) throw new Error('WASM 실행 환경이 준비되지 않았습니다. 미리보기를 다시 시작해 주세요.');
+    browserBackend ||= import(new URL('assets/web/wasm-reader.js', siteRoot))
+      .then(module => module.createBrowserBackend(siteRoot));
+    return (await browserBackend).call(path, payload);
   }
 
   // Keep both branch-local states and the outer state after a nested `have`.
@@ -94,6 +71,8 @@
     if (!/\b(def|theorem|lemma|example|structure|inductive|instance)\b/.test(plain(source))) return;
     wrapper.dataset.readerReady = 'true';
     const key = wrapper.dataset.snippet;
+    const exercise = wrapper.dataset.exerciseUnit === 'proofs';
+    wrapper.classList.toggle('book-exercise', exercise);
     const steps = proofSteps(source);
     const toolbar = element('div', 'book-toolbar');
     toolbar.setAttribute('aria-label', '예제 도구');
@@ -107,6 +86,29 @@
     panel.id = `book-panel-${++panelCounter}`;
     panel.hidden = true;
     body.append(panel);
+    let workspace;
+    if (exercise) {
+      workspace = element('dialog', 'book-exercise-workspace');
+      const heading = element('div', 'book-exercise-heading');
+      const title = element('strong', '', '연습문제 풀이');
+      title.id = `book-exercise-${panelCounter}`;
+      workspace.setAttribute('aria-labelledby', title.id);
+      heading.append(title, button('본문으로', () => setMode(null)));
+      const statement = element('div', 'book-exercise-statement');
+      const paragraphs = [];
+      for (let node = wrapper.previousElementSibling; node?.tagName === 'P'; node = node.previousElementSibling) {
+        paragraphs.unshift(node);
+        if (/^문제\s*\d/.test(node.textContent.trim())) break;
+      }
+      for (const paragraph of paragraphs) {
+        const clone = paragraph.cloneNode(true);
+        clone.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
+        statement.append(clone);
+      }
+      workspace.append(heading, statement, panel);
+      wrapper.append(workspace);
+      workspace.addEventListener('cancel', event => { event.preventDefault(); setMode(null); });
+    }
     let mode = null;
     let stepIndex = 0;
     let editor;
@@ -114,11 +116,11 @@
     const status = element('span', 'book-toolbar-status');
     status.setAttribute('role', 'status');
     let stepButton;
-    const editButton = button('편집', () => setMode(mode === 'edit' ? null : 'edit'));
+    const editButton = button(exercise ? '풀기' : '편집', () => setMode(mode === 'edit' ? null : 'edit'));
     if (browserLean) editButton.title = '브라우저에서 Lean을 실행합니다. 첫 실행 시 약 300 MB를 내려받습니다.';
     const copyButton = button('복사', async () => {
       try {
-        const text = mode === 'edit' && editor ? editor.input.value : (await snippet(key)).code;
+        const text = mode === 'edit' && editor ? editor.code() : (await snippet(key)).code;
         await navigator.clipboard.writeText(text);
         status.textContent = '복사됨';
       } catch { status.textContent = '복사 실패'; }
@@ -180,6 +182,11 @@
       mode = next;
       wrapper.classList.toggle('book-reading', mode === 'steps');
       wrapper.classList.toggle('book-editing', mode === 'edit');
+      if (workspace) {
+        if (mode === 'edit' && !workspace.open) workspace.showModal();
+        else if (mode !== 'edit' && workspace.open) { workspace.close(); editButton.focus(); }
+        document.documentElement.classList.toggle('book-solving', mode === 'edit');
+      }
       panel.hidden = !mode;
       if (stepButton) stepButton.setAttribute('aria-expanded', String(mode === 'steps'));
       editButton.setAttribute('aria-expanded', String(mode === 'edit'));
@@ -193,7 +200,11 @@
           const data = await snippet(key);
           if (mode !== 'edit') return;
           panel.replaceChildren();
-          editor ||= createEditor(key, data);
+          if (!editor) {
+            const model = exercise ? await import(new URL('assets/web/exercise-model.js', siteRoot)) : null;
+            if (mode !== 'edit') return;
+            editor = createEditor(key, data, model?.exerciseModel);
+          }
           panel.append(editor.root);
           editor.input.focus();
           editor.activate();
@@ -221,7 +232,7 @@
     }
   }
 
-  function createEditor(key, original) {
+  function createEditor(key, original, makeExercise) {
     const root = element('div', 'book-live-editor');
     const controls = element('div', 'book-editor-controls');
     const input = element('textarea', 'book-code-input');
@@ -231,33 +242,90 @@
     input.autocomplete = 'off';
     input.wrap = 'off';
     const storageKey = `lean-algebra.code.${key}`;
-    input.value = stored(storageKey) ?? original.code.trimEnd();
+    const draft = stored(storageKey) ?? original.code.trimEnd();
+    const exercise = makeExercise?.(original.code, draft);
+    let fullCode = exercise?.full || false;
+    let selectedProof = 0;
+    const declaration = element('pre', 'book-exercise-declaration');
+    const proofControls = element('div', 'book-proof-controls');
+    function currentCode() {
+      if (!exercise || fullCode) return input.value;
+      exercise.bodies[selectedProof] = input.value;
+      return exercise.source(exercise.bodies);
+    }
+    function editableStart() { return exercise && !fullCode ? exercise.start(exercise.bodies, selectedProof) : 0; }
+    function loadProof() {
+      input.value = exercise.bodies[selectedProof];
+      declaration.textContent = exercise.parts[selectedProof].header.trimEnd();
+      declaration.hidden = fullCode;
+      proofControls.hidden = fullCode || exercise.parts.length === 1;
+      input.setAttribute('aria-label', fullCode ? '연습문제 전체 코드' : `풀이 ${selectedProof + 1}`);
+      [...proofControls.children].forEach((node, i) => node.setAttribute('aria-pressed', String(i === selectedProof)));
+    }
+    if (exercise) {
+      for (const [index] of exercise.parts.entries()) proofControls.append(button(`(${index + 1})`, () => {
+        currentCode(); selectedProof = index; loadProof(); input.focus(); changed();
+      }));
+      if (fullCode) input.value = draft;
+      else loadProof();
+    } else input.value = draft;
     const message = element('span', 'book-run-status', '대기 중');
     message.setAttribute('role', 'status');
-    const run = button('실행', check, 'book-primary');
+    const run = button(exercise ? '검사' : '실행', check, 'book-primary');
     const reset = button('초기화', () => {
-      input.value = original.code.trimEnd();
+      if (exercise) {
+        exercise.bodies = exercise.parts.map(part => part.body);
+        if (fullCode) input.value = original.code.trimEnd();
+        else loadProof();
+      } else input.value = original.code.trimEnd();
       changed();
       input.focus();
     });
     controls.append(run, reset, message);
+    if (exercise) {
+      const toggle = button(fullCode ? '증명만 편집' : '전체 코드', () => {
+        const source = currentCode();
+        if (fullCode) {
+          const bodies = exercise.parse(source);
+          if (!bodies) {
+            message.textContent = '정리의 선언이나 보조 정의를 수정한 코드는 전체 코드에서 편집할 수 있습니다.';
+            return;
+          }
+          exercise.bodies = bodies;
+        }
+        fullCode = !fullCode;
+        if (fullCode) input.value = source;
+        else loadProof();
+        declaration.hidden = fullCode;
+        proofControls.hidden = fullCode || exercise.parts.length === 1;
+        toggle.textContent = fullCode ? '증명만 편집' : '전체 코드';
+        input.setAttribute('aria-label', fullCode ? '연습문제 전체 코드' : `풀이 ${selectedProof + 1}`);
+        input.focus(); changed();
+      });
+      const download = button('풀이 내려받기', () => {
+        let source = original.before.trimEnd() + '\n\n' + currentCode() + '\n';
+        const scopes = [];
+        for (const line of source.split('\n')) {
+          const open = /^(namespace|section)(?:\s+(\S+))?\s*$/.exec(line);
+          if (open) scopes.push(open[2] || '');
+          else if (/^end(?:\s+\S+)?\s*$/.test(line)) scopes.pop();
+        }
+        source += scopes.reverse().map(name => `end${name ? ' ' + name : ''}\n`).join('');
+        const url = URL.createObjectURL(new Blob([source], {type: 'text/plain;charset=utf-8'}));
+        const link = element('a'); link.href = url; link.download = exercise.parts[0].name + '.lean';
+        link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+      controls.insertBefore(toggle, message);
+      controls.insertBefore(download, message);
+      root.append(proofControls, declaration);
+      declaration.hidden = fullCode;
+      proofControls.hidden = fullCode || exercise.parts.length === 1;
+    }
     const columns = element('div', 'book-editor-columns');
     const codePane = element('div', 'book-edit-code');
     const gutter = element('pre', 'book-line-numbers');
     gutter.setAttribute('aria-hidden', 'true');
     codePane.append(gutter, input);
-    const completion = element('div', 'book-completion');
-    completion.hidden = true;
-    const choices = element('div', 'book-completion-list');
-    choices.id = `book-completion-${++panelCounter}`;
-    choices.setAttribute('role', 'listbox');
-    choices.setAttribute('aria-label', 'Lean 자동완성');
-    const signature = element('pre', 'book-completion-detail');
-    completion.append(choices, signature);
-    codePane.append(completion);
-    input.setAttribute('aria-autocomplete', 'list');
-    input.setAttribute('aria-controls', choices.id);
-    input.setAttribute('aria-expanded', 'false');
     const output = element('section', 'book-live-output');
     output.setAttribute('aria-label', 'Lean 실행 결과');
     const outputHeading = element('strong', 'book-panel-heading', '가정과 목표');
@@ -266,8 +334,7 @@
     output.append(outputHeading, goal, diagnostics);
     columns.append(codePane, output);
     root.append(controls, columns, element('p', 'book-help',
-      browserLean ? '브라우저 실행 · 첫 실행 시 약 300 MB 다운로드 · Ctrl+Enter 실행 · \\forall + Tab → ∀'
-        : '자동 실행 · Ctrl+Space 자동완성 · Ctrl+Enter 즉시 실행 · \\forall + Tab → ∀'));
+      '자동 검사 · Ctrl+Enter 즉시 검사 · \\forall + Tab → ∀'));
     if (browserLean) window.addEventListener('book-lean-progress', event => {
       if (busy && root.isConnected) message.textContent = event.detail;
     });
@@ -280,19 +347,11 @@
     let activated = false;
     let requestNumber = 0;
     let documentQueue = Promise.resolve();
-    let completionTimer;
-    let detailTimer;
-    let completionNumber = 0;
-    let completionResult;
-    let completionCode;
-    let completionCursor;
-    let selectedChoice = 0;
-    let composing = false;
     // Serialize edits to the same LSP document. Skip queued requests for text
     // that has already changed instead of sending an older document to Lean.
     function documentCall(path, code, payload) {
       const task = documentQueue.catch(() => {}).then(async () => {
-        if (input.value !== code || !root.isConnected) return null;
+        if (currentCode() !== code || !root.isConnected) return null;
         const result = await call(path, {snippet: key, code, session: session || tabSession(), ...payload});
         session = result.session;
         tabSession(session);
@@ -303,7 +362,7 @@
       return task;
     }
     function position() {
-      const before = input.value.slice(0, input.selectionStart);
+      const before = currentCode().slice(0, editableStart() + input.selectionStart);
       const lines = before.split('\n');
       return {line: lines.length - 1, character: lines.at(-1).length};
     }
@@ -319,18 +378,13 @@
       compileTimer = setTimeout(check, delay);
     }
     function changed() {
-      hideCompletions();
-      store(storageKey, input.value);
+      store(storageKey, currentCode());
       message.textContent = '수정됨';
       message.className = 'book-run-status';
       ++requestNumber;
       lines();
       scheduleCheck();
-      const prefix = input.value.slice(0, input.selectionStart);
-      if (composing || !input.matches(':focus') || input.selectionStart !== input.selectionEnd || /\\[^\s]*$/.test(prefix)) return;
-      if (!browserLean && /[\p{L}_][\p{L}\p{N}_']{1,}$|[\p{L}\p{N}_']\.$/u.test(prefix)) {
-        completionTimer = setTimeout(() => complete(false), 220);
-      }
+
     }
     function showGoal(value) {
       goal.textContent = value === null ? '이 위치에는 표시할 목표가 없습니다.'
@@ -343,21 +397,31 @@
       run.disabled = true;
       message.textContent = '실행 중…';
       message.className = 'book-run-status';
-      const code = input.value;
+      const code = currentCode();
       ++requestNumber;
       try {
         const result = await documentCall('/api/lean/check', code, {position: position()});
         if (!result) return;
         checkedCode = code;
-        if (code !== input.value) return;
+        if (code !== currentCode()) return;
         showGoal(result.goal);
         diagnostics.replaceChildren();
         for (const item of result.diagnostics) {
           if (item.kind === 'unfinished' || item.isSilent) continue;
-          const diagnostic = button(`${item.line}:${item.column}  ${item.message}`, () => {
-            const start = input.value.split('\n').slice(0, item.line - 1).reduce((n, line) => n + line.length + 1, 0);
+          const start = code.split('\n').slice(0, item.line - 1).reduce((n, line) => n + line.length + 1, 0) + item.column - 1;
+          const proofIndex = exercise && !fullCode
+            ? exercise.parts.findLastIndex((_, i) => exercise.start(exercise.bodies, i) <= start) : -1;
+          const row = proofIndex < 0 ? item.line
+            : code.slice(exercise.start(exercise.bodies, proofIndex), start).split('\n').length;
+          const label = proofIndex >= 0 && exercise.parts.length > 1 ? `풀이 (${proofIndex + 1}) ` : '';
+          const diagnostic = button(`${label}${row}:${item.column}  ${item.message}`, () => {
+            if (exercise && !fullCode) {
+              const index = exercise.parts.findLastIndex((_, i) => exercise.start(exercise.bodies, i) <= start);
+              if (index >= 0) { selectedProof = index; loadProof(); lines(); }
+            }
             input.focus();
-            input.setSelectionRange(start + item.column - 1, start + item.column - 1);
+            const cursor = Math.max(0, start - editableStart());
+            input.setSelectionRange(cursor, cursor);
             updateGoal();
           }, item.severity === 1 ? 'book-error' : 'book-warning');
           diagnostics.append(diagnostic);
@@ -367,29 +431,30 @@
         }
         const errors = result.diagnostics.filter(item => item.severity === 1 && item.kind !== 'unfinished');
         const holes = result.diagnostics.some(item => item.kind === 'unfinished');
-        message.textContent = errors.length ? `오류 ${errors.length}개` : holes ? '증명 중' : '오류 없음';
+        message.textContent = errors.length ? `오류 ${errors.length}개` : holes ? '증명 중'
+          : exercise ? (exercise.parse(code) ? '풀이 완료' : '코드 검사 통과') : '오류 없음';
         message.classList.toggle('book-error', !!errors.length);
         message.classList.toggle('book-success', !errors.length && !holes);
       } catch (error) {
-        if (code === input.value) {
+        if (code === currentCode()) {
           message.textContent = '실행 실패';
           diagnostics.replaceChildren(element('p', 'book-error', error.message));
         }
       } finally {
         busy = false;
         run.disabled = false;
-        if (input.value !== code) scheduleCheck(250);
+        if (currentCode() !== code) scheduleCheck(250);
         else if (checkedCode === code) updateGoal();
       }
     }
     async function updateGoal() {
       clearTimeout(timer);
-      if (busy || !root.isConnected || !session || checkedCode !== input.value) return;
+      if (busy || !root.isConnected || !session || checkedCode !== currentCode()) return;
       const current = ++requestNumber;
       timer = setTimeout(async () => {
         try {
           const result = await call('/api/lean/goal', {session, version, position: position()});
-          if (current === requestNumber && checkedCode === input.value) showGoal(result.goal);
+          if (current === requestNumber && checkedCode === currentCode()) showGoal(result.goal);
         } catch (error) {
           if (root.isConnected && /Run this example|code changed/.test(error.message)) {
             checkedCode = undefined;
@@ -398,120 +463,12 @@
         }
       }, 180);
     }
-    function hideCompletions() {
-      clearTimeout(completionTimer);
-      clearTimeout(detailTimer);
-      ++completionNumber;
-      completion.hidden = true;
-      completionResult = undefined;
-      input.setAttribute('aria-expanded', 'false');
-      input.removeAttribute('aria-activedescendant');
-    }
-    function placeCompletions() {
-      if (completion.hidden) return;
-      // A hidden mirror measures the caret in both wrapped and unwrapped text.
-      const mirror = element('div');
-      const style = getComputedStyle(input);
-      for (const property of ['font', 'lineHeight', 'letterSpacing', 'tabSize', 'padding', 'boxSizing',
-        'wordBreak', 'overflowWrap', 'borderWidth', 'borderStyle']) mirror.style[property] = style[property];
-      Object.assign(mirror.style, {position: 'fixed', visibility: 'hidden', left: '0', top: '0',
-        width: `${input.clientWidth}px`, whiteSpace: input.wrap === 'soft' ? 'pre-wrap' : 'pre'});
-      mirror.append(document.createTextNode(input.value.slice(0, input.selectionStart)));
-      const caret = element('span', '', '\u200b');
-      mirror.append(caret);
-      document.body.append(mirror);
-      const rect = input.getBoundingClientRect();
-      const pane = codePane.getBoundingClientRect();
-      const x = rect.left - pane.left + caret.offsetLeft - input.scrollLeft;
-      const y = rect.top - pane.top + caret.offsetTop - input.scrollTop + parseFloat(style.lineHeight);
-      mirror.remove();
-      const width = Math.min(560, codePane.clientWidth);
-      completion.style.width = `${width}px`;
-      completion.style.left = `${Math.max(0, Math.min(x, codePane.clientWidth - width))}px`;
-      completion.style.top = `${Math.max(0, Math.min(y, codePane.clientHeight))}px`;
-    }
-    function choose(index) {
-      if (!completionResult?.items.length) return;
-      selectedChoice = (index + completionResult.items.length) % completionResult.items.length;
-      [...choices.children].forEach((node, i) => node.setAttribute('aria-selected', String(i === selectedChoice)));
-      const node = choices.children[selectedChoice];
-      input.setAttribute('aria-activedescendant', node.id);
-      if (node.offsetTop < choices.scrollTop) choices.scrollTop = node.offsetTop;
-      else if (node.offsetTop + node.offsetHeight > choices.scrollTop + choices.clientHeight) {
-        choices.scrollTop = node.offsetTop + node.offsetHeight - choices.clientHeight;
-      }
-      const item = completionResult.items[selectedChoice];
-      signature.textContent = item.detail || '타입을 불러오는 중…';
-      clearTimeout(detailTimer);
-      const result = completionResult;
-      detailTimer = setTimeout(async () => {
-        try {
-          const detail = await call('/api/lean/resolve', {session, version: result.version,
-            completion: result.completion, index: item.index});
-          if (completionResult !== result || result.items[selectedChoice] !== item) return;
-          item.detail = detail.detail;
-          signature.textContent = detail.detail || detail.documentation || item.label;
-        } catch { /* A changed document invalidates older completion details. */ }
-      }, 100);
-    }
-    async function complete(explicit) {
-      if (browserLean) return;
-      clearTimeout(completionTimer);
-      const code = input.value;
-      const cursor = input.selectionStart;
-      const request = ++completionNumber;
-      try {
-        const result = await documentCall('/api/lean/complete', code, {position: position()});
-        if (!result || request !== completionNumber || cursor !== input.selectionStart || code !== input.value || !input.matches(':focus')) return;
-        completionResult = result;
-        completionCode = code;
-        completionCursor = cursor;
-        choices.replaceChildren();
-        completion.hidden = false;
-        input.setAttribute('aria-expanded', 'true');
-        for (const [index, item] of result.items.entries()) {
-          const node = element('div', 'book-completion-option', item.label);
-          node.id = `${choices.id}-${index}`;
-          node.setAttribute('role', 'option');
-          node.addEventListener('pointerdown', event => {
-            event.preventDefault();
-            selectedChoice = index;
-            acceptCompletion();
-          });
-          choices.append(node);
-        }
-        if (result.items.length) choose(0);
-        else if (explicit) signature.textContent = '일치하는 항목 없음';
-        else hideCompletions();
-        placeCompletions();
-      } catch (error) {
-        if (!explicit || request !== completionNumber) return;
-        completion.hidden = false;
-        choices.replaceChildren();
-        signature.textContent = error.message;
-        placeCompletions();
-      }
-    }
-    function acceptCompletion() {
-      const item = completionResult?.items[selectedChoice];
-      if (!item || completionCode !== input.value || completionCursor !== input.selectionStart) return hideCompletions();
-      const offset = pos => input.value.split('\n').slice(0, pos.line).reduce((n, row) => n + row.length + 1, 0) + pos.character;
-      const start = offset(item.range.start);
-      const end = offset(item.range.end);
-      input.focus();
-      input.setRangeText(item.text, start, end, 'end');
-      changed();
-      // A chosen name should not immediately reopen the same completion menu.
-      clearTimeout(completionTimer);
-    }
     input.addEventListener('input', changed);
-    input.addEventListener('compositionstart', () => { composing = true; hideCompletions(); });
-    input.addEventListener('compositionend', () => { composing = false; changed(); });
-    input.addEventListener('click', () => { hideCompletions(); updateGoal(); });
-    input.addEventListener('blur', hideCompletions);
+    input.addEventListener('compositionend', changed);
+    input.addEventListener('click', updateGoal);
     input.addEventListener('select', updateGoal);
     input.addEventListener('keyup', event => { if (event.key.startsWith('Arrow')) updateGoal(); });
-    input.addEventListener('scroll', () => { gutter.scrollTop = input.scrollTop; placeCompletions(); });
+    input.addEventListener('scroll', () => { gutter.scrollTop = input.scrollTop; });
     const symbols = {'forall': '∀', 'exists': '∃', 'in': '∈', 'notin': '∉', 'subseteq': '⊆',
       'and': '∧', 'or': '∨', 'not': '¬', 'to': '→', 'iff': '↔', 'equiv': '≡', 'times': '×',
       'le': '≤', 'ge': '≥', 'ne': '≠', 'emptyset': '∅', 'inter': '∩', 'union': '∪',
@@ -519,21 +476,6 @@
       '[[': '⟦', ']]': '⟧', '[[]]': '⟦$CURSOR⟧'};
     input.addEventListener('keydown', event => {
       if (event.isComposing) return;
-      if ((event.ctrlKey || event.metaKey) && event.code === 'Space') {
-        event.preventDefault(); complete(true); return;
-      }
-      if (!completion.hidden) {
-        if (event.key === 'Escape') { event.preventDefault(); hideCompletions(); return; }
-        if (completionResult?.items.length) {
-          if (['ArrowDown', 'ArrowUp'].includes(event.key)) {
-            event.preventDefault(); choose(selectedChoice + (event.key === 'ArrowDown' ? 1 : -1)); return;
-          }
-          if (['Enter', 'Tab'].includes(event.key) && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-            event.preventDefault(); acceptCompletion(); return;
-          }
-        }
-      }
-      if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) hideCompletions();
       if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); check(); }
       if (event.key === 'Tab') {
         event.preventDefault();
@@ -566,11 +508,11 @@
         input.setSelectionRange(position, position);
         activated = true;
       }
-      if (checkedCode !== input.value) scheduleCheck(50);
+      if (checkedCode !== currentCode()) scheduleCheck(50);
       else updateGoal();
     }
-    window.addEventListener('resize', () => { if (root.isConnected) { lines(); placeCompletions(); } });
-    return {root, input, activate};
+    window.addEventListener('resize', () => { if (root.isConnected) { lines(); } });
+    return {root, input, activate, code: currentCode};
   }
 
   function foldLegacyHints() {
@@ -591,7 +533,7 @@
       sessionStorage.removeItem('lean-algebra.reopen');
       if (reopen) {
         const wrapper = [...document.querySelectorAll('.book-example')].find(node => node.dataset.snippet === reopen);
-        [...(wrapper?.querySelectorAll('.book-button') || [])].find(node => node.textContent === '편집')?.click();
+        [...(wrapper?.querySelectorAll('.book-button') || [])].find(node => ['편집', '풀기'].includes(node.textContent))?.click();
       }
     }
   }

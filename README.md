@@ -36,7 +36,7 @@ lake exe textbook
 
 공개 웹 문서는 [GitHub Pages](https://cywohoy.github.io/lean-algebra/)에서 읽을 수 있다.
 본문과 검색, 증명 단계의 가정·목표 보기, 코드 복사를 제공한다.
-코드를 수정하여 Lean으로 검사하거나 자동완성을 사용하려면 아래의 로컬 미리보기를 실행하라.
+공개 사이트와 로컬 미리보기 모두 브라우저 안에서 Lean과 Ample로 코드를 검사한다.
 `main`에 반영한 내용은 GitHub Actions에서 빌드와 검사를 통과한 뒤 자동으로 배포된다.
 
 Windows에서는 `preview.bat`를 실행하라. 문서 생성과 예제 검사 후
@@ -47,6 +47,7 @@ Windows에서는 `preview.bat`를 실행하라. 문서 생성과 예제 검사 �
 별도의 Python 패키지는 필요하지 않다.
 
 ```sh
+python scripts/prepare_pages.py
 python web/serve.py --port 8000
 ```
 
@@ -100,10 +101,10 @@ python tests/RevisionDocument.Tests.py
 python tests/AutomationTrace.Tests.py
 ```
 
-GitHub Pages용 문서는 `python scripts/prepare_pages.py --download-wasm`으로 `_out/pages/`에 준비한다.
+GitHub Pages용 문서는 `python scripts/prepare_pages.py`로 `_out/pages/`에 준비한다.
 공개 편집기는 브라우저 안에서 Lean 4.35와 Ample을 실행하며 코드를 실행 서버로 보내지 않는다.
-처음 `편집`을 누르면 실행 파일을 내려받는다. 자동완성은 현재 로컬 미리보기에서 제공한다.
-실행 기능이 없는 읽기 전용 출력은 `python scripts/prepare_pages.py`로 만들 수 있다.
+처음 `편집` 또는 `풀기`를 누르면 실행 파일을 불러온다. 현재 자동완성은 제공하지 않는다.
+`python scripts/prepare_pages.py`도 같은 WASM 실행 환경을 준비한다.
 `python tests/Pages.Tests.py`로 저장소 이름이 붙은 URL에서도 링크가 연결되는지 검사할 수 있다.
 
 Ample의 전술과 수학 모듈은 독립된 공개 라이브러리이며, Ample의 빌드에는 이 교재가 필요하지 않다.

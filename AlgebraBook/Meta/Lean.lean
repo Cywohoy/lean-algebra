@@ -25,11 +25,13 @@ block_extension Block.playground
   toHtml :=
     open Verso.Output.Html in
     some fun _ goB _ data contents => do
-      let .arr #[_, _, .str key, _, .bool visible] := data
+      let .arr #[.str file, .str source, .str key, .bool keep, .bool visible] := data
         | Verso.reportError "Invalid playground metadata" *> pure .empty
       let contents ← contents.mapM goB
       if !visible then return contents
-      return {{<div class="book-example" data-snippet={{key}}>{{contents}}</div>}}
+      let pilot := !keep && file.endsWith "Proofs.lean" && source.startsWith "theorem exercise_"
+      return {{<div class="book-example" data-snippet={{key}}
+        data-exercise-unit={{if pilot then "proofs" else ""}}>{{contents}}</div>}}
 
 block_extension Block.readerDisclosure (title : String) where
   data := .str title
