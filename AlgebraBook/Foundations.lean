@@ -10,14 +10,14 @@ import AlgebraBook.InfiniteCardinality
 
 open Verso.Genre Manual
 
-#doc (Manual) "준비: Lean과 기초 수학" =>
+#doc (Manual) "Lean과 기초 수학" =>
 
 %%%
 tag := "foundations"
 file := "foundations"
 %%%
 
-이 장에서는 Lean의 기본 표기를 익히고 대수학에 필요한 집합과 함수의 정의 및 기초 수학을 Lean으로 옮긴다.
+이 장에서는 Lean의 기본 표기를 익히고 집합과 함수의 정의 및 기초 수학을 Lean으로 옮긴다.
 값과 함수, 명제와 술어의 표기를 배운 뒤 함의와 전칭명제의 증명을 구성한다.
 이를 바탕으로 집합과 함수의 성질을 증명하고 자연수와 정수의 계산을 익힌다.
 
@@ -33,10 +33,6 @@ file := "foundations"
 제목에 *Advanced*가 붙은 보충 설명은 건너뛰어도 이후의 기본 본문을 읽을 수 있다.
 각 절의 연습문제는 그 절까지 배운 정의와 증명 방법으로 풀 수 있으며,
 여러 소문제로 이루어진 문제에서는 앞에서 얻은 결과를 이어서 사용한다.
-
-군론을 먼저 공부하려면 1.1~1.5를 읽고 2.1~2.7로 진행한 뒤,
-{ref "group-order"}[유한군과 위수] 앞에서 1.6~1.7로 돌아오라.
-무한집합의 크기를 다루는 1.8은 기초 군론을 읽는 데 필요한 선수 내용이 아니다.
 
 {include 1 AlgebraBook.Introduction}
 {include 1 AlgebraBook.Proofs}

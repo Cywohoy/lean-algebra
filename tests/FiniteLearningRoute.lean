@@ -1,14 +1,11 @@
-import AlgebraBook.Groups.Order
+import AlgebraBook.FiniteCardinality
 
 open Ample Lean Elab Command
 
 run_cmd do
   for name in [`Ample.IsCountablyInfinite, `Ample.powerSet,
-      `Ample.Cardinal.le] do
+      `Ample.Cardinal.le, `Ample.Group] do
     if (← getEnv).contains name then
-      throwError "Finite group order unexpectedly imports {name}."
+      throwError "The finite cardinality chapter unexpectedly imports {name}."
 
-theorem finite_order_example :
-    groupOrder twoElementGroup (by
-      apply isFinite_of_cardinal_eq bool_cardinal) = 2 := by
-  exact cardinality_eq _ bool_cardinal
+example (n : Nat) : IsFinite (Fin n) := by exact fin_isFinite n

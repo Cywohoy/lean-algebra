@@ -10,7 +10,7 @@ Copyright (c) 2024–2025 Lean FRO LLC. Author: David Thrane Christiansen.
 한국어 설명과 함수 예제는 이 프로젝트를 위해 작성했으며 교재 원문을 전재하지 않았습니다.
 Verso, Batteries와 그 의존 패키지는 각 패키지의 라이선스를 따릅니다.
 
-교재에서 사용하는 전술 구현은 `../Ample/Ample/Tactic/`으로 옮겼다.
+교재에서 사용하는 전술 구현은 독립 패키지 Ample의 `Ample/Tactic/`에서 제공한다.
 Lean과 mathlib에서 수정하여 가져온 전술의 저작권 표시와 라이선스는
 [Ample의 외부 구성 요소 안내](https://github.com/Cywohoy/ample/blob/main/THIRD_PARTY_NOTICES.md)에 정리했다.
 

@@ -35,14 +35,6 @@ sections={
  'foundations/relations':('1.6.','동치관계와 몫집합'),
  'foundations/cardinality':('1.7.','집합의 크기와 유한성'),
  'foundations/infinite-cardinality':('1.8.','무한집합의 크기'),
- 'operations-and-groups/operations':('2.1.','이항연산'),
- 'operations-and-groups/groups':('2.2.','군의 정의와 기본 성질'),
- 'operations-and-groups/calculations':('2.3.','역원과 곱의 계산'),
- 'operations-and-groups/powers':('2.4.','거듭제곱'),
- 'operations-and-groups/products':('2.5.','군의 곱'),
- 'operations-and-groups/permutations':('2.6.','순열군'),
- 'operations-and-groups/automation':('2.7.','군 계산의 자동화'),
- 'operations-and-groups/order':('2.8.','유한군과 위수'),
 }
 for folder,(number,title) in sections.items():
     parser=Headings()
@@ -52,7 +44,6 @@ for folder,(number,title) in sections.items():
 for old,target in {
  'foundations/preliminaries/equivalence-relations':'/foundations/relations/equivalence-relations/',
  'foundations/cardinality/power-sets':'/foundations/infinite-cardinality/power-sets/',
- 'operations-and-groups/groups/group-order':'/operations-and-groups/order/group-order/',
 }.items():
     assert target in (htmlroot/old/'index.html').read_text(encoding='utf-8')
     assert (htmlroot/target.strip('/')/'index.html').is_file(),target
@@ -69,8 +60,7 @@ for page in ['tactics/failures', 'tactics/failures/unpack',
 # relying on an old build's redirect pages being left in the destination.
 main=(root/'Main.lean').read_text(encoding='utf-8-sig')
 redirects=dict(re.findall(r'\("([^"\n]+)", "(/[^"\n]+)"\)',main))
-for legacy in ['preliminaries/products', 'preliminaries/equivalence-relations',
-               'operations-and-groups/group-order']:
+for legacy in ['preliminaries/products', 'preliminaries/equivalence-relations']:
     assert legacy in redirects, legacy
 for old, target in redirects.items():
     url=urlsplit(target)
@@ -87,5 +77,10 @@ for path in (root/'AlgebraBook').rglob('*.lean'):
             assert not re.search(r'\bsorry\b|^axiom\s',code,re.M),path
 
 exports=list((buildroot/'example-code').rglob('*.lean'))
-assert len(exports)==18, len(exports)
-print('PASS: 16 section numbers, moved URLs, completed proofs, and 18 current code exports')
+assert len(exports)==9, len(exports)
+assert not (htmlroot/'operations-and-groups').exists()
+assert not (root/'AlgebraBook/Groups').exists()
+homepage = (htmlroot/'index.html').read_text(encoding='utf-8')
+assert 'Lean으로 배우는 기초 수학' in homepage
+assert 'group_calc' not in (root/'AlgebraBook/Tactics.lean').read_text(encoding='utf-8')
+print('PASS: standalone foundations book, 8 sections, links, proofs, and 9 code exports')

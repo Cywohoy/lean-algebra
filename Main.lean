@@ -106,35 +106,6 @@ def buildRedirects (mode : Mode) (cfg : Config) (_state : TraverseState)
       let some parent := relative.parent | continue
       let url := "/foundations/" ++ parent.toString.replace "\\" "/" ++ "/"
       redirect root relative url
-  let groups := root / "operations-and-groups"
-  for sectionName in ["operations", "groups"] do
-    let sectionRoot := groups / sectionName
-    if ← sectionRoot.pathExists then
-      for page in ← sectionRoot.walkDir do
-        if page.fileName != some "index.html" then continue
-        let some suffix := page.toString.dropPrefix? sectionRoot.toString | continue
-        let relative : System.FilePath :=
-          (suffix.dropWhile (· ∈ System.FilePath.pathSeparators)).copy
-        if !relative.isRelative || relative.components.contains ".." then continue
-        if relative.components.length < 2 then continue
-        let some parent := relative.parent | continue
-        let url := "/operations-and-groups/" ++ sectionName ++ "/" ++
-          parent.toString.replace "\\" "/" ++ "/"
-        redirect groups relative url
-  -- 군의 예를 군의 정의와 같은 장으로 옮긴 뒤 이전 주소를 연결한다.
-  for sectionName in ["calculations", "powers", "two-elements", "products",
-      "permutations", "automation"] do
-    let sectionRoot := groups / sectionName
-    if ← sectionRoot.pathExists then
-      for page in ← sectionRoot.walkDir do
-        if page.fileName != some "index.html" then continue
-        let some suffix := page.toString.dropPrefix? groups.toString | continue
-        let relative : System.FilePath :=
-          (suffix.dropWhile (· ∈ System.FilePath.pathSeparators)).copy
-        if !relative.isRelative || relative.components.contains ".." then continue
-        let some parent := relative.parent | continue
-        let url := "/operations-and-groups/" ++ parent.toString.replace "\\" "/" ++ "/"
-        redirect root ("group-examples" / relative) url
   for (old, url) in [
       ("foundations/introduction/explicit-and-implicit-arguments", "/foundations/using-proofs/named-theorems/#intro-explicit-and-implicit-arguments"),
       ("introduction/explicit-and-implicit-arguments", "/foundations/using-proofs/named-theorems/#intro-explicit-and-implicit-arguments"),
@@ -158,33 +129,9 @@ def buildRedirects (mode : Mode) (cfg : Config) (_state : TraverseState)
       ("foundations/cardinality/power-sets", "/foundations/infinite-cardinality/power-sets/"),
       ("cardinality/countable-sets", "/foundations/infinite-cardinality/countable-sets/"),
       ("cardinality/power-sets", "/foundations/infinite-cardinality/power-sets/"),
-      ("operations-and-groups/two-elements", "/operations-and-groups/groups/definition/#group-two-elements"),
-      ("operations-and-groups/two-elements/operation-table", "/operations-and-groups/groups/definition/#group-two-element-table"),
-      ("operations-and-groups/two-elements/powers", "/operations-and-groups/powers/boolean-powers/"),
-      ("operations-and-groups/two-elements/cardinality", "/operations-and-groups/order/cardinality/"),
-      ("group-examples/two-elements", "/operations-and-groups/groups/definition/#group-two-elements"),
-      ("group-examples/two-elements/operation-table", "/operations-and-groups/groups/definition/#group-two-element-table"),
-      ("group-examples/two-elements/powers", "/operations-and-groups/powers/boolean-powers/"),
-      ("group-examples/two-elements/cardinality", "/operations-and-groups/order/cardinality/"),
-      ("operations-and-groups/groups/group-order", "/operations-and-groups/order/group-order/"),
-      ("group-examples", "/operations-and-groups/calculations/"),
-      ("cardinality/group-order", "/operations-and-groups/order/group-order/"),
-      ("cardinality/group-order/____________-_________-____________", "/operations-and-groups/order/group-order/#cardinality-positive-order"),
       ("cardinality/finite-sets/____________-___-______-______", "/foundations/cardinality/finite-sets/#cardinality-empty-and-singleton"),
       ("cardinality/finite-sets/____________-______-___-_________", "/foundations/cardinality/finite-sets/#cardinality-counting-three-elements"),
       ("cardinality/uniqueness/______-_________-______-___", "/foundations/cardinality/uniqueness/#cardinality-number-unique"),
-      ("operations-and-groups/operation-laws/composition-laws", "/operations-and-groups/operations/operation-laws/"),
-      ("operations-and-groups/definition/integer-addition", "/operations-and-groups/groups/definition/#groups-integer-addition"),
-      ("operations-and-groups/definition/abelian", "/operations-and-groups/groups/definition/#groups-abelian"),
-      ("operations-and-groups/definition/additive-and-multiplicative-notation", "/operations-and-groups/groups/definition/#groups-additive-and-multiplicative-notation"),
-      ("operations-and-groups/group-order", "/operations-and-groups/order/group-order/"),
-      ("operations-and-groups/group-order/____________-_________-____________", "/operations-and-groups/order/group-order/#cardinality-positive-order"),
-      ("operations-and-groups/group-order/_________-____________-_______________", "/operations-and-groups/order/group-order/#cardinality-infinite-integer-group"),
-      ("operations-and-groups/first-properties/identity-uniqueness", "/operations-and-groups/groups/first-properties/#groups-identity-uniqueness"),
-      ("operations-and-groups/first-properties/inverse-uniqueness", "/operations-and-groups/groups/first-properties/#groups-inverse-uniqueness"),
-      ("operations-and-groups/first-properties/left-cancellation", "/operations-and-groups/groups/first-properties/#groups-left-cancellation"),
-      ("operations-and-groups/first-properties/solving-equations", "/operations-and-groups/groups/first-properties/#groups-solving-equations"),
-      ("operations-and-groups/first-properties/calc", "/foundations/preliminaries/divisibility/#preliminaries-calc"),
       ("cardinality/elements", "/foundations/functions/elements/"),
       ("foundations/cardinality/elements", "/foundations/functions/elements/"),
       ("sets/universal-and-empty-sets", "/foundations/sets/sets-as-predicates/#sets-universal-and-empty-sets"),

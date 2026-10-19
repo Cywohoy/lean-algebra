@@ -2,14 +2,15 @@
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import hashlib
-import json
 import shutil
 import subprocess
 
 root = Path(__file__).resolve().parents[1]
+before = {p: hashlib.sha256(p.read_bytes()).hexdigest()
+          for p in (root/'Exercises').rglob('*') if p.is_file()}
 lake = shutil.which('lake') or str(Path.home() / '.elan/bin/lake.exe')
-# Include compatibility entry points that the document executable may not import.
-subprocess.run([lake, 'build', 'AlgebraBook'], cwd=root, check=True)
+# Include compatibility and public tactic entry points used by regression files.
+subprocess.run([lake, 'build', 'AlgebraBook', 'Ample.Tactic'], cwd=root, check=True)
 paths = sorted((root/'_out/example-code').rglob('*.lean'))
 paths += sorted((root/'ExerciseTemplates').glob('*.lean'))
 paths += sorted((root/'tests').glob('*.lean'))
@@ -32,9 +33,9 @@ with ThreadPoolExecutor(max_workers=4) as pool:
             failures.append(name)
             print('FAIL:', name, flush=True)
 
-before=json.loads((root/'output/revision-private-hashes.json').read_text(encoding='utf-8'))
-for name,digest in before.items():
-    assert hashlib.sha256((root/name).read_bytes()).hexdigest()==digest, name
+after = {p: hashlib.sha256(p.read_bytes()).hexdigest()
+         for p in (root/'Exercises').rglob('*') if p.is_file()}
+assert before == after, 'Personal solutions changed during verification.'
 
 print(f'Checked {len(paths)} Lean files; {len(failures)} failed. Private solutions preserved.',flush=True)
 if failures:

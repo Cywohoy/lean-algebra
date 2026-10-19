@@ -1,5 +1,4 @@
 import AlgebraBook.InfiniteCardinality
-import AlgebraBook.Groups.Automation
 
 -- 기존 개인 풀이가 사용하는 이름과 설정을 교재 어댑터에서 확인한다.
 open Course
@@ -7,7 +6,6 @@ open scoped Course.Auto Classical
 
 #check Course.Set
 #check Course.singleton
-#check Course.Group
 
 example (n : Int) (h : ¬ n < 0) : 0 ≤ n := by
   guard_hyp h : 0 ≤ n
@@ -28,9 +26,6 @@ example (n : Nat) : 2 * n ≠ 5 := by arith
 example (A B : Type) (h : cardinal A = cardinal B) (hA : IsInfinite A) :
     IsInfinite B := by
   card
-
-example {A : Type} (G : Group A) (a : A) : G.op (G.inv a) a = G.id := by
-  group_calc G
 
 example : 1 ∈ Course.singleton 1 := by
   expand

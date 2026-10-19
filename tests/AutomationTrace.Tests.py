@@ -14,7 +14,6 @@ assert 'Rule: Nat.div_le_self' in output, output
 assert 'Rule: Ample.isInfinite_transport' in output, output
 assert 'condition: cardinal A = cardinal B' in output, output
 assert 'Hypothesis: hA : IsInfinite A' in output, output
-assert 'Rule: Ample.Group.inv_left' in output, output
 assert 'Proved: n ≤ n + 1' not in output, output
 assert 'Proved: n < n' not in output, output
 assert '_private.' not in output, output

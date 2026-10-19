@@ -18,7 +18,6 @@ file := "cardinality"
 이 관계로 기수를 정의한 뒤 유한집합에 번호를 붙여 원소를 센다.
 번호를 붙이는 방법이 달라도 원소 수는 같음을 증명하고,
 유한 개의 번호로 자연수 전체를 셀 수 없음을 보인다.
-이 결과들은 뒤에서 유한군의 위수를 정의할 때 사용한다.
 
 ```savedImport
 import AlgebraBook.Relations

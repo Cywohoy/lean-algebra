@@ -1,4 +1,4 @@
-import AlgebraBook.Groups.Order
+import AlgebraBook.FiniteCardinality
 import AlgebraBook.Tactic.Auto
 
 open Ample

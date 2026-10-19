@@ -1,0 +1,44 @@
+name: Book
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: leanprover/lean-action@v1
+        with:
+          auto-config: false
+          build: true
+          use-mathlib-cache: false
+      - name: Generate the standalone book
+        run: lake exe textbook
+      - name: Check examples, exercises, and tactic regressions
+        run: python tests/verify_revision.py
+      - name: Check document boundaries and links
+        run: python tests/RevisionDocument.Tests.py
+      - name: Check exported mathematics
+        run: python scripts/sync_ample.py --ample-root .lake/packages/ample --check
+      - name: Check automation traces and library documentation
+        run: |
+          python tests/AutomationTrace.Tests.py
+          python tests/LibraryDocumentation.Tests.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lean-foundations-html
+          path: _out/html-multi

@@ -2,7 +2,6 @@ import VersoManual
 import AlgebraBook.Meta.Lean
 import AlgebraBook.Tactic.Classical
 import AlgebraBook.Tactic.Arithmetic
-import AlgebraBook.Tactic.Group
 import AlgebraBook.Functions
 import AlgebraBook.Preliminaries
 import AlgebraBook.Cardinality
@@ -37,7 +36,6 @@ Ample에서 제공하는 전술은 `open Ample` 또는 `open scoped Ample`로 �
 ```savedImport
 import AlgebraBook.Tactic.Classical
 import AlgebraBook.Tactic.Arithmetic
-import AlgebraBook.Tactic.Group
 import AlgebraBook.Functions
 import AlgebraBook.Preliminaries
 import AlgebraBook.Cardinality
@@ -60,7 +58,7 @@ file := "index"
 
 본문과 연습문제에서 사용하는 명령을 역할별로 정리하면 다음과 같다.
 각 설명에서는 기본 용법을 먼저 살펴보고 가정에서의 적용이나 여러 목표를 다루는 용법을 이어서 다룬다.
-`let`·`letI`·`have`와 `calc`도 증명 안에서 사용하는 명령이므로 같은 표에 모았다.
+`let`·`have`와 `calc`도 증명 안에서 사용하는 명령이므로 같은 표에 모았다.
 연습문제의 `sorry`는 독자가 완성할 증명의 자리이다.
 
 :::table +header (align := left)
@@ -76,7 +74,7 @@ file := "index"
   * {ref "tactic-hypotheses"}[가정과 정리]
 *
   * 증명의 구성
-  * `let`, `letI`, `have`, `suffices`
+  * `let`, `have`, `suffices`
   * 대상과 보조정리를 정의하거나 충분한 조건을 목표로 삼는다.
   * {ref "tactic-local-definitions"}[대상과 보조정리], {ref "tactic-suffices-search"}[충분한 조건]
 *
@@ -144,11 +142,6 @@ file := "index"
   * `card`
   * 주어진 크기 관계와 기본 정리를 연결한다.
   * {ref "tactic-card"}[집합의 크기]
-*
-  * 계산과 자동화
-  * `group_calc G`
-  * 지정한 군의 곱·역원·거듭제곱 법칙과 지수의 산술을 계산한다.
-  * {ref "tactic-group-calc"}[군의 계산]
 :::
 
 표현을 단계마다 정리하는 `open scoped Ample.Auto`의 범위와 동작은
@@ -389,10 +382,6 @@ example
 
 둘째 예제의 `twice`는 자연수에 관한 지역 함수이며,
 `twice n`을 계산하면 `n + n`이므로 원하는 존재명제의 증인을 얻는다.
-
-`letI`는 증명 안에서 사용할 표기나 구조의 `instance`를 정한다.
-예를 들어 `letI : Add A := { add := G.op }`로 군의 연산을 `+`에 연결할 수 있다.
-이 선언의 사용 예는 {ref "groups-additive-and-multiplicative-notation"}[덧셈 표기]에서 다룬다.
 
 ## 충분한 조건
 %%%
@@ -1600,7 +1589,6 @@ example
 ```
 
 이 표기를 처음 소개하는 예제는 {ref "preliminaries-calc"}[등식의 연쇄]를 참고하라.
-군의 법칙을 사용하는 계산은 {ref "groups-identity-uniqueness"}[항등원의 유일성]에서 살펴볼 수 있다.
 
 ## 전체 등식과 비교 조건
 %%%
@@ -2169,39 +2157,6 @@ example (f g : Nat → Nat)
   exact h
 ```
 
-## 지역 인스턴스
-%%%
-tag := "tactic-failure-instances"
-file := "instances"
-%%%
-
-기호를 사용하는 정리는 그 기호에 연결할 연산도 필요로 할 수 있다.
-아래의 `[Add A]`는 `A`의 덧셈을 Lean이 찾을 인수로 받는다는 뜻이다.
-덧셈이 주어지지 않은 문맥에서 `step`을 사용하면 인스턴스를 찾지 못했다는 오류가 난다.
-
-```lean +error -keep
-theorem failure_missing_instance
-    (A : Type) (P Q : Prop)
-    (step : [Add A] → P → Q)
-    (hp : P) :
-    Q := by
-  apply step at hp with hq
-```
-
-연산 `op`를 사용하려면 `letI`로 이 증명에서의 덧셈에 연결한다.
-인스턴스가 준비되면 같은 `apply`로 `hp : P`에서 `hq : Q`를 얻는다.
-
-```savedLean
-example
-    (A : Type) (P Q : Prop) (op : A → A → A)
-    (step : [Add A] → P → Q)
-    (hp : P) :
-    Q := by
-  letI : Add A := { add := op }
-  apply step at hp with hq
-  exact hq
-```
-
 ## 서로 다른 가정 아래의 목표
 %%%
 tag := "tactic-failure-context"
@@ -2271,7 +2226,7 @@ file := "automation"
 %%%
 
 자동 표현 정리는 목표와 가정의 표기를 정해진 규칙에 따라 바꾸고,
-`decide`·`arith`·`card`·`group_calc G`는 각각의 범위에서 현재 목표의 증명을 찾는다.
+`decide`·`arith`·`card`는 각각의 범위에서 현재 목표의 증명을 찾는다.
 이 둘의 역할을 구별한 뒤 각 명령이 사용하는 사실과 적용 범위를 확인하자.
 새 사실에 이름을 붙일 때는 `have h : 명제 := by` 아래에서 계산 전술을 사용한다.
 
@@ -2283,8 +2238,7 @@ file := "tracing"
 
 
 자동화가 실패하면 필요한 가정이 빠졌거나 등록된 규칙과 탐색 범위로 결론을 연결하지 못했을 수 있다.
-예를 들어 나눗셈에서는 분모의 부호와 영이 아닌 조건을 확인하고,
-군의 식에서는 선택한 군 구조와 가환성의 가정을 확인하라.
+예를 들어 나눗셈에서는 분모의 부호와 영이 아닌 조건을 확인하라.
 실패 자체로 목표의 부정을 얻는 것은 아니다.
 
 :::table +header (align := left)
@@ -2300,15 +2254,11 @@ file := "tracing"
   * `card`
   * 이미 증명한 크기 관계와 유한성·무한성 정리
   * 새로운 단사·전단사의 구성
-*
-  * `group_calc G`
-  * 지정한 군의 법칙과 지수의 산술
-  * 군·부분군의 구성, 새로운 보존 법칙, 필요한 가환성
 :::
 
 필요할 때 `set_option trace.Ample.arith true in`을 선언 앞에 적으면
 완성된 산술 증명에 사용된 등록 정리와 그 조건, 사용한 가정을 확인할 수 있다.
-`trace.Ample.card`와 `trace.Ample.group`도 같은 방식으로 켠다.
+`trace.Ample.card`도 같은 방식으로 켠다.
 다음 옵션은 바로 뒤의 정리에서만 적용된다.
 
 ```savedLean
@@ -2687,24 +2637,6 @@ example (A B : Type) (n : Nat)
 `AlgebraBook.Cardinality`를 가져오고 `open Ample`를 쓰면 이 전술과 등록한 기본 정리를 사용할 수 있다.
 산술식의 계산은 `arith`로 확인하고
 새로운 전단사가 필요하면 함수를 구성하여 직접 증명한다.
-
-## 군의 계산
-%%%
-tag := "tactic-group-calc"
-file := "group-calculations"
-%%%
-
-`group_calc G`는 {ref "group-automation"}[군 계산의 자동화]에서 소개한 전술이다. 지정한 군 구조 `G`의 결합법칙, 항등원과 역원, 앞에서 증명한 거듭제곱 법칙을 사용한다. 지수에 남는 자연수·정수 계산에는 `arith`를 사용하며 임의의 두 원소를 교환하는 규칙은 사용하지 않는다.
-
-```savedLean
-example {A : Type}
-    (G : Ample.Group A) (a b c : A) :
-    G.op (G.op a b) (G.op (G.inv b) c) =
-      G.op a c := by
-  group_calc G
-```
-
-`AlgebraBook.Tactic.Group`를 가져오고 `open Ample`를 적으면 사용할 수 있다. 서로 다른 군 구조를 같은 타입에 정의한 경우에는 `G`로 선택한 구조의 법칙만 적용한다. `arith`의 기본 지식에는 군의 법칙을 추가하지 않는다.
 
 ```savedLean
 end TacticExamples

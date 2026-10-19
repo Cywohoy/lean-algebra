@@ -1,4 +1,4 @@
-import AlgebraBook.GroupBasics
+import AlgebraBook.Numbers
 
 open Ample
 
@@ -10,16 +10,6 @@ example (A : Type) (op : A → A → A) (a b c : A)
     (hAssoc : ∀ x y z, op (op x y) z = op x (op y z)) :
     op (op a b) c = op a (op b c) := by
   arith
-
--- 군의 구조에 들어 있는 연산 법칙은 산술 전술이 자동으로 가져오지 않는다.
-example (A : Type) (G : Group A) (a b c : A) :
-    G.op (G.op a b) c = G.op a (G.op b c) := by
-  fail_if_success arith
-  exact G.assoc a b c
-
-example (A : Type) (G : Group A) (a : A) : G.op G.id a = a := by
-  fail_if_success arith
-  exact G.id_left a
 
 @[irreducible] def numericCode (n : Nat) : Nat := n + n
 

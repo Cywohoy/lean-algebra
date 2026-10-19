@@ -91,9 +91,9 @@ try {
 
     $outputDirectory = Join-Path $PSScriptRoot 'output/pdf'
     New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
-    $outputPath = Join-Path $outputDirectory 'lean-algebra-ko.pdf'
+    $outputPath = Join-Path $outputDirectory 'lean-foundations-ko.pdf'
     Copy-Item -LiteralPath (Join-Path $texDirectory 'main.pdf') -Destination $outputPath -Force
-    Copy-Item -LiteralPath $outputPath -Destination '_out/html-multi/lean-algebra-ko.pdf' -Force
+    Copy-Item -LiteralPath $outputPath -Destination '_out/html-multi/lean-foundations-ko.pdf' -Force
     Write-Host ('PDF 저장 완료: ' + $outputPath)
 }
 finally {

@@ -4,7 +4,8 @@ import re
 import runpy
 
 root = Path(__file__).resolve().parents[1]
-package = root.parent / 'Ample'
+package = root / '.lake/packages/ample'
+assert (package / 'Ample').is_dir(), 'Run lake update ample first.'
 paths = sorted((package / 'Ample').rglob('*.lean'))
 paths += [package / 'README.md', package / 'THIRD_PARTY_NOTICES.md']
 for path in paths:

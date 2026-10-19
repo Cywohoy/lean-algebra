@@ -19,9 +19,6 @@ file := "preliminaries"
 정수의 나누어떨어짐과 합동에서 등식을 사용하는 방법을 살펴본다.
 기본 성질과 연습문제를 마친 뒤에는 반복되는 산술 계산을 `arith`에 맡긴다.
 
-군론을 먼저 공부하려면 이 절을 마친 뒤
-{ref "operations-and-groups"}[연산과 군]으로 진행할 수 있다.
-
 ```savedImport
 import AlgebraBook.Functions
 import AlgebraBook.Tactic.Arithmetic
