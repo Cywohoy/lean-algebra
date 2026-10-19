@@ -4,6 +4,8 @@
 Lean을 처음 접하는 독자를 위해 값과 함수에서 시작하여 집합, 정수, 동치관계와 집합의 크기까지 다룬다.
 설명과 Lean 코드를 Verso 웹 문서로 함께 제공하며, 연습문제는 `sorry`를 채우는 방식으로 풀 수 있다.
 
+**[웹에서 읽기](https://cywohoy.github.io/lean-algebra/)**
+
 이 저장소는 공개되어 있다. `main`은 기존 대수학 교재의 **1장과 부록만으로 구성한 독립된 책**이다.
 군론을 포함한 전체 교재와 이후 집필 계획은 [full-book 브랜치](https://github.com/Cywohoy/lean-algebra/tree/full-book)에 보존한다.
 
@@ -31,6 +33,11 @@ lake exe textbook
 연습문제의 `sorry` 경고는 독자가 채울 빈 증명을 나타낸다.
 
 ## 웹에서 읽기
+
+공개 웹 문서는 [GitHub Pages](https://cywohoy.github.io/lean-algebra/)에서 읽을 수 있다.
+본문과 검색, 증명 단계의 가정·목표 보기, 코드 복사를 제공한다.
+코드를 수정하여 Lean으로 검사하거나 자동완성을 사용하려면 아래의 로컬 미리보기를 실행하라.
+`main`에 반영한 내용은 GitHub Actions에서 빌드와 검사를 통과한 뒤 자동으로 배포된다.
 
 Windows에서는 `preview.bat`를 실행하라. 문서 생성과 예제 검사 후
 [로컬 미리보기](http://127.0.0.1:8000/)가 열리며, 실행 창을 열어 둔 동안 서버가 돌아간다.
@@ -92,6 +99,10 @@ python tests/verify_revision.py
 python tests/RevisionDocument.Tests.py
 python tests/AutomationTrace.Tests.py
 ```
+
+GitHub Pages용 정적 문서는 `python scripts/prepare_pages.py`로 `_out/pages/`에 준비한다.
+이 출력에서는 로컬 Lean 서버가 필요한 편집 버튼을 숨긴다.
+`python tests/Pages.Tests.py`로 저장소 이름이 붙은 URL에서도 링크가 연결되는지 검사할 수 있다.
 
 Ample의 전술과 수학 모듈은 독립된 공개 라이브러리이며, Ample의 빌드에는 이 교재가 필요하지 않다.
 수학 코드를 수정한 뒤 개발용 Ample 체크아웃에 반영하려면 다음 명령을 사용하라.

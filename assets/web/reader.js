@@ -1,6 +1,8 @@
 /* Interactive reading and a local Lean playground. No third-party scripts. */
 (() => {
   'use strict';
+  const siteRoot = new URL('.', document.baseURI);
+  const staticReading = document.querySelector('meta[name="book-mode"]')?.content === 'static';
   const snippets = new Map();
   let backend;
   let activeEditor;
@@ -24,7 +26,7 @@
   };
   async function snippet(key) {
     if (!snippets.has(key)) {
-      snippets.set(key, fetch(`/playground/${key}.json`).then(response => {
+      snippets.set(key, fetch(new URL(`playground/${key}.json`, siteRoot)).then(response => {
         if (!response.ok) throw new Error('코드를 불러오지 못했습니다. 페이지를 새로고침해 주세요.');
         return response.json();
       }).catch(error => { snippets.delete(key); throw error; }));
@@ -117,7 +119,8 @@
       stepButton = button('단계', () => setMode(mode === 'steps' ? null : 'steps'));
       toolbar.append(stepButton);
     }
-    toolbar.append(editButton, copyButton, status);
+    if (!staticReading) toolbar.append(editButton);
+    toolbar.append(copyButton, status);
     for (const control of [stepButton, editButton].filter(Boolean)) {
       control.setAttribute('aria-controls', panel.id);
       control.setAttribute('aria-expanded', 'false');

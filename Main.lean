@@ -185,13 +185,16 @@ def buildRedirects (mode : Mode) (cfg : Config) (_state : TraverseState)
     let mapping := (Lean.Json.mkObj (targets.map fun (tag, url) => (tag, .str url))).compress
     let script := "<script>(()=>{const moved=" ++ mapping ++
       ";const target=moved[decodeURIComponent(location.hash.slice(1))];" ++
-      "if(target)location.replace(target);})();</script>"
+      "if(target)location.replace(new URL(target.slice(1),document.baseURI));})();</script>"
     let html ← IO.FS.readFile page
     IO.FS.writeFile page (html.replace "</head>" (script ++ "</head>"))
 where
   redirect (root path : System.FilePath) (url : String) : IO Unit := do
     let target := root / path
     if let some parent := target.parent then IO.FS.createDirAll parent
+    -- Resolve from this page, including when the book is hosted below a repository path.
+    let rootPath := String.join (List.replicate (path.components.length - 1) "../")
+    let url := rootPath ++ (url.dropWhile (· == '/')).copy
     let jsUrl := (Lean.Json.str url).compress
     let html := s!"<!doctype html><html lang=\"ko\"><head><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0;url={url}\"><link rel=\"canonical\" href=\"{url}\"><title>옮겨진 본문</title><script>const target={jsUrl};location.replace(target.includes('#') ? target : target+location.hash);</script></head><body><a href=\"{url}\">옮겨진 본문으로 이동</a></body></html>"
     IO.FS.writeFile target html

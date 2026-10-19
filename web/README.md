@@ -1,5 +1,8 @@
 # 상호작용 미리보기
 
+공개 문서는 [GitHub Pages](https://cywohoy.github.io/lean-algebra/)에서 읽을 수 있다.
+단계 보기와 코드 복사는 서버 없이 동작하며, 아래의 편집·Lean 검사·자동완성은 로컬 미리보기에서 제공한다.
+
 `interactive-preview.bat`를 실행하면 `http://127.0.0.1:8001/`에서 교재를 열 수 있다.
 일반 미리보기인 `preview.bat`도 같은 기능을 제공하며 주소는 기존의 `8000`번 포트를 사용한다.
 이미 문서를 생성했다면 `interactive-preview.bat -SkipBuild`로 실행할 수 있다.
