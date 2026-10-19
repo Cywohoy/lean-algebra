@@ -32,7 +32,7 @@ open scoped Classical
 ```
 
 ```savedLean
-namespace Course
+namespace Ample
 variable {A B C : Type} {m n : Nat}
 local infixr:90 (priority := high) " ∘ " => compose
 ```
@@ -795,7 +795,7 @@ file := "without-loss-of-generality"
 그러면 `a ≤ b`가 아닌 경우의 가정 `¬ a ≤ b`는 `b < a`로 표시된다.
 
 ```savedLean
-open scoped Course.Auto
+open scoped Ample.Auto
 ```
 
 ```savedLean
@@ -821,5 +821,9 @@ example (a b : Nat) :
 `Nat.min_eq_left hab`와 `Nat.max_eq_right hab`로 각각의 값을 정리한다.
 
 ```savedLean
-end Course
+end Ample
+```
+
+```savedLean -show
+export_course_compat
 ```

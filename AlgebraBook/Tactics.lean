@@ -26,7 +26,7 @@ number := false
 처음 증명을 읽을 때는 {ref "using-proofs"}[증명의 구성과 사용]을 따라가고,
 명령의 사용법을 다시 확인할 때 이 부록을 참고하라.
 
-교재에서 정의한 명령은 `open Course` 또는 `open scoped Course`로 사용할 수 있다.
+Ample에서 제공하는 전술은 `open Ample` 또는 `open scoped Ample`로 사용할 수 있다.
 아래 예제에는 이 설정과 고전논리 설정을 미리 적용했으며,
 자동 표현 정리는 {ref "tactic-auto-normalization"}[해당 절]에서 따로 켠다.
 
@@ -49,7 +49,7 @@ namespace TacticExamples
 ```
 
 ```savedLean -show
-open scoped Course Classical
+open scoped Ample Classical
 ```
 
 # 전술 찾아보기
@@ -151,7 +151,7 @@ file := "index"
   * {ref "tactic-group-calc"}[군의 계산]
 :::
 
-표현을 단계마다 정리하는 `open scoped Course.Auto`의 범위와 동작은
+표현을 단계마다 정리하는 `open scoped Ample.Auto`의 범위와 동작은
 {ref "tactic-auto-normalization"}[자동 표현 정리]에서 설명한다.
 
 기본 용법은 본문의 증명을 읽고 연습문제를 푸는 데 사용하는 형태이다.
@@ -1219,7 +1219,7 @@ file := "without-loss-of-generality"
 
 ```savedLean -show
 section
-open scoped Course.Auto
+open scoped Ample.Auto
 ```
 
 ```savedLean
@@ -1343,23 +1343,23 @@ file := "unfold-auto"
 ```savedLean
 example
     (n : Nat)
-    (h : n ∈ Course.positives) :
+    (h : n ∈ Ample.positives) :
     0 < n := by
   change 0 < n at h
   exact h
 
 example
     (n : Nat)
-    (h : n ∈ Course.positives) :
+    (h : n ∈ Ample.positives) :
     0 < n := by
-  dsimp [Course.positives] at h
+  dsimp [Ample.positives] at h
   -- 가정: h : positive n
-  dsimp [Course.positive] at h
+  dsimp [Ample.positive] at h
   exact h
 
 example
     (n : Nat)
-    (h : n ∈ Course.positives) :
+    (h : n ∈ Ample.positives) :
     0 < n := by
   expand at h
   -- 가정: h : positive n
@@ -1369,7 +1369,7 @@ example
 
 세 명령 모두 정의상 같은 명제로 가정을 바꾼다.
 `change`에는 바꿀 명제를 적어야 하고,
-`dsimp [Course.positives]`에는 펼칠 정의의 이름을 적는다.
+`dsimp [Ample.positives]`에는 펼칠 정의의 이름을 적는다.
 `expand`는 바깥 정의 `positives`를 먼저 펼치고 새로 나타난 `positive`는 다음 단계에 남긴다.
 
 목표에 적용하려면 `at h`를 생략한다.
@@ -1380,7 +1380,7 @@ example
 ```savedLean
 example
     (n : Nat)
-    (h : n ∈ Course.positives) :
+    (h : n ∈ Ample.positives) :
     0 < n := by
   expand! at h
   exact h
@@ -1392,10 +1392,10 @@ example
 
 ```savedLean
 example
-    (A B : Type) (S : Course.Set A) (T : Course.Set B)
+    (A B : Type) (S : Ample.Set A) (T : Ample.Set B)
     (a : A)
     (b : B)
-    (h : (a, b) ∈ Course.setProduct S T) :
+    (h : (a, b) ∈ Ample.setProduct S T) :
     a ∈ S := by
   expand at h
   unpack h with ⟨ha, hb⟩
@@ -1706,14 +1706,14 @@ example (A B : Type) (f g : A → B)
   ext x
   exact h x
 
-example (A : Type) (S T : Course.Set A)
+example (A : Type) (S T : Ample.Set A)
     (h : ∀ x, x ∈ S ↔ x ∈ T) :
     S = T := by
   ext x
   exact h x
 
-example (A : Type) (S : Course.Set A)
-    (s t : Course.Elem S)
+example (A : Type) (S : Ample.Set A)
+    (s t : Ample.Elem S)
     (h : s.val = t.val) :
     s = t := by
   ext
@@ -1729,15 +1729,15 @@ example
 
 example
     (a b : Int)
-    (h : Course.Congruent 2 a b) :
-    Course.parityClass a = Course.parityClass b := by
+    (h : Ample.Congruent 2 a b) :
+    Ample.parityClass a = Ample.parityClass b := by
   ext
   exact h
 
 example
     (A B : Type)
-    (h : Course.SameCardinality A B) :
-    Course.cardinal A = Course.cardinal B := by
+    (h : Ample.SameCardinality A B) :
+    Ample.cardinal A = Ample.cardinal B := by
   ext
   exact h
 ```
@@ -1864,7 +1864,7 @@ example (A B : Type)
 
 ```savedLean
 example (A : Type)
-    (S T : Course.Set A)
+    (S T : Ample.Set A)
     (x : A)
     (h : S = T)
     (hx : x ∈ S) :
@@ -1922,17 +1922,17 @@ file := "indisc-quotients"
 
 ```savedLean
 example (a b : Int)
-    (h : Course.parityClass a = Course.parityClass b) :
-    Course.Congruent 2 a b := by
+    (h : Ample.parityClass a = Ample.parityClass b) :
+    Ample.Congruent 2 a b := by
   indisc at h with congruence
   exact congruence
 
 example
     (a b : Int)
-    (h : Course.Congruent 2 a b) :
-    Course.parityClass a = Course.parityClass b := by
+    (h : Ample.Congruent 2 a b) :
+    Ample.parityClass a = Ample.parityClass b := by
   ext at h with equality :
-      Course.parityClass a = Course.parityClass b
+      Ample.parityClass a = Ample.parityClass b
   exact equality
 ```
 
@@ -1941,7 +1941,7 @@ example
 합동 관계만으로는 어떤 이름의 몫 원소를 사용할지 정해지지 않으므로
 둘째 예제에서는 결과의 등식을 명시한다.
 
-목표가 합동 관계일 때도 `indisc (Course.parityClass a = Course.parityClass b)`로
+목표가 합동 관계일 때도 `indisc (Ample.parityClass a = Ample.parityClass b)`로
 그 관계에 충분한 몫의 등식을 새 목표로 삼을 수 있다.
 함수의 비교와 달리 여기서 비교하는 것은 대표원 사이의 관계이다.
 
@@ -2306,13 +2306,13 @@ file := "tracing"
   * 군·부분군의 구성, 새로운 보존 법칙, 필요한 가환성
 :::
 
-필요할 때 `set_option trace.Course.arith true in`을 선언 앞에 적으면
+필요할 때 `set_option trace.Ample.arith true in`을 선언 앞에 적으면
 완성된 산술 증명에 사용된 등록 정리와 그 조건, 사용한 가정을 확인할 수 있다.
-`trace.Course.card`와 `trace.Course.group`도 같은 방식으로 켠다.
+`trace.Ample.card`와 `trace.Ample.group`도 같은 방식으로 켠다.
 다음 옵션은 바로 뒤의 정리에서만 적용된다.
 
 ```savedLean
-set_option trace.Course.arith true in
+set_option trace.Ample.arith true in
 example (a m : Nat)
     (h : a < m) :
     a % m = a := by
@@ -2326,7 +2326,7 @@ example (a m : Nat)
 
 ## 교재 관례와 Lean의 용법
 %%%
-tag := "tactic-course-conventions"
+tag := "tactic-ample-conventions"
 file := "conventions"
 %%%
 
@@ -2355,7 +2355,7 @@ file := "conventions"
   * 기존 가정, 기존 목표, 새 이름과 패턴을 각각 지정한다. 적용 가능한 형태는 이 부록의 해당 용법에서 확인한다.
 *
   * 설정
-  * 교재 전술은 `open Course`, 자동 표현 정리는 `open scoped Course.Auto`로 사용한다.
+  * 교재 전술은 `open Ample`, 자동 표현 정리는 `open scoped Ample.Auto`로 사용한다.
 :::
 
 다른 Lean 문서를 읽을 때는 그 문서가 가져오는 모듈과 설정도 확인하라.
@@ -2374,11 +2374,11 @@ file := "auto-normalization"
 
 ```savedLean -show
 namespace AutoExamples
-open Course
+open Ample
 ```
 
 ```savedLean
-open scoped Course.Auto
+open scoped Ample.Auto
 ```
 
 자동으로 정리하는 표현은 다음과 같다.
@@ -2427,7 +2427,7 @@ example (P : Prop)
 원소나 성분의 등식을 비교하는 단계에는 `ext`를 사용한다.
 
 특정 증명에서 원래 표기를 확인하려면
-그 선언 앞에 `set_option course.autoNormalize false in`을 적을 수 있다.
+그 선언 앞에 `set_option ample.autoNormalize false in`을 적을 수 있다.
 
 ```savedLean -show
 end AutoExamples
@@ -2464,7 +2464,7 @@ file := "arithmetic"
 `arith`는 교재의 산술 전술로, 선형 산술과 다항식 등식에 더하여
 자연수와 정수의 몫·나머지에 관한 정리들을 사용한다.
 이 전술은 {ref "preliminaries-arith"}[자연수와 정수의 마지막 절]에서 처음 소개한다.
-풀이 파일에서 `import AlgebraBook.Tactic.Arithmetic`와 `open Course`를 사용하면 활성화된다.
+풀이 파일에서 `import AlgebraBook.Tactic.Arithmetic`와 `open Ample`를 사용하면 활성화된다.
 자연수와 정수 이후의 교재 모듈은 이 전술을 포함한다.
 
 `arith`가 계산에 사용하는 기본 지식은 자연수와 정수의 산술이다.
@@ -2624,10 +2624,10 @@ file := "membership-arithmetic"
 
 ```savedLean
 def tactic_element_from_three (n : Nat) :
-    Course.Elem (fun k : Nat => 3 ≤ k) :=
+    Ample.Elem (fun k : Nat => 3 ≤ k) :=
   { val := n + 3, property := by arith }
 example
-    (s : Course.Elem (fun n : Nat => 2 ≤ n)) :
+    (s : Ample.Elem (fun n : Nat => 2 ≤ n)) :
     s.val - 2 + 2 = s.val := by
   have hy :=
     s.property
@@ -2678,13 +2678,13 @@ file := "cardinality"
 
 ```savedLean
 example (A B : Type) (n : Nat)
-    (hAB : Course.cardinal A = Course.cardinal B)
-    (hA : Course.cardinal A = n) :
-    Course.cardinal B = n := by
+    (hAB : Ample.cardinal A = Ample.cardinal B)
+    (hA : Ample.cardinal A = n) :
+    Ample.cardinal B = n := by
   card
 ```
 
-`AlgebraBook.Cardinality`를 가져오고 `open Course`를 쓰면 이 전술과 등록한 기본 정리를 사용할 수 있다.
+`AlgebraBook.Cardinality`를 가져오고 `open Ample`를 쓰면 이 전술과 등록한 기본 정리를 사용할 수 있다.
 산술식의 계산은 `arith`로 확인하고
 새로운 전단사가 필요하면 함수를 구성하여 직접 증명한다.
 
@@ -2698,13 +2698,13 @@ file := "group-calculations"
 
 ```savedLean
 example {A : Type}
-    (G : Course.Group A) (a b c : A) :
+    (G : Ample.Group A) (a b c : A) :
     G.op (G.op a b) (G.op (G.inv b) c) =
       G.op a c := by
   group_calc G
 ```
 
-`AlgebraBook.Tactic.Group`를 가져오고 `open Course`를 적으면 사용할 수 있다. 서로 다른 군 구조를 같은 타입에 정의한 경우에는 `G`로 선택한 구조의 법칙만 적용한다. `arith`의 기본 지식에는 군의 법칙을 추가하지 않는다.
+`AlgebraBook.Tactic.Group`를 가져오고 `open Ample`를 적으면 사용할 수 있다. 서로 다른 군 구조를 같은 타입에 정의한 경우에는 `G`로 선택한 구조의 법칙만 적용한다. `arith`의 기본 지식에는 군의 법칙을 추가하지 않는다.
 
 ```savedLean
 end TacticExamples

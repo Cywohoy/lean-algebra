@@ -27,7 +27,7 @@ open scoped Classical
 ```
 
 ```savedLean
-namespace Course
+namespace Ample
 variable {A B C : Type} {m n : Nat}
 local infixr:90 (priority := high) " ∘ " => compose
 ```
@@ -1049,7 +1049,7 @@ file := "automation"
 이미 알고 있는 크기 관계를 연결할 때는 `card`를 사용할 수 있다.
 
 ```savedLean -show
-attribute [course_card_rules]
+attribute [ample_card_rules]
   Cardinal.le_refl Cardinal.le_trans Cardinal.le_of_eq
   countablyInfinite_isInfinite positives_countablyInfinite
   cardinal_le_powerSet cardinal_ne_powerSet cardinal_lt_powerSet
@@ -1067,5 +1067,9 @@ theorem infinite_card_comparison
 ```
 
 ```savedLean
-end Course
+end Ample
+```
+
+```savedLean -show
+export_course_compat
 ```

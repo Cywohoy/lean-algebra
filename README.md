@@ -8,6 +8,9 @@ Ample은 공개하고 교재 저장소는 현재 비공개로 관리한다.
 `python scripts/sync_ample.py --check`로 두 저장소의 코드가 일치하는지 검사한다.
 Ample의 위치가 다르면 `--ample-root 경로`를 지정한다.
 개인 풀이인 `Exercises/`와 생성된 문서는 Git 추적에서 제외한다.
+본문과 새 연습문제는 `Ample` 이름공간과 `Ample.Auto` 설정을 사용한다.
+기존 개인 풀이의 `open Course`, `open scoped Course.Auto`와 `Course.singleton` 같은 이름은
+교재의 호환 모듈이 연결하므로 풀이 파일을 고칠 필요가 없다.
 기존 Cubical 실험은 `C:/Users/Cywohoy/Documents/AmpleCTT`로 옮겨 보관했다.
 
 수업에서 배우는 수학적 정의를 직접 구현하며 공부하는 한국어 대수학 교재이다.
@@ -162,7 +165,7 @@ Lean 4 확장이 설치된 VS Code에서 이 프로젝트 폴더를 열고
 | `rw`, `expand` | 표현 변환 | 같은 표현 변환 |
 
 기본 `ext`, `indisc`, `expand`는 한 단계이며 `!`형은 반복형이다.
-교재의 `ext` 기본 깊이는 표준 Lean과 다르며 `open Course`에서 활성화된다.
+교재의 `ext` 기본 깊이는 표준 Lean과 다르며 `open Ample`에서 활성화된다.
 기존 `indiscern`과 짧은 `suffices`는 개인 풀이 호환을 위해 남겨 두되 본문에서 가르치지 않는다.
 
 | 선택과 명명 | 의미 |
@@ -188,7 +191,7 @@ indisc goals first second with pair
 `ext at h1 h2 with whole`는 두 비교 증거로 전체 등식을 얻는다.
 결과를 추론하기 어려우면 `: 원하는 등식`을 적는다.
 대표원으로 만든 몫의 등식은 동치류인 집합의 등식에 근거한 동치형 정리로 연결한다.
-`course_compare`에 등록한 정리를 `ext`와 `indisc`이 양방향으로 사용한다.
+`ample_compare`에 등록한 정리를 `ext`와 `indisc`이 양방향으로 사용한다.
 임의의 몫 원소에서 대표원을 자동으로 선택하지 않으며 일반 함수의 단사성도 추론하지 않는다.
 
 `apply r at h`는 정리에서 `h`가 들어갈 자리를 찾고 실제 적용 결과를 가정에 기록한다.
@@ -244,7 +247,7 @@ Mathlib의 `wlog!` 부정 전개 변형은 추가하지 않는다.
 필요한 표현 정리는 교재의 고전논리 범위와 자동 정리 규칙을 사용한다.
 
 자동 표현 정리는 풀이 파일 맨 위에 `import AlgebraBook.Tactic.Auto`를 추가하고
-`open scoped Course.Auto`를 한 번 적으면 활성화된다.
+`open scoped Ample.Auto`를 한 번 적으면 활성화된다.
 증명 시작과 전술의 각 단계 전후에 익명 술어의 원소 조건, 지역 함수의 계산과 부등식의 부정을 정리한다.
 일반적인 `x ∈ S`는 유지하며 이름 붙인 집합은 `expand`, `dsimp` 등으로 명시적으로 펼친다.
 직접 만든 원소의 등식은 유지하고 값의 등식을 추가한다.
@@ -255,7 +258,7 @@ Mathlib의 `wlog!` 부정 전개 변형은 추가하지 않는다.
 기존 `Exercises/` 파일의 설정과 개인 풀이는 그대로 보존한다.
 
 정의의 이름을 적지 않고 원소 조건이나 함수값을 펼치려면
-`open Course` 아래에서 `expand at h`를 사용할 수 있다.
+`open Ample` 아래에서 `expand at h`를 사용할 수 있다.
 이 전술은 필요한 정의를 찾아 `dsimp`의 계산으로 식을 정리한다.
 교재와 현재 풀이 파일의 정의를 바깥에서 한 층만 펼치며
 새로 나타난 정의는 다음 `expand`까지 남겨 둔다.
@@ -263,7 +266,7 @@ Mathlib의 `wlog!` 부정 전개 변형은 추가하지 않는다.
 논리곱이나 부등식을 정리로 단순화하지 않는다.
 `expand`는 목표를, `expand at *`는 목표와 모든 가정을 펼친다.
 
-자연수와 정수 이후의 풀이에서는 `open Course`로 산술 전술 `arith`와 `suffices`도 사용할 수 있다.
+자연수와 정수 이후의 풀이에서는 `open Ample`로 산술 전술 `arith`와 `suffices`도 사용할 수 있다.
 분야별 자동화는 정의와 기본 성질을 직접 배우고 증명한 뒤 도입하며,
 `arith`의 첫 사용 예는 자연수와 정수의 마지막 절에 둔다.
 `arith`는 선형 산술, 다항식 등식과 자연수·정수의 몫·나머지 계산을 처리한다.
@@ -279,16 +282,16 @@ Mathlib의 `wlog!` 부정 전개 변형은 추가하지 않는다.
 전술 사용법은 부록의 “자동 표현 정리”, “산술식의 계산”과 “새 목표의 지정”에 정리했다.
 
 군의 기본 계산을 직접 다룬 뒤 2.7에서 `group_calc G`를 소개한다.
-`AlgebraBook.Tactic.Group`와 `open Course`로 사용할 수 있으며 군 구조 `G`를 명시한다.
-곱의 결합법칙, 항등원·역원과 거듭제곱 법칙은 `course_group_rules`에 별도로 등록한다.
+`AlgebraBook.Tactic.Group`와 `open Ample`로 사용할 수 있으며 군 구조 `G`를 명시한다.
+곱의 결합법칙, 항등원·역원과 거듭제곱 법칙은 `ample_group_rules`에 별도로 등록한다.
 군의 식을 정리하면서 생기는 자연수·정수 지수의 계산에는 `arith`를 사용하며,
 `arith`의 규칙에는 군의 법칙을 추가하지 않는다.
 본문에서는 `suffices h : G by ...`로 연결 증명을 적고 군 계산이 필요한 곳에서 `group_calc`를 사용한다.
 개인 풀이용 짧은 `suffices G`는 기존과 같이 산술로 연결을 증명한다.
 
 집합의 크기 연습문제 뒤에는 별도의 전술 `card`를 소개한다.
-`AlgebraBook.Cardinality`와 `open Course`로 사용할 수 있으며
-현재 가정과 `course_card_rules`에 등록한 크기 관계, 원소 수의 유일성, 유한성·무한성의 전달 정리를 연결한다.
+`AlgebraBook.Cardinality`와 `open Ample`로 사용할 수 있으며
+현재 가정과 `ample_card_rules`에 등록한 크기 관계, 원소 수의 유일성, 유한성·무한성의 전달 정리를 연결한다.
 1.7에서는 기수의 등식과 유한성·무한성의 기본 정리를 사용한다.
 1.8을 가져오면 부등식의 반사성·추이성과 칸토어 정리도 연결한다.
 주어진 등식과 부등식을 먼저 연결한 뒤 등록한 정리를 적용하며 새로운 중간 기수를 임의로 정하여 탐색하지 않는다.
@@ -351,8 +354,8 @@ PowerShell에서는 여러 절을 함께 지정할 수도 있다.
 
 ## 자동화의 추론 확인과 검증
 
-필요한 선언 앞에 `set_option trace.Course.arith true in`을 적으면 성공한 산술 증명의 등록 정리와 조건, 사용한 가정을 확인할 수 있다.
-기수와 군 계산에는 각각 `trace.Course.card`, `trace.Course.group`를 사용한다.
+필요한 선언 앞에 `set_option trace.Ample.arith true in`을 적으면 성공한 산술 증명의 등록 정리와 조건, 사용한 가정을 확인할 수 있다.
+기수와 군 계산에는 각각 `trace.Ample.card`, `trace.Ample.group`를 사용한다.
 완성된 증명에 들어 있는 정리 적용만 보고하며 계산 엔진 내부의 모든 추론을 설명하지는 않는다.
 
 본문에서 처음 익힐 전술 용법과 여러 목표를 조립하는 확장 용법은 전술 부록에서 구분한다.

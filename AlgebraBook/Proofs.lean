@@ -31,7 +31,7 @@ import AlgebraBook.Tactic.Rule
 ```
 
 ```savedLean -show
-open scoped Course
+open scoped Ample
 ```
 
 ```savedLean

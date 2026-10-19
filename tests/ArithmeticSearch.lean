@@ -1,6 +1,6 @@
 import AlgebraBook.Tactic.Arithmetic
 
-open Course
+open Ample
 
 set_option maxHeartbeats 60000
 

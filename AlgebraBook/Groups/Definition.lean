@@ -32,7 +32,7 @@ open scoped Classical
 ```
 
 ```savedLean
-namespace Course
+namespace Ample
 
 variable {A B : Type}
 
@@ -538,5 +538,9 @@ $`a\ast b=(c\ast u)\ast b`를 계산하라.
 마지막으로 $`a\ast u=a\ast(b\ast a)`를 계산하면 우항등원의 조건을 얻는다.
 
 ```savedLean
-end Course
+end Ample
+```
+
+```savedLean -show
+export_course_compat
 ```

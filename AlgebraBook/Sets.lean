@@ -40,7 +40,7 @@ import AlgebraBook.Tactic.Unfold
 ```
 
 ```savedLean
-namespace Course
+namespace Ample
 ```
 
 # 집합과 술어
@@ -168,7 +168,7 @@ example : 3 ∈ positives := by
 @[simp] theorem mem_def {A : Type} (S : Set A) (x : A) :
     (x ∈ S) = S x := rfl
 
-attribute [course_arith_simp] mem_def positives positive
+attribute [ample_arith_simp] mem_def positives positive
 
 ```
 
@@ -339,7 +339,7 @@ file := "subsets"
 def Subset {A : Type} : Set A → Set A → Prop :=
   fun S T => ∀ x, x ∈ S → x ∈ T
 instance {A : Type} : HasSubset (Set A) where
-  Subset := Course.Subset
+  Subset := Ample.Subset
 ```
 
 앞에서와 같이 기호와 정의를 연결했으므로,
@@ -820,7 +820,7 @@ file := "intersections-and-conjunctions"
 def inter {A : Type} (S T : Set A) : Set A :=
   fun x => x ∈ S ∧ x ∈ T
 instance {A : Type} : Inter (Set A) where
-  inter := Course.inter
+  inter := Ample.inter
 ```
 
 `inter S T`가 두 집합의 교집합이며,
@@ -946,7 +946,7 @@ file := "unions-and-disjunctions"
 def union {A : Type} (S T : Set A) : Set A :=
   fun x => x ∈ S ∨ x ∈ T
 instance {A : Type} : Union (Set A) where
-  union := Course.union
+  union := Ample.union
 ```
 
 `union S T`가 두 집합의 합집합이며, 뒤의 `instance`로 이를 `S ∪ T`에 연결한다.
@@ -1145,7 +1145,7 @@ example
 def compl {A : Type} (S : Set A) : Set A :=
   fun x => x ∉ S
 instance {A : Type} : Complement (Set A) where
-  complement := Course.compl
+  complement := Ample.compl
 
 postfix:max "ᶜ" => Complement.complement
 ```
@@ -1364,7 +1364,7 @@ open scoped Classical
 
 ```savedLean -show
 section
-open scoped Course.Auto
+open scoped Ample.Auto
 open scoped Classical
 ```
 
@@ -1401,7 +1401,7 @@ $`S`와 $`T`의 *차집합*이라고 하며 $`S \setminus T`로 나타낸다.
 def diff {A : Type} (S T : Set A) : Set A :=
   fun x => x ∈ S ∧ x ∉ T
 instance {A : Type} : SDiff (Set A) where
-  sdiff := Course.diff
+  sdiff := Ample.diff
 ```
 
 이 기호 연결로 `diff S T`를 `S \ T`로 쓴다.
@@ -1566,5 +1566,9 @@ theorem exercise_diff_empty_iff {A : Type}
 *힌트* $`S\setminus T=\varnothing`에서 $`S\subseteq T`를 보일 때는 원소 $`x\in S`를 택하라. $`x\notin T`라고 가정하면 $`x`가 차집합에 속하여 모순이 생긴다.
 
 ```savedLean
-end Course
+end Ample
+```
+
+```savedLean -show
+export_course_compat
 ```

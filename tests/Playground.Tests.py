@@ -13,7 +13,7 @@ class PlaygroundTests(unittest.TestCase):
     def setUpClass(cls):
         cls.playground = Playground(ROOT, {
             'logic': {'before': 'import AlgebraBook.Tactic.Rule\nnamespace BrowserExample\n'},
-            'arith': {'before': 'import AlgebraBook.Tactic.Arithmetic\nopen scoped Course\n'},
+            'arith': {'before': 'import AlgebraBook.Tactic.Arithmetic\nopen scoped Ample\n'},
             'context': {'before': 'import AlgebraBook.Tactic.Rule\nnamespace Earlier\ndef known := 7\n'},
         })
 
@@ -79,7 +79,7 @@ class PlaygroundTests(unittest.TestCase):
             'session': result['session'], 'position': {'line': 4, 'character': 2}})
         self.assertIn('⊢ a < b', '\n'.join(result['goal'] or []), result)
 
-    def test_course_automation_is_available(self):
+    def test_ample_automation_is_available(self):
         result = self.playground.check({'snippet': 'arith',
             'code': 'example (n : Nat) : 2 * n ≠ 5 := by\n  arith'})
         self.assertEqual(result['contextErrors'], [])

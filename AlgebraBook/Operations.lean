@@ -31,7 +31,7 @@ open scoped Classical
 ```
 
 ```savedLean
-namespace Course
+namespace Ample
 
 variable {A B : Type}
 
@@ -403,5 +403,9 @@ theorem exercise_inverse_symm
 ```
 
 ```savedLean
-end Course
+end Ample
+```
+
+```savedLean -show
+export_course_compat
 ```

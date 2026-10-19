@@ -8,6 +8,8 @@ import subprocess
 
 root = Path(__file__).resolve().parents[1]
 lake = shutil.which('lake') or str(Path.home() / '.elan/bin/lake.exe')
+# Include compatibility entry points that the document executable may not import.
+subprocess.run([lake, 'build', 'AlgebraBook'], cwd=root, check=True)
 paths = sorted((root/'_out/example-code').rglob('*.lean'))
 paths += sorted((root/'ExerciseTemplates').glob('*.lean'))
 paths += sorted((root/'tests').glob('*.lean'))

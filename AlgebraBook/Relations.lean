@@ -27,7 +27,7 @@ open scoped Classical
 ```
 
 ```savedLean
-namespace Course
+namespace Ample
 variable {A B C : Type} {m n : Nat}
 local infixr:90 (priority := high) " ∘ " => compose
 ```
@@ -284,7 +284,7 @@ def Notation.delabQuotientType : Delab :=
     let relation ← withNaryArg 1 delab
     return ⟨mkNode ``quotientTypeNotation #[carrier.raw, mkAtom "/", relation.raw]⟩
 
-attribute [scoped delab app.Course.QuotientType] Notation.delabQuotientType
+attribute [scoped delab app.Ample.QuotientType] Notation.delabQuotientType
 ```
 
 `q : A / R`이면 `q.val`은 동치류인 집합이고
@@ -322,7 +322,7 @@ def Notation.delabClassOf : Delab :=
     let value ← withNaryArg 2 delab
     return ⟨mkNode ``classOfNotation #[mkAtom "⟦", value.raw, mkAtom "⟧"]⟩
 
-attribute [scoped delab app.Course.classOf] Notation.delabClassOf
+attribute [scoped delab app.Ample.classOf] Notation.delabClassOf
 ```
 
 ## 몫 원소의 등식
@@ -391,7 +391,7 @@ theorem parityClass_eq_iff (a b : Int) :
 ```
 
 ```savedLean -show
-attribute [course_compare] parityClass_eq_iff
+attribute [ample_compare] parityClass_eq_iff
 ```
 
 이 비교도 `ext`와 `indisc`에 연결했다.
@@ -859,5 +859,9 @@ theorem exercise_nextParity_twice (q : Parity) :
 *힌트* 마지막 증명에서는 `quotient_exists_classOf`로 `q`의 대표원을 얻은 뒤 두 번째 결과를 사용하라.
 
 ```savedLean
-end Course
+end Ample
+```
+
+```savedLean -show
+export_course_compat
 ```

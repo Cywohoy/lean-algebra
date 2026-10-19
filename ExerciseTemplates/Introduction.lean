@@ -2,7 +2,7 @@ import AlgebraBook.Introduction
 import AlgebraBook.Tactic.Auto
 
 open IntroExamples
-open scoped Course.Auto
+open scoped Ample.Auto
 
 namespace Exercises.Introduction
 

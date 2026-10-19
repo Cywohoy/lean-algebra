@@ -1,6 +1,6 @@
 import AlgebraBook.Functions
 
-open Course
+open Ample
 
 variable {A B : Type} {m n : Nat}
 

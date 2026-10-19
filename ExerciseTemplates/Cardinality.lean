@@ -3,8 +3,8 @@ import AlgebraBook.Tactic.Auto
 
 /-! 유한성과 무한집합의 연습문제를 함께 모은 파일이다. -/
 
-open Course
-open scoped Course.Auto Classical
+open Ample
+open scoped Ample.Auto Classical
 namespace Exercises.Cardinality
 variable {A B C : Type} {m n : Nat}
 

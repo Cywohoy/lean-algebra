@@ -2,7 +2,7 @@ import AlgebraBook.Tactic.GroupRules
 import AlgebraBook.Tactic.Group
 import AlgebraBook.Tactic.Auto
 
-open Course
+open Ample
 
 section
 variable {A : Type} (G H : Group A)

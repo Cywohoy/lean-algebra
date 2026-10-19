@@ -1,6 +1,6 @@
 import AlgebraBook.Cardinality
 
-open Course
+open Ample
 
 variable {A B C : Type} {m n : Nat}
 

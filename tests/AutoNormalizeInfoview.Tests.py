@@ -90,8 +90,8 @@ def request(method, params):
 source = """import AlgebraBook.Sets
 import AlgebraBook.Tactic.Auto
 import Ample.Tactic
-open Course
-open scoped Course.Auto Classical
+open Ample
+open scoped Ample.Auto Classical
 
 example {A : Type} (S : Set A) : Sᶜᶜ ⊆ S := by
   intro x hxScc
@@ -182,7 +182,7 @@ theorem display_apply_order : ∃ n : Nat, n = 7 := by
 
 theorem display_recursive_comparison (p q : Fin 3 × Fin 4) (h : p = q) :
     p.1.val = q.1.val := by
-  indisc at h with first second
+  indisc : 2 at h with first second
   
   exact first
 
@@ -198,7 +198,7 @@ theorem display_suffices_hover (m : Nat) (ym : Fin m) : ym.val % m = ym.val := b
   suffices bound : ym.val < m by arith
   exact ym.isLt
 
-set_option course.autoNormalize false in
+set_option ample.autoNormalize false in
 theorem display_hover_without_normalization (n : Nat) : (fun x => x) n = n := by
   expand
 
@@ -298,7 +298,7 @@ def check_hovers():
         ("display_ext_hyp", "  ext at h", "ext"),
         ("display_unpack_hypothesis", "  unpack h with ⟨hp, hq⟩", "unpack"),
         ("display_finished_expansion", "  expand", "expand"),
-        ("display_recursive_comparison", "  indisc at h with first second", "indisc"),
+        ("display_recursive_comparison", "  indisc : 2 at h with first second", "indisc"),
         ("display_congruence_hover", "  congr : 1", "congr"),
         ("display_arithmetic_hover", "  arith", "arith"),
         ("display_suffices_hover", "  suffices bound : ym.val < m by arith", "suffices"),

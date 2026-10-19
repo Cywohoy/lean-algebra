@@ -7,7 +7,7 @@ import AlgebraBook.Tactic.Auto
 -/
 
 open ProofExamples
-open scoped Course.Auto
+open scoped Ample.Auto
 
 namespace Exercises.Proofs
 

@@ -26,7 +26,7 @@ open scoped Classical
 ```
 
 ```savedLean
-namespace Course
+namespace Ample
 variable {A B C : Type} {m n : Nat}
 local infixr:90 (priority := high) " ∘ " => compose
 ```
@@ -225,5 +225,9 @@ theorem exercise_groupOrder_equal
 기수의 등식으로 한쪽의 원소 수를 다른 쪽으로 옮긴 뒤 `finite_cardinal_unique`로 비교하라.
 
 ```savedLean
-end Course
+end Ample
+```
+
+```savedLean -show
+export_course_compat
 ```

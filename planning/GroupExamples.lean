@@ -5,7 +5,7 @@ import AlgebraBook.GroupBasics
 독자용 본문은 2장의 정의, 기본 계산, 구체적인 예와 자동화 절에 수록한다.
 -/
 
-namespace Course.Preparation
+namespace Ample.Preparation
 
 variable {A B : Type}
 
@@ -221,4 +221,4 @@ theorem permutationGroup_three_not_abelian :
 #print axioms permutationGroup
 #print axioms permutationGroup_three_not_abelian
 
-end Course.Preparation
+end Ample.Preparation

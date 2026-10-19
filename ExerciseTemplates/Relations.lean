@@ -3,8 +3,8 @@ import AlgebraBook.Tactic.Auto
 
 /-! 각 sorry를 자신의 증명으로 바꾸어 완성하라. -/
 
-open Course
-open scoped Course.Auto Classical
+open Ample
+open scoped Ample.Auto Classical
 namespace Exercises.Relations
 variable {A B C : Type} {m n : Nat}
 

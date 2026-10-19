@@ -26,7 +26,7 @@ open scoped Classical
 ```
 
 ```savedLean
-namespace Course
+namespace Ample
 variable {A : Type}
 ```
 
@@ -131,8 +131,12 @@ example (G : Group A)
 
 `group_calc G`가 사용하는 군의 지식은 결합법칙, 항등원과 역원, 앞에서 증명한 거듭제곱 법칙이다. 현재 가정의 등식과 지수에 관한 산술 조건도 사용하며, `G`를 지정하면 그 구조의 법칙으로 계산한다. 새로운 군이나 함수를 구성하거나 귀납법의 가정을 고르는 단계는 독자가 적는다.
 
-산술 전술 `arith`에는 군의 법칙을 추가하지 않는다. `group_calc G`가 지수의 계산에 `arith`를 사용하는 순서이며, 군의 정의와 성질을 처음 증명하는 앞 절에서는 이 자동화를 사용하지 않는다. 풀이 파일에서는 `AlgebraBook.Tactic.Group`를 가져오고 `open Course`를 적으면 사용할 수 있다.
+산술 전술 `arith`에는 군의 법칙을 추가하지 않는다. `group_calc G`가 지수의 계산에 `arith`를 사용하는 순서이며, 군의 정의와 성질을 처음 증명하는 앞 절에서는 이 자동화를 사용하지 않는다. 풀이 파일에서는 `AlgebraBook.Tactic.Group`를 가져오고 `open Ample`를 적으면 사용할 수 있다.
 
 ```savedLean
-end Course
+end Ample
+```
+
+```savedLean -show
+export_course_compat
 ```

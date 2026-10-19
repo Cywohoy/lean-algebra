@@ -30,7 +30,7 @@ open scoped Classical
 ```
 
 ```savedLean
-namespace Course
+namespace Ample
 variable {A B C : Type} {m n : Nat}
 local infixr:90 (priority := high) " ∘ " => compose
 ```
@@ -161,7 +161,7 @@ theorem cardinal_eq_iff (A B : Type) :
 ```
 
 ```savedLean -show
-attribute [course_compare] cardinal_eq_iff
+attribute [ample_compare] cardinal_eq_iff
 ```
 
 앞 절의 `classOf_eq_iff`를 전단사 관계에 적용한 결과이다.
@@ -1502,7 +1502,7 @@ theorem isInfinite_transport
 그러면 $`A`도 유한하여 주어진 무한성과 모순이다.
 
 ```savedLean -show
-attribute [course_card_rules]
+attribute [ample_card_rules]
   sameCardinality_refl sameCardinality_symm sameCardinality_trans
   cardinal_eq_of_sameCardinality sameCardinality_of_cardinal_eq
   Cardinal.eq_symm Cardinal.eq_trans
@@ -1584,5 +1584,9 @@ example
 ```
 
 ```savedLean
-end Course
+end Ample
+```
+
+```savedLean -show
+export_course_compat
 ```

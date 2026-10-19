@@ -1,7 +1,7 @@
 import AlgebraBook.Groups.Order
 import AlgebraBook.Tactic.Auto
 
-open Course
+open Ample
 
 theorem rejected_unpack_retains_hypothesis (P Q : Prop)
     (h : P ∨ Q) : Q ∨ P := by

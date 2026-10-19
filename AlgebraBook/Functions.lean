@@ -34,7 +34,7 @@ open scoped Classical
 ```
 
 ```savedLean
-namespace Course
+namespace Ample
 
 variable {A B C D : Type}
 ```
@@ -738,7 +738,7 @@ Lean에서는 같은 명제의 증명들을 같게 취급한다.
     apply elem_ext
     exact h
 
-attribute [course_norm_hyp] elem_eq_iff
+attribute [ample_norm_hyp] elem_eq_iff
 ```
 
 `s = t`라는 목표에 `ext`를 사용하면 새 목표는 `s.val = t.val`이다.
@@ -1898,5 +1898,9 @@ theorem exercise_cancel_surjective (f g : B → C)
 ```
 
 ```savedLean
-end Course
+end Ample
+```
+
+```savedLean -show
+export_course_compat
 ```
