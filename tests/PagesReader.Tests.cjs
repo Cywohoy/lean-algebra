@@ -42,8 +42,14 @@ async function main() {
     await proof.locator('.tactic > label').filter({hasText: /^funext x$/}).click();
     assert.ok((await proof.locator('.book-step-state').innerText()).includes('S x = T x'));
     assert.ok(await proof.getByRole('button', {name: '단계', exact: true}).isVisible());
+    await page.evaluate(() => document.activeElement?.blur());
+    await page.mouse.move(0, 0);
+    await page.waitForFunction(() => getComputedStyle(document.querySelector('.book-example:has(.book-step-state) .book-copy')).opacity === '0');
+    await proof.hover();
+    const copyBefore = await proof.getByRole('button', {name: '복사', exact: true}).boundingBox();
     await proof.getByRole('button', {name: '복사', exact: true}).click();
     await page.waitForFunction(() => document.body.textContent.includes('복사됨'));
+    assert.deepEqual(await proof.getByRole('button', {name: '복사', exact: true}).boundingBox(), copyBefore);
     assert.ok((await page.evaluate(() => navigator.clipboard.readText())).includes('theorem set_ext'));
     await page.goto(base + 'preliminaries/equivalence-relations/');
     await page.waitForURL(base + 'foundations/relations/equivalence-relations/');

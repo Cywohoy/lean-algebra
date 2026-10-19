@@ -3,13 +3,14 @@
 .book-toolbar { position: absolute; top: .25rem; right: .3rem; z-index: 2; display: flex; align-items: center; gap: .7rem; padding: 0 .2rem; background: white; font: .875rem/1.4 var(--verso-text-font-family); }
 .book-example:hover > .book-toolbar, .book-example:focus-within > .book-toolbar,
 .book-reading > .book-toolbar, .book-editing > .book-toolbar { opacity: 1; }
-.book-copy { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; min-height: 32px; }
+.book-copy { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; min-height: 32px; opacity: 0; pointer-events: none; transition: opacity .12s; }
+.book-example:hover > .book-toolbar > .book-copy, .book-example:focus-within > .book-toolbar > .book-copy { opacity: 1; pointer-events: auto; }
 .book-button { border: 0; border-radius: 0; padding: .15rem 0; background: transparent; color: #737373; font: inherit; cursor: pointer; line-height: 1.5; text-align: left; }
 .book-button:hover { color: #111; text-decoration: underline; text-underline-offset: 3px; }
 .book-button:focus-visible, .book-code-input:focus-visible { outline: 1px solid #777; outline-offset: 3px; }
 .book-button[aria-expanded="true"] { color: #111; text-decoration: underline; text-underline-offset: 3px; }
 .book-button:disabled { color: #aaa; cursor: default; text-decoration: none; }
-.book-toolbar-status { color: #888; font-size: .72rem; }
+.book-toolbar-status { position: absolute; top: 100%; right: 0; color: #777; background: white; font-size: .72rem; white-space: nowrap; pointer-events: none; }
 .book-example-body > .hl.lean.block { display: block; margin: 0; padding: .45rem 5rem .45rem .75rem; overflow-x: auto; }
 .book-reader-panel[hidden] { display: none; }
 .book-reading .book-example-body { display: block; }
@@ -47,7 +48,7 @@
 .book-disclosure > summary { cursor: pointer; color: #777; font-size: .85rem; }
 .book-disclosure > div { padding: .5rem 0 0 1rem; }
 .book-disclosure p:last-child { margin-bottom: .2rem; }
-@media (hover: none) { .book-toolbar { opacity: 1; } }
+@media (hover: none) { .book-copy { opacity: 1; pointer-events: auto; } }
 @media (max-width: 1000px) {
   .book-reading .book-example-body, .book-editor-columns { grid-template-columns: minmax(0, 1fr); }
   .book-reader-panel, .book-live-output { border-left: 0; border-top: 1px solid #ddd; padding: .85rem .75rem; }

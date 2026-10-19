@@ -114,6 +114,12 @@
     let selectStep;
     const status = element('span', 'book-toolbar-status');
     status.setAttribute('role', 'status');
+    let copyStatusTimer;
+    function copyStatus(text) {
+      clearTimeout(copyStatusTimer);
+      status.textContent = text;
+      copyStatusTimer = setTimeout(() => { status.textContent = ''; }, 1600);
+    }
     let stepButton;
     const editButton = exercise ? button('풀기', () => setMode(mode === 'edit' ? null : 'edit')) : null;
     if (editButton && browserLean) editButton.title = '브라우저에서 Lean을 실행합니다. 첫 실행 시 약 300 MB를 내려받습니다.';
@@ -121,8 +127,8 @@
       try {
         const text = mode === 'edit' && editor ? editor.code() : (await snippet(key)).code;
         await navigator.clipboard.writeText(text);
-        status.textContent = '복사됨';
-      } catch { status.textContent = '복사 실패'; }
+        copyStatus('복사됨');
+      } catch { copyStatus('복사 실패'); }
     }, 'book-copy');
     copyButton.setAttribute('aria-label', '복사');
     copyButton.title = '코드 복사';
