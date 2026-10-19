@@ -104,6 +104,7 @@ async function main() {
     wrapper = await open(exercise);
     await status(wrapper, '증명 중');
     assert(await wrapper.locator('dialog').isVisible());
+    assert.equal(await wrapper.getByRole('button', {name: '단계', exact: true}).count(), 0);
     assert((await wrapper.locator('.book-exercise-statement').innerText()).includes('문제 1'));
     assert((await wrapper.locator('.book-exercise-declaration').innerText()).includes('a + 3 < b + 3'));
     assert.equal((await wrapper.locator('textarea').inputValue()).trim(), 'sorry');
@@ -130,7 +131,7 @@ async function main() {
     assert(downloaded.includes('import Ample.') && downloaded.includes('exact h'));
     await page.keyboard.press('Escape');
     assert.equal(await wrapper.locator('dialog').isVisible(), false);
-    await wrapper.getByRole('button', {name: '풀기', exact: true}).click();
+    await wrapper.locator('.book-example-body > .hl.lean.block').click({position: {x: 8, y: 8}});
     assert((await wrapper.locator('textarea').inputValue()).includes('exact h'));
     await status(wrapper, '풀이 완료');
     await page.screenshot({path: 'tmp/exercise-workspace-desktop.png'});

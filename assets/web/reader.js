@@ -125,7 +125,7 @@
         status.textContent = '복사됨';
       } catch { status.textContent = '복사 실패'; }
     }, 'book-copy');
-    if (steps.length) {
+    if (steps.length && !exercise) {
       stepButton = button('단계', () => setMode(mode === 'steps' ? null : 'steps'));
       toolbar.append(stepButton);
     }
@@ -212,8 +212,11 @@
       }
     }
     source.addEventListener('click', event => {
-      if (!steps.length || event.target.closest('a[href]') || event.ctrlKey || event.metaKey) return;
+      if ((!steps.length && !exercise) || event.target.closest('a[href]') || event.ctrlKey || event.metaKey) return;
       if (window.getSelection()?.toString()) return;
+      if (exercise) {
+        event.preventDefault(); event.stopPropagation(); setMode('edit'); return;
+      }
       const label = event.target.closest('.tactic > label');
       const index = steps.findIndex(step => step.label === label);
       event.preventDefault();
@@ -221,13 +224,14 @@
       if (mode !== 'steps') setMode('steps');
       selectStep(index >= 0 ? index : stepIndex);
     }, true);
-    if (steps.length) {
+    if (steps.length || exercise) {
       source.tabIndex = 0;
-      source.setAttribute('aria-label', 'Lean 증명. 누르면 단계별 가정과 목표를 볼 수 있습니다.');
+      source.setAttribute('aria-label', exercise ? 'Lean 연습문제. 누르면 풀이 화면이 열립니다.'
+        : 'Lean 증명. 누르면 단계별 가정과 목표를 볼 수 있습니다.');
       source.addEventListener('keydown', event => {
         if (event.target !== source || !['Enter', ' '].includes(event.key)) return;
         event.preventDefault();
-        setMode(mode === 'steps' ? null : 'steps');
+        setMode(exercise ? 'edit' : mode === 'steps' ? null : 'steps');
       });
     }
   }
