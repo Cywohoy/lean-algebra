@@ -1,9 +1,13 @@
 # Lean으로 배우는 대수학
 
+이 공개 `full-book` 브랜치는 군론을 포함한 전체 교재와 집필 계획을 보존한다.
+1장과 부록으로 구성한 독립 입문서 「Lean으로 배우는 기초 수학」은
+[main 브랜치](https://github.com/Cywohoy/lean-algebra/tree/main)에서 제공한다.
+
 전술과 수학 코드의 독립 라이브러리는 별도 Git 프로젝트 [Ample](https://github.com/Cywohoy/ample)에서 관리한다.
 개발할 때는 두 저장소를 나란히 두고 교재에서 `../Ample`을 Lake 경로 의존성으로 가져온다.
 Ample 자체는 Verso나 교재 문서에 의존하지 않는다.
-Ample은 공개하고 교재 저장소는 현재 비공개로 관리한다.
+Ample과 교재 저장소는 모두 공개되어 있다.
 교재에서 수학 코드를 수정하면 `python scripts/sync_ample.py`로 Ample에 반영하고,
 `python scripts/sync_ample.py --check`로 두 저장소의 코드가 일치하는지 검사한다.
 Ample의 위치가 다르면 `--ample-root 경로`를 지정한다.
@@ -67,11 +71,11 @@ Advanced 절은 이후 기본 본문의 선수 지식이 아니며, 이후 Advan
   수학적 정의와 핵심 증명은 교재에서 직접 작성한다.
 
 두 저장소를 새로 받을 때는 같은 폴더에서 다음과 같이 실행한다.
-교재를 받으려면 비공개 저장소에 접근할 수 있는 GitHub 계정으로 로그인해야 한다.
+전체 교재를 받으려면 `full-book` 브랜치를 지정하라.
 
 ```powershell
 git clone https://github.com/Cywohoy/ample.git Ample
-git clone https://github.com/Cywohoy/lean-algebra.git Textbook
+git clone --branch full-book https://github.com/Cywohoy/lean-algebra.git Textbook
 cd Textbook
 lake update ample
 ```

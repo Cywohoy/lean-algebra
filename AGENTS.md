@@ -1,6 +1,6 @@
 # 프로젝트 지침
 
-- 교재 저장소는 현재 비공개로 유지하고, 별도 Ample 저장소만 공개한다. 사용자의 변경 요청 없이 교재를 공개하거나 Ample의 공개 CI에서 교재 저장소에 접근하지 않는다.
+- 교재와 Ample은 모두 공개 저장소이다. `full-book`은 군론을 포함한 전체 교재와 집필 계획을 보존하며, `main`은 1장과 두 부록으로 구성한 독립 입문서이다. Ample의 빌드와 공개 CI는 교재 저장소에 의존하지 않는다.
 - 수학 코드 동기화 도구는 교재 저장소의 `scripts/sync_ample.py`에 둔다. 기본 Ample 위치는 형제 폴더 `../Ample`이며 `--ample-root`로 다른 체크아웃을 지정할 수 있다.
 - 본문과 새 연습문제는 `Ample`, `Ample.Auto`, `ample_*`를 사용한다. 기존 개인 풀이의 `Course` 이름은 `AlgebraBook/Compatibility.lean`에서만 지원한다. 수학 단원 끝의 숨긴 `export_course_compat` 명령은 이전 이름을 연결하며 라이브러리로 내보내지 않는다.
 
