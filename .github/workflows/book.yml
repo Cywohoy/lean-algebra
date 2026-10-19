@@ -55,6 +55,8 @@ jobs:
           python scripts/prepare_pages.py
           python tests/Pages.Tests.py
           python tests/Preview.Tests.py
+          python scripts/build_unicode_input.py --check
+          node tests/UnicodeTable.Tests.cjs
           node tests/ExerciseModel.Tests.cjs
       # The Pages artifact already contains the complete downloadable site.
       - uses: actions/upload-pages-artifact@v4

@@ -39,8 +39,9 @@ def prepare(site, bundle=None, download=False, config=None):
     (site / 'assets/web').mkdir(parents=True, exist_ok=True)
     shutil.copyfile(ROOT / 'assets/web/reader.js', site / '-verso-data/reader.js')
     shutil.copyfile(ROOT / 'assets/web/reader.css', site / '-verso-data/reader.css')
-    for name in ['lean-wasm.js', 'wasm-reader.js', 'exercise-model.js']:
+    for name in ['lean-wasm.js', 'wasm-reader.js', 'exercise-model.js', 'unicode-input.js', 'lean-unicode.js']:
         shutil.copyfile(ROOT / 'assets/web' / name, site / 'assets/web' / name)
+    shutil.copytree(ROOT / 'assets/web/vendor/lean-unicode-input', site / 'assets/web/vendor/lean-unicode-input', dirs_exist_ok=True)
     loader = importlib.util.spec_from_file_location('book_math_export', ROOT / 'scripts/sync_ample.py')
     exporter = importlib.util.module_from_spec(loader)
     loader.loader.exec_module(exporter)

@@ -233,8 +233,9 @@
           panel.replaceChildren();
           if (!editor) {
             const model = exercise ? await import(new URL('assets/web/exercise-model.js', siteRoot)) : null;
+            const unicode = await import(new URL('assets/web/unicode-input.js', siteRoot));
             if (mode !== 'edit') return;
-            editor = createEditor(key, data, model?.exerciseModel);
+            editor = createEditor(key, data, model?.exerciseModel, unicode.attachUnicodeInput);
           }
           panel.append(editor.root);
           editor.input.focus();
@@ -267,7 +268,7 @@
     }
   }
 
-  function createEditor(key, original, makeExercise) {
+  function createEditor(key, original, makeExercise, attachUnicodeInput) {
     const root = element('div', 'book-live-editor');
     const controls = element('div', 'book-editor-controls');
     const input = element('textarea', 'book-code-input');
@@ -281,6 +282,7 @@
     const exercise = makeExercise?.(original.code, draft);
     let fullCode = exercise?.full || false;
     let selectedProof = 0;
+    let unicodeInput;
     const declaration = element('pre', 'book-exercise-declaration');
     const support = element('details', 'book-exercise-support');
     const supportCode = element('pre', 'book-exercise-declaration');
@@ -294,6 +296,7 @@
     function editableStart() { return exercise && !fullCode ? exercise.start(exercise.bodies, selectedProof) : 0; }
     function loadProof() {
       input.value = exercise.editorBody(exercise.bodies[selectedProof]);
+      unicodeInput?.reset();
       declaration.textContent = exercise.parts[selectedProof].header.trimEnd();
       supportCode.textContent = exercise.parts.slice(0, selectedProof + 1).map(part => part.prefix).join('').trim();
       support.hidden = fullCode || !supportCode.textContent;
@@ -318,6 +321,7 @@
         if (fullCode) input.value = original.code.trimEnd();
         else loadProof();
       } else input.value = original.code.trimEnd();
+      unicodeInput?.reset();
       changed();
       input.focus();
     });
@@ -336,6 +340,7 @@
         fullCode = !fullCode;
         if (fullCode) input.value = source;
         else loadProof();
+        unicodeInput?.reset();
         declaration.hidden = fullCode;
         support.hidden = fullCode || !supportCode.textContent;
         proofControls.hidden = fullCode || exercise.parts.length === 1;
@@ -376,7 +381,7 @@
     output.append(outputHeading, goal, diagnostics);
     columns.append(codePane, output);
     root.append(controls, columns, element('p', 'book-help',
-      '자동 검사 · Ctrl+Enter 즉시 검사 · \\forall + Tab → ∀'));
+      '자동 검사 · Ctrl+Enter 즉시 검사 · \\forall → ∀ 자동 입력'));
     if (browserLean) window.addEventListener('book-lean-progress', event => {
       if (busy && root.isConnected) message.textContent = event.detail;
     });
@@ -543,40 +548,32 @@
         }
       }, 180);
     }
-    input.addEventListener('input', changed);
-    input.addEventListener('compositionend', changed);
+    unicodeInput = attachUnicodeInput(input, changed);
     input.addEventListener('click', updateGoal);
     input.addEventListener('select', updateGoal);
     input.addEventListener('keyup', event => { if (event.key.startsWith('Arrow')) updateGoal(); });
     input.addEventListener('scroll', () => { gutter.scrollTop = input.scrollTop; });
-    const symbols = {'forall': '∀', 'exists': '∃', 'in': '∈', 'notin': '∉', 'subseteq': '⊆',
-      'and': '∧', 'or': '∨', 'not': '¬', 'to': '→', 'iff': '↔', 'equiv': '≡', 'times': '×',
-      'le': '≤', 'ge': '≥', 'ne': '≠', 'emptyset': '∅', 'inter': '∩', 'union': '∪',
-      'cap': '∩', 'cup': '∪', 'circ': '∘', 'langle': '⟨', 'rangle': '⟩', '<': '⟨', '>': '⟩', '.': '·',
-      '[[': '⟦', ']]': '⟧', '[[]]': '⟦$CURSOR⟧'};
-    input.addEventListener('keydown', event => {
+    input.addEventListener('keydown', async event => {
       if (event.isComposing) return;
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); check(); }
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault(); await unicodeInput.flush(); check(); return;
+      }
       if (event.key === 'Tab') {
         event.preventDefault();
+        if (unicodeInput.hasPending()) { await unicodeInput.flush(); return; }
         const start = input.selectionStart;
-        const match = input.value.slice(0, start).match(/\\([a-zA-Z<>.\[\]]+)$/);
-        if (match && symbols[match[1]]) {
-          const replacement = symbols[match[1]];
-          const marker = replacement.indexOf('$CURSOR');
-          const begin = start - match[0].length;
-          input.setRangeText(replacement.replace('$CURSOR', ''), begin, start, 'end');
-          if (marker >= 0) input.setSelectionRange(begin + marker, begin + marker);
-        }
-        else if (!event.shiftKey) input.setRangeText('  ', start, input.selectionEnd, 'end');
-        changed();
+        if (!event.shiftKey) input.setRangeText('  ', start, input.selectionEnd, 'end');
+        await unicodeInput.edited();
       }
       if (event.key === 'Enter' && !event.ctrlKey && !event.metaKey) {
         event.preventDefault();
         const before = input.value.slice(0, input.selectionStart).split('\n').at(-1);
-        const indent = before.match(/^ */)[0] + (/\bby\s*$/.test(before) ? '  ' : '');
+        const code = before.split('--')[0].trimEnd();
+        const branch = /^[\t ]*[·.](?:\s|$)/.test(code);
+        const nested = /\bby$|=>$/.test(code);
+        const indent = before.match(/^[\t ]*/)[0] + '  '.repeat(Number(branch) + Number(nested));
         input.setRangeText('\n' + indent, input.selectionStart, input.selectionEnd, 'end');
-        changed();
+        await unicodeInput.edited();
       }
     });
     lines();
