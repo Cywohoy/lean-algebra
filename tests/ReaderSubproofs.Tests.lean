@@ -1,4 +1,4 @@
-import Ample
+import Ample.Tactic
 import SubVerso.Highlighting
 
 open Lean Elab Command SubVerso.Highlighting

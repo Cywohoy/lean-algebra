@@ -125,4 +125,4 @@ Lean 언어 서버의 전술 상태와 도움말은 `python tests/AutoNormalizeI
 
 `web/wasm-runtime.local.json`이 있으면 미리보기는 그 설정의 개발 실행 환경을 사용한다. 이 파일은 Git에 포함하지 않으며 공개 버전 고정 파일을 변경하지 않는다. 직접 준비할 때는 `scripts/prepare_pages.py --runtime-config web/wasm-runtime.local.json`을 사용한다.
 
-긴 본문 증명을 매번 다시 검사하지 않도록 연습문제의 앞선 문맥을 동일한 wasm32 Lean으로 미리 검사할 수 있다. `scripts/build_wasm_contexts.py`는 각 문제 직전의 코드만으로 문맥 파일을 만들며, 실행 파일을 묶을 때 `scripts/build_wasm_bundle.py --contexts ...`로 포함한다. 문맥의 원문 해시가 현재 교재와 일치할 때만 이를 재사용한다. 풀이와 이후 정리는 포함하지 않으며, 브라우저는 문맥 파일의 크기와 해시를 확인한다. 일치하는 문맥이 없으면 원래 코드로 검사한다.
+긴 본문 증명을 브라우저에서 다시 검사하지 않도록 연습문제 앞의 문맥을 동일한 wasm32 Lean으로 미리 검사한다. `scripts/build_wasm_contexts.py`로 각 문제 직전의 코드만 담은 문맥 파일을 만들고 `scripts/build_wasm_bundle.py --contexts ...`로 실행 묶음에 포함한다. 풀이와 이후 정리는 포함하지 않으며 브라우저는 문맥 파일의 크기와 해시를 확인한다. 현재 교재의 코드와 일치하는 문맥이 없으면 사이트 준비가 실패하므로, 예제 코드를 수정하거나 문제를 옮긴 뒤에는 문맥과 실행 묶음도 다시 만들어야 한다.

@@ -78,6 +78,9 @@ def prepare(site, bundle=None, download=False, config=None):
             snippet['legacyKeys'] = list(dict.fromkeys([key, *historical_keys.get(name[1], [])]))
         snippet['before'] = translate(snippet['before'])
         digest = hashlib.sha256(snippet['before'].encode()).hexdigest()
+        if snippet.get('exercise') and digest not in contexts:
+            raise ValueError('Missing checked browser context for ' + name[1]
+                             + '; rebuild the exercise contexts and browser bundle before publishing')
         if snippet.get('exercise') and digest in contexts:
             context = contexts[digest]
             snippet['sourceBefore'] = snippet['before']

@@ -66,6 +66,8 @@ if 'content="wasm"' in (site / 'index.html').read_text(encoding='utf-8'):
     assert (site / 'assets/web/wasm-reader.js').is_file()
     assert (site / 'assets/web/exercise-model.js').is_file()
     assert not any('AlgebraBook.' in item['before'] for item in json.loads((site / 'playground.json').read_text()).values())
+    assert all(item.get('contextFiles') for item in json.loads(
+        (site / 'playground.json').read_text(encoding='utf-8')).values() if item.get('exercise'))
 assert not (site / 'operations-and-groups').exists()
 # Reading does not require opening another page for each small subsection.
 reading_pages = [p for p in (site / 'foundations').rglob('index.html')
