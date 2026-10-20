@@ -197,7 +197,6 @@ example (n : Nat)
   exact h
 ```
 
-`dsimp [positives]` 이후에는 `positive n`, `dsimp [positive]` 이후에는 `0 < n`이 남는다.
 가정에 사용할 때도 `dsimp [positives] at h`처럼 적는다.
 
 바뀔 조건을 이미 알고 있다면 `change`로 그 조건을 직접 적을 수도 있다.
@@ -366,9 +365,8 @@ tag := "sets-basic-subsets"
 *정리* 모든 집합은 전체집합의 부분집합이다.
 
 *증명* 임의의 원소 $`x \in S`를 택하면 $`x`는 $`A`의 원소이므로 전체집합에 속한다.
-Lean에서는 `x ∈ whole A`의 정의를 펼치면 `True`가 되므로 항상 참인 이 명제를 증명하면 된다.
-Lean은 `True`의 증명 `True.intro`를 제공하므로 `exact True.intro`로 증명을 마칠 수 있다.
-전술 `trivial`도 이 목표를 해결하며 아래에서는 이 전술을 사용한다.
+Lean에서 남은 목표 `x ∈ whole A`는 정의에 따라 `True`이다.
+이 명제의 증명인 `True.intro`를 제시하는 `exact True.intro`나 전술 `trivial`로 마칠 수 있다.
 
 ```savedLean
 theorem subset_whole {A : Type} (S : Set A) :
@@ -376,9 +374,6 @@ theorem subset_whole {A : Type} (S : Set A) :
   intro x hx
   trivial
 ```
-
-`intro x hx` 이후의 목표는 `x ∈ whole A`, 곧 `True`이다.
-`x : A`이면 언제나 전체집합에 속하므로 `trivial`은 가정 `hx`를 사용하지 않고 증명을 마친다.
 
 *정리* 공집합은 모든 집합의 부분집합이다.
 
@@ -399,9 +394,6 @@ theorem empty_subset {A : Type} (S : Set A) :
   intro x hx
   contradiction
 ```
-
-`intro x hx` 이후의 목표는 `x ∈ S`이며, 가정 `hx`의 명제는 정의에 따라 `False`이다.
-따라서 `contradiction`이 바로 그 가정을 사용하여 증명을 마친다.
 
 ## 포함 관계의 추이성
 %%%
@@ -574,10 +566,8 @@ tag := "sets-function-extensionality"
 
 $$`\bigl(\text{모든 } x \in A \text{에 대하여 } f(x) = g(x)\bigr) \;\Longrightarrow\; f = g.`
 
-Lean에서 이 원리를 사용하는 전술이 `funext`이다.
-목표가 함수의 등식 `f = g`일 때 `funext x`를 쓰면,
-임의의 원소 `x : A`를 도입하고 그 원소에서의 등식 `f x = g x`를 새 목표로 삼는다.
-전칭명제를 증명할 때처럼 임의의 원소를 택하여, 그 원소에서 두 함수의 값을 비교하는 것이다.
+Lean에서는 `funext x`로 임의의 원소 `x : A`를 도입하고
+함수의 등식 `f = g`를 함수값의 등식 `f x = g x`로 바꾼다.
 
 ```savedLean
 example (A B : Type) (f g : A → B)
@@ -591,8 +581,6 @@ example (A B : Type) (f g : A → B)
 2. `funext x`를 쓰면 `x : A`가 도입되고, 목표는 이 원소에서의 등식 `f x = g x`가 된다.
 3. `h x`는 전칭명제의 증명 `h`를 원소 `x`에서 사용한 것이므로 바로 그 등식의 증명이다.
    따라서 `exact h x`로 증명을 마친다.
-
-이때 `x`는 임의의 원소이므로 `exact h x`로 보인 등식은 모든 원소에서 성립한다.
 
 {anchor "sets-proposition-extensionality"}[]이제 같은 방법으로 집합의 등식을 증명해 보자.
 두 집합은 `A → Prop`의 함수이므로 먼저 `funext x`로 원소 하나에서의 값을 비교할 수 있다.
@@ -669,19 +657,10 @@ tag := "sets-proving-set-equality"
 4. `h x`는 전칭명제의 증명 `h`를 원소 `x`에서 사용한 것으로, 이 동치의 증명이다.
    따라서 `exact h x`로 모든 단계가 끝난다.
 
-앞의 증명에서는 `funext`와 `propext`를 차례로 적용하여
-집합의 등식을 원소 조건의 동치를 보이는 문제로 바꾸었다.
-이제 이 과정을 담은 정리 `set_ext`를 사용할 수 있으므로 매번 두 원리를 따로 적용할 필요는 없다.
-정리 앞의 `@[ext]`는 `ext`가 이 정리를 찾을 수 있도록 등록하는 표시이다.
+`set_ext`를 `@[ext]`로 등록했으므로 `funext`와 `propext`를 차례로 쓰는 대신 `ext x`를 사용할 수 있다.
+목표 `S = T`는 `x ∈ S ↔ x ∈ T`로 바뀐다.
 
-`ext`는 목표에 맞는 외연성 정리를 적용하여 그 정리에 필요한 비교를 새 목표로 삼는다.
-가령 목표가 `S = T`일 때 `ext x`를 쓰면 `set_ext`를 적용하고
-임의의 원소 `x : A`를 도입하여 `x ∈ S ↔ x ∈ T`를 새 목표로 삼는다.
-도입한 `x`는 임의의 원소이므로 이 원소에서 두 조건이 동치임을 보이면 집합의 등식이 성립한다.
-남은 목표에는 앞에서 배운 함의와 동치의 증명 방법을 사용한다.
-
-`ext`는 함수의 등식에서도 함수값을 비교하는 목표를 만든다.
-앞의 함수 예제와 같이 `f g : A → B`가 주어졌을 때는 다음과 같이 쓴다.
+함수의 등식에서는 `ext x`가 `funext x`와 같이 함수값의 등식을 목표로 만든다.
 
 ```savedLean
 example (A B : Type) (f g : A → B)
@@ -690,10 +669,6 @@ example (A B : Type) (f g : A → B)
   ext x
   exact h x
 ```
-
-앞의 `funext`와 `propext`는 함수와 명제의 등식을 증명하는 원리를 설명하기 위해 따로 살펴보았다.
-앞으로 함수나 집합의 원소별 비교를 시작할 때는 `ext`를 사용하겠다.
-다음 절에서는 순서쌍과 부분타입을 다루면서 이 전술의 다른 용법도 살펴본다.
 
 {anchor "sets-equality-from-subsets"}[]*정리* $`S \subseteq T`이고 $`T \subseteq S`이면 $`S = T`이다.
 
@@ -753,7 +728,6 @@ example {A : Type} (S T : Set A)
 ```
 
 `at hxS`는 등식을 사용할 가정을 지정한다.
-이처럼 목표나 가정에 있는 대상을 주어진 등식으로 바꿀 때는 `rw`를 사용하면 된다.
 
 등식에서 원소별 비교 조건을 꺼내 두고 사용할 수도 있다.
 가령 집합의 등식 `hST : S = T`로부터 모든 원소에 대한 동치
@@ -853,13 +827,6 @@ theorem inter_comm_forward {A : Type} (S T : Set A)
   · exact hx.left
 ```
 
-`intro hx`를 쓰면 `x ∈ S ∩ T`가 가정 `hx`로 들어오고, 목표는 `x ∈ T ∩ S`가 된다.
-이어서 `constructor`로 나눈 첫 목표 `x ∈ T`는 `hx.right`로 증명하고,
-둘째 목표 `x ∈ S`는 `hx.left`로 증명한다.
-각 목표의 증명은 앞에서와 같이 `·` 뒤에 나누어 적는다.
-
-
-
 같은 증명을 가정에 담긴 두 사실을 꺼내는 방식으로 적을 수도 있다.
 `unpack hx with ⟨hxS, hxT⟩`는 논리곱의 증명 하나에서 두 성분의 증명을 꺼낸다.
 이때 `hxS : x ∈ S`와 `hxT : x ∈ T`를 얻으므로
@@ -876,9 +843,7 @@ theorem inter_comm_forward_by_parts {A : Type} (S T : Set A)
   · exact hxS
 ```
 
-`unpack`은 논리곱의 증명에서 두 성분을 꺼내며,
-꺾쇠괄호 안에는 그 성분에 붙일 이름을 적는다.
-`⟨`, `⟩`는 `\<`, `\>`로 입력한다.
+꺾쇠괄호 안에는 꺼낼 성분의 이름을 적으며 `⟨`, `⟩`는 `\<`, `\>`로 입력한다.
 주어진 증명들을 한 증명으로 묶는 `constructor at`의 용법은
 {ref "tactic-conjunctions"}[부록의 논리곱]에서 설명한다.
 
@@ -887,9 +852,6 @@ theorem inter_comm_forward_by_parts {A : Type} (S T : Set A)
 두 방향을 묶어 원소 조건의 동치를 증명할 수 있다.
 
 *정리* $`x \in S \cap T`일 필요충분조건은 $`x \in T \cap S`이다.
-
-동치를 증명하는 방법은 앞에서 배운 것과 같으므로,
-`constructor`로 두 방향의 함의를 나누어 보이자.
 
 ```savedLean
 theorem inter_comm {A : Type} (S T : Set A) (x : A) :
@@ -1128,9 +1090,7 @@ example
   exact hP
 ```
 
-새 목표는 이미 주어진 증명 `hP`로 해결하므로 `exact hP`로 증명을 마친다.
-앞에서 배운 증명의 적용으로 두 단계를 줄여 쓰면,
-`hnotP hP`가 `False`의 증명이므로 `exact hnotP hP` 한 줄로도 같은 모순을 얻는다.
+`apply hnotP`와 `exact hP`는 `exact hnotP hP` 한 줄로도 쓸 수 있다.
 
 등식의 부정 `¬ (a = b)`는 `a ≠ b`로 줄여 쓴다.
 따라서 두 집합이 다르다는 목표 `S ≠ T`에서도 `intro h`로 `h : S = T`를 가정하고 모순을 보이면 된다.
@@ -1200,9 +1160,6 @@ Lean에서도 같은 순서로 가정을 도입하고 모순을 얻으며, 각 �
 2. `intro hxS`: 목표는 `x ∈ S → False`이므로 `x ∈ S`를 가정하며 이제 보일 것은 `False`이다.
 3. `have hxT : x ∈ T := by`: 포함 관계의 증명 `hST`를 사용하여 `x ∈ T`를 보이고, 그 증명에 `hxT`라는 이름을 붙인다.
 4. `exact hxTc hxT`: `hxTc`는 `x ∈ T → False`의 증명이므로 여기에 `hxT`를 적용하여 `False`를 얻는다.
-
-이 증명에서 `hxS`는 $`x \notin S`를 보이기 위해 임시로 도입한 가정이다.
-그 가정에서 모순을 얻었으므로 `x ∈ S → False`, 곧 `x ∉ S`의 증명이 완성된다.
 
 ## 이중 여집합
 %%%
@@ -1317,9 +1274,7 @@ example {A : Type}
   exact hxScc hxNotS
 ```
 
-`intro x hxScc` 이후에는 `hxScc : ¬¬ (x ∈ S)`를 가정으로 갖고 `x ∈ S`를 증명해야 한다.
-`by_contra hxNotS`로 `hxNotS : ¬ (x ∈ S)`를 도입하면 목표가 `False`로 바뀌므로,
-`exact hxScc hxNotS`로 이중 부정의 증명에 그 부정의 증명을 적용하여 모순을 얻는다.
+`hxScc : ¬¬ (x ∈ S)`에 `hxNotS : ¬ (x ∈ S)`를 넣으면 모순을 얻는다.
 
 부정을 증명하는 앞의 방법과 귀류법에서 무엇을 가정했는지 비교하라.
 `¬ P`를 보일 때 `P`를 가정하는 것은 부정의 정의에 따른 것이며,

@@ -209,7 +209,6 @@ def toPositive (n : Nat) : Elem positives :=
 
 `val := n + 1`로 함수값을 정하고 `property`에서 그 수가 `positives`에 속함을 증명한다.
 `arith`는 이 원소 조건을 `0 < n + 1`로 정리하여 부등식을 확인한다.
-따라서 함수값은 양수라는 조건까지 갖춘 `Elem positives`의 원소이다.
 
 $`x+1=y+1`이면 $`x=y`이므로 이 함수는 단사이다.
 또한 양의 자연수 $`y`에 대하여 $`y-1`을 택하면
@@ -1081,7 +1080,6 @@ attribute [ample_card_rules]
 ```
 
 *보기* $`|A|\leq|B|`이고 $`|B|\leq|C|`이면 $`|A|\leq|C|`이다.
-새로운 단사를 직접 합성하는 대신 이미 주어진 두 크기 관계를 `card`로 연결할 수 있다.
 
 ```savedLean
 theorem infinite_card_comparison {A B C : Type}

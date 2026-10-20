@@ -100,7 +100,7 @@ end IsEquivalence
 *풀이* 앞에서 증명한 `congruent_refl n`, `congruent_symm n`, `congruent_trans n`이
 각각 반사성·대칭성·추이성의 증명이다.
 논리곱으로 묶인 여러 조건을 한 번에 나누는 전술 `and_intros`를 사용하자.
-이렇게 얻은 세 목표는 각각 반사성·대칭성·추이성이므로 앞의 세 정리를 차례로 사용하면 된다.
+이 전술은 나뉜 목표가 다시 논리곱이면 그 목표도 나눈다.
 
 ```savedLean
 theorem congruent_equivalence (n : Int) :
@@ -110,10 +110,6 @@ theorem congruent_equivalence (n : Int) :
   · exact congruent_symm n
   · exact congruent_trans n
 ```
-
-`and_intros`는 바깥의 논리곱을 나누고 남은 목표가 다시 논리곱이면 그 목표도 나눈다.
-이 증명에서 얻는 세 목표는 정의에 적은 순서대로 반사성·대칭성·추이성이다.
-각 정리에서 법 `n`을 고정하면 해당 조건의 증명이 되므로 `exact`로 마친다.
 
 *보기* 자연수에서 $`a\leq b`라는 관계는 동치관계가 아니다.
 이 관계에서는 $`0\leq1`이 성립하지만 그 반대인 $`1\leq0`은 성립하지 않으므로 대칭성이 없다.

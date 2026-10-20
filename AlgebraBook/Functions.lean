@@ -101,9 +101,6 @@ example {A B : Type}
   rw [hxy]
 ```
 
-`rw [hxy]`는 등식 `hxy`에 따라 목표의 `x`를 `y`로 바꾼다.
-그 결과 목표가 `f y = f y`가 되면 `rw`가 양변이 같다는 것까지 확인하여 증명을 마친다.
-
 함수의 등식 $`f=g`도 같은 방법으로 사용할 수 있다.
 아래에서 `rw [hfg]`로 `f`를 `g`로 바꾸면 목표가 `g x = g x`가 되어 증명이 끝난다.
 
@@ -740,11 +737,8 @@ file := "element-comparison"
 모두 값 $`1`을 갖는다면 이 둘을 같은 양의 자연수로 취급해야 한다.
 
 Lean에서는 같은 명제의 증명들을 같게 취급한다.
-따라서 `s t : Elem S`의 값이 같으면 두 원소에 담긴 증명도 같은 명제의 증명으로 비교할 수 있다.
-그 증명들은 Lean에서 같게 취급하므로 원소의 등식을 보일 때는 값만 비교하면 된다.
-이 성질에 따라 값의 등식 `s.val = t.val`에서 원소의 등식 `s = t`를 얻는 정리가 `Subtype.ext`이다.
-이 성질은 교재의 `ext`에 연결되어 있으므로
-부분타입의 원소도 같은 전술로 비교할 수 있다.
+`s.val = t.val`이면 두 원소의 조건도 같은 명제이므로 그 증명들도 같다.
+이 원리로 값의 등식에서 `s = t`를 얻는 정리가 `Subtype.ext`이며 `ext`로 사용할 수 있다.
 
 ```savedLean -show
 @[ext] theorem elem_ext {A : Type _} {S : Set A} {s t : Elem S}
@@ -778,7 +772,6 @@ example {A : Type}
   exact h
 ```
 
-위 증명에서는 가정이 `h : s.val = t.val`로 바뀌므로 `exact h`로 증명을 마친다.
 같은 값 비교를 사용하면 원소를 꺼내는 함수 `fun s => s.val`이 단사임을 보일 수 있다.
 
 ```savedLean
@@ -1071,9 +1064,6 @@ theorem compose_assoc {A B C D : Type}
   rfl
 ```
 
-`ext x`로 임의의 원소에서 함수값을 비교하면
-양변이 정의에 따라 `h (g (f x))`가 되므로 `rfl`로 증명을 마친다.
-
 {anchor "functions-composition-with-identity"}[]*정리* 함수 $`f : A \to B`에 대하여
 $`f \circ \operatorname{id}_A = f`이고 $`\operatorname{id}_B \circ f = f`이다.
 
@@ -1270,9 +1260,6 @@ example {A B : Type} (a c : A) (b d : B)
   · exact hb
 ```
 
-`ext`를 쓰면 첫 번째 목표는 `a = c`이고 두 번째 목표는 `b = d`이다.
-각 목표는 주어진 가정 `ha`와 `hb`로 증명한다.
-
 반대로 순서쌍이 같다는 가정이 주어지면 각 성분의 등식을 얻을 수 있다.
 `indisc at h with ha hb`는 가정 `h : (a, b) = (c, d)`에서
 `ha : a = c`와 `hb : b = d`를 얻는 전술이다.
@@ -1290,7 +1277,6 @@ example {A B : Type} (a c : A) (b d : B)
 
 여기서 `indisc`은 원래 등식 `h`를 유지하며 성분의 등식 두 개에 각각 이름을 붙인다.
 이후 `rw [ha, hb]`로 `a`를 `c`로, `b`를 `d`로 바꾸면 양변이 같아진다.
-두 성분의 등식은 다른 목표나 가정에도 따로 사용할 수 있다.
 
 `ext`와 `indisc`의 기본형은 한 겹을 비교한다.
 예를 들어 `Fin m × Fin n`의 등식에 `ext`를 쓰면 두 번호의 등식이 남으며,
@@ -1452,9 +1438,6 @@ example {A : Type} :
   ext x
   exact functions_identity_twice x
 ```
-
-두 번째 증명에서는 `ext x`로 함수값을 비교한 뒤
-앞의 보기 `functions_identity_twice x`를 사용하여 그 등식을 증명한다.
 
 *보기* 순서쌍의 두 원소를 바꾸는 함수는 한 번 더 원소를 바꾸면 원래 순서쌍을 돌려준다.
 즉 $`A\times B`에서 $`B\times A`로 가는 함수 $`(a,b)\mapsto(b,a)`의 역함수는

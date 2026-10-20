@@ -23,15 +23,16 @@ def check(path):
                             capture_output=True, text=True, encoding='utf-8')
     name = str(relative).replace('\\','__').replace('/','__')+'.log'
     (logdir/name).write_text(result.stdout+result.stderr, encoding='utf-8')
-    return str(relative), result.returncode
+    return str(relative), result.returncode, result.stdout + result.stderr
 
 failures=[]
 with ThreadPoolExecutor(max_workers=4) as pool:
     for future in as_completed([pool.submit(check,p) for p in paths]):
-        name, code=future.result()
+        name, code, output=future.result()
         if code:
             failures.append(name)
             print('FAIL:', name, flush=True)
+            print(output, flush=True)
 
 after = {p: hashlib.sha256(p.read_bytes()).hexdigest()
          for p in (root/'Exercises').rglob('*') if p.is_file()}

@@ -15,16 +15,18 @@ elab "check_reader_subproof " cmd:command : command => do
   let trees := (← getInfoState).trees
   let rendered ← liftTermElabM <| highlight cmd #[] trees
   let states := readerStates rendered
+  let summary := states.map fun (entry : String × Array (Highlighted.Goal Highlighted)) =>
+    (entry.1, entry.2.map fun goal => goal.conclusion.toString)
   for expected in ["exact hP", "exact hpq hp", "exact hq"] do
     unless states.any (fun (text, goals) => text == expected && goals.isEmpty) do
-      throwError "Missing completed inner tactic: {expected}"
+      throwError "Missing completed inner tactic: {expected}\nStates: {repr summary}"
   for expected in ["P", "Q"] do
     unless states.any (fun (text, goals) => text == "by" &&
         goals.any (fun goal => goal.conclusion.toString == expected)) do
-      throwError "Missing auxiliary goal: {expected}"
+      throwError "Missing auxiliary goal: {expected}\nStates: {repr summary}"
   unless states.any (fun (text, goals) => text.startsWith "have hp" &&
       goals.any (fun goal => goal.toString.contains "hp")) do
-    throwError "Missing return to enclosing proof"
+    throwError "Missing return to enclosing proof\nStates: {repr summary}"
 
 set_option Elab.async false
 open Ample

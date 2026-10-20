@@ -163,16 +163,10 @@ attribute [ample_compare] cardinal_eq_iff
 ```
 
 앞 절의 `classOf_eq_iff`를 전단사 관계에 적용한 결과이다.
-두 기수가 같다는 것은 같은 동치류를 값으로 담았다는 뜻이며,
-이 동치류가 같을 필요충분조건은 대표원 사이에 전단사가 존재한다는 것이다.
-이 정리는 `ext`와 `indisc`에도 연결했다.
-`ext`로 기수의 등식을 전단사의 존재를 보이는 목표로 바꾸고,
-`indisc at h`로 기수의 등식 `h`에서 전단사가 존재한다는 증명을 얻을 수 있다.
-
 앞으로 크기가 같다는 명제는 `cardinal A = cardinal B`로 나타내겠다.
-이 등식을 증명할 때 `ext`를 쓰면 `SameCardinality A B`가 목표가 되므로
-앞에서와 같이 `A`에서 `B`로 가는 전단사를 제시하면 된다.
-등식의 증명 `h`가 주어졌을 때는 `(cardinal_eq_iff A B).mp h`로 전단사의 존재를 얻는다.
+이 정리를 `ext`와 `indisc`에도 연결했으므로
+`ext`는 기수의 등식을 `SameCardinality A B`를 보이는 목표로 바꾸고,
+`indisc at h`는 등식 가정에서 전단사의 존재를 얻는다.
 
 ```savedLean
 example {A B : Type}
@@ -188,9 +182,6 @@ example {A B : Type}
   exact (cardinal_eq_iff A B).mp h
 ```
 
-첫 예제의 `exists f`는 함수 `f`를 제시하고 이미 주어진 전단사성의 증명 `hf`로 증명을 마친다.
-둘째 예제에서는 기수의 등식으로부터 전단사의 존재를 얻는다.
-이 결과를 `unpack`으로 나누면 함수와 전단사성의 증명을 사용할 수 있다.
 집합 `S : Set A`의 기수는 `cardinal (Elem S)`이며
 두 집합을 비교할 때도 그 원소 타입의 기수를 사용한다.
 
@@ -1315,8 +1306,6 @@ $`x=(x\bmod m)+\lfloor x/m\rfloor m`에 따라 원래 번호를 복원한다.
 
 *보기* `Fin (m * n)`에서 `Fin m × Fin n`으로 가는 전단사를 구성하자.
 아래 함수는 번호 $`x`를 나머지와 몫으로 나누며 각 범위 조건은 `arith`로 확인한다.
-단사성에서는 `indisc : 2 at hxy`로 순서쌍과 각 번호의 등식을 차례로 비교하여
-나머지와 몫이 같다는 조건을 얻는다. 전사성에서도 `ext : 2`로 두 성분과 그 자연수 값을 차례로 비교한다.
 
 ```savedLean
 def finProduct (m n : Nat) (x : Fin (m * n)) :
@@ -1592,12 +1581,8 @@ example {A : Type} {n : Nat}
   card
 ```
 
-위의 증명들은 각각 기수 등식의 연결, `cardinal_eq_iff`,
-`isInfinite_transport`, `cardinality_eq`를 사용한 추론을 자동으로 수행한다.
-
-`card`의 탐색 범위는 이처럼 등록한 기본 정리로 한정된다.
-새로운 전단사가 필요한 문제에서는 함수와 그 성질을 직접 제시하고,
-이미 확인한 원소 수를 사용하거나 두 원소 수가 같음을 보일 때는 다음과 같이 `card`를 사용할 수 있다.
+위의 예제들은 각각 등식의 대입, `cardinal_eq_iff`, `isInfinite_transport`, `cardinality_eq`를 사용한 것이다.
+`card`는 등록된 정리로 크기 관계를 연결하며 새로운 전단사는 직접 구성해야 한다.
 
 ```savedLean
 example
