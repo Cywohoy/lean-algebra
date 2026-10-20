@@ -1,8 +1,8 @@
 {
-  "sha256": "97756509898c42a9f7302c99e5246bc337577cf7db41de76720f6c884b101bd3",
-  "bytes": 199070021,
+  "sha256": "110a517738fe07e937fba0304204b03acb6ca83a2c20ff63c2180dda10e32b43",
+  "bytes": 199071214,
   "ampleCommit": "2ca593e44cbaa9915461ade6ceb9901bfd856bcc",
   "schemaVersion": 1,
   "leanVersion": "4.35.0",
-  "url": "https://github.com/Cywohoy/lean-algebra/releases/download/wasm-4.35.0-reader-20261020/lean-browser-4.35.0-ample-2ca593e-contexts-v2.tar.gz"
+  "url": "https://github.com/Cywohoy/lean-algebra/releases/download/wasm-4.35.0-stack-20261020/lean-browser-4.35.0-ample-2ca593e-stack-safe.tar.gz"
 }

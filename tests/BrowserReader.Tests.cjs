@@ -242,6 +242,51 @@ async function main() {
     await page.keyboard.press('Escape');
     console.log('PASS: automatic checking, check button, and Ctrl+Enter survive idle periods without reloading');
 
+    const progression = example(code => code.includes('theorem exercise_oneModThree_bijective'));
+    wrapper = await open(progression);
+    await status(wrapper, '증명 중');
+    const failingArithmetic = `constructor
+· intro x y hxy
+  indisc at hxy
+  arith
+· intro y
+  exists (y.val - 1) / 3
+  ext
+  arith`;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const proof = attempt === 1
+        ? failingArithmetic.replace(/  arith$/, '  suffices (3 ∣ (y.val - 1)) by arith\n  sorry')
+        : failingArithmetic;
+      await wrapper.locator('textarea').fill(proof + ` -- attempt ${attempt}`);
+      await wrapper.locator('textarea').press('Control+Enter');
+      await status(wrapper, '오류');
+      const panel = await wrapper.locator('.book-live-editor').innerText();
+      assert(!panel.includes('Lean 실행이 중단되었습니다'), panel);
+      assert(panel.includes('Arithmetic could not close the goal'), panel);
+      if (attempt === 0) {
+        await wrapper.locator('textarea').press('Home');
+        await wrapper.locator('textarea').press('ArrowRight');
+        await wrapper.locator('textarea').press('ArrowRight');
+        await page.waitForFunction(key => {
+          const text = document.querySelector(`[data-snippet="${key}"] .book-live-goal`)?.textContent;
+          return text?.includes('y : Elem') && text.includes('⊢');
+        }, progression.key, {timeout: 15000});
+      }
+    }
+    await wrapper.locator('textarea').fill(`constructor
+· intro x y hxy
+  indisc at hxy
+  arith
+· intro y
+  rcases y.property with ⟨k, hk⟩
+  exists k
+  ext
+  exact hk.symm`);
+    await wrapper.locator('textarea').press('Control+Enter');
+    await status(wrapper, '증명 완료 (1/3 완료)');
+    await page.keyboard.press('Escape');
+    console.log('PASS: failed arithmetic searches report diagnostics and allow a corrected proof without reloading');
+
     const cantor = example(code => code.startsWith('theorem cantor_not_surjective '));
     const concrete = example(code => code.startsWith('theorem cardinal_fin '));
     await page.goto(new URL(concrete.url, base).href);
@@ -263,6 +308,11 @@ async function main() {
       {snippet: concrete.key, code: concrete.data.code,
         position: {line: concrete.data.code.split('\n').findIndex(line => line.includes('rfl')), character: 2}},
       {snippet: concrete.key, code: inverse},
+      {snippet: progression.key, code: `example (x y : Int) :
+    (x + y) * (x - y) = x * x - y * y := by arith
+example (n : Int) (h : 0 < n) : 3 / n ≤ 3 := by arith
+example (n m : Nat) (h : n * m = 3) (hn : n ≠ 0) : m ≤ 3 := by arith
+example (k : Int) : ¬ (2 ∣ 2 * k + 1) := by arith`},
     ]});
     for (const check of checks) {
       assert.deepEqual(check.contextErrors, []);

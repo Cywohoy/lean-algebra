@@ -838,3 +838,53 @@ index 29b8598..0bcec4f 100644
          dec_ref(r);
          return true;
      }
+diff --git a/src/Lean/Meta/Tactic/Grind/Action.lean b/src/Lean/Meta/Tactic/Grind/Action.lean
+index ad212d7..181925e 100644
+--- a/src/Lean/Meta/Tactic/Grind/Action.lean
++++ b/src/Lean/Meta/Tactic/Grind/Action.lean
+@@ -6,6 +6,7 @@ Authors: Leonardo de Moura
+ module
+ prelude
+ public import Lean.Meta.Tactic.Grind.Types
++import Init.System.Platform
+ public section
+ namespace Lean.Meta.Grind
+ /-!
+@@ -114,17 +115,26 @@ instance : OrElse Action where
+ /--
+ Repeats `x` up to `n` times while it remains applicable.
+ -/
+-def loop (n : Nat) (x : Action) : Action := fun goal _ kp =>
+-  tryCatchRuntimeEx
+-    (match n with
+-     | 0 => kp goal
+-     | n+1 => x goal kp (fun goal' => loop n x goal' kp kp))
+-    (fun ex => do
+-      if ex.isMaxHeartbeat || ex.isMaxRecDepth then
+-        reportIssue! ex.toMessageData
+-        return .stuck [goal]
+-      else
+-        throw ex)
++def loop (n : Nat) (x : Action) : Action :=
++  -- CPS search retains native browser stack frames across continuations.
++  -- Bound this nesting separately from Lean's ordinary recursion limit so
++  -- normalization, arithmetic solvers, and proof checking keep their budget.
++  let rec go (remaining depth : Nat) : Action := fun goal _ kp =>
++    tryCatchRuntimeEx
++      (match remaining with
++       | 0 => kp goal
++       | n+1 => do
++         if System.Platform.isEmscripten && depth >= 16 then
++           reportIssue! "Browser search reached its continuation-depth limit. Supply an intermediate fact or split the proof."
++           return .stuck [goal]
++         x goal kp (fun goal' => go n (depth + 1) goal' kp kp))
++      (fun ex => do
++        if ex.isMaxHeartbeat || ex.isMaxRecDepth then
++          reportIssue! ex.toMessageData
++          return .stuck [goal]
++        else
++          throw ex)
++  go n 0
+ 
+ /-- `loop` reference implementation without `tryCatchRuntimeEx` for proving sanity checking lemmas. -/
+ def loopRef (n : Nat) (x : Action) : Action := fun goal _ kp =>

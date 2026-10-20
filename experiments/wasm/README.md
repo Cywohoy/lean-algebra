@@ -35,6 +35,20 @@ be rejected by Lean 4.35.
 
 ## Performance and remaining work
 
+Failed searches must return Lean diagnostics rather than terminate the Worker.
+Lean 4.35's `grind` retains native stack frames in its continuation-based search
+loop. The browser port limits that loop to 16 nested continuations, separately
+from Lean's ordinary recursion limit. This leaves normalization, arithmetic
+solvers, and proof checking at their normal limits. Reaching the search limit
+returns a stuck goal and an English diagnostic; it does not accept a proof.
+Native Lean keeps the original search budget. Deep browser searches can therefore
+need an intermediate fact sooner than the native toolchain.
+
+`tests/BrowserReader.Tests.cjs` covers repeated failed `arith` searches in the
+arithmetic-progression exercise, the original `suffices ... by arith` failure,
+the remaining goal, and a corrected proof in the same Worker. It also checks
+successful polynomial, product-bound, division, and divisibility calculations.
+
 The initial matching build prioritizes compatibility. Its artifacts are large:
 
 | Artifact | Bytes |
