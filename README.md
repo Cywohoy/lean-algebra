@@ -6,7 +6,7 @@ Lean을 처음 접하는 독자를 위해 값과 함수에서 시작하여 집�
 
 **[웹에서 읽기](https://cywohoy.github.io/lean-algebra/)**
 
-이 저장소는 공개되어 있다. `main`은 기존 대수학 교재의 **1장과 부록만으로 구성한 독립된 책**이다.
+`main`은 **기초 수학 한 장과 두 부록으로 구성한 입문서**이다.
 군론을 포함한 전체 교재와 이후 집필 계획은 [full-book 브랜치](https://github.com/Cywohoy/lean-algebra/tree/full-book)에 보존한다.
 
 ## 내용
@@ -20,7 +20,7 @@ Lean을 처음 접하는 독자를 위해 값과 함수에서 시작하여 집�
 ## 설치와 빌드
 
 [Git](https://git-scm.com/)과 [elan](https://github.com/leanprover/elan)을 설치한 뒤 다음 명령을 실행하라.
-Lean과 Verso는 v4.35.0, 전술 라이브러리 [Ample](https://github.com/Cywohoy/ample)은 v0.2.0으로 고정되어 있다.
+Lean과 Verso는 v4.35.0을 사용한다. 전술 라이브러리 [Ample](https://github.com/Cywohoy/ample)의 버전은 `lakefile.toml`과 `lake-manifest.json`에 고정되어 있다.
 필요한 패키지는 Lake가 받으므로 Ample을 별도로 복제할 필요는 없다.
 
 ```sh
@@ -41,7 +41,7 @@ lake exe textbook
 
 Windows에서는 `preview.bat`를 실행하라. 문서 생성과 예제 검사 후
 [로컬 미리보기](http://127.0.0.1:8000/)가 열리며, 실행 창을 열어 둔 동안 서버가 돌아간다.
-종료할 때는 `Ctrl+C`를 누른다.
+종료할 때는 `Ctrl+C`를 누른다. VS Code의 `교재 미리보기` 작업도 같은 WASM 사이트를 준비하고 제공한다.
 
 다른 환경에서는 Python 3를 설치한 뒤 다음과 같이 실행할 수 있다.
 별도의 Python 패키지는 필요하지 않다.
@@ -54,7 +54,7 @@ python web/serve.py --port 8000
 증명의 전술을 누르면 그 단계의 가정과 목표를 볼 수 있다.
 연습문제의 `풀기`에서는 증명을 작성하여 Lean으로 확인할 수 있으며, 입력을 잠시 멈추면 자동으로 검사한다.
 사용법은 [상호작용 미리보기](web/README.md)에 정리했다.
-본문을 수정한 뒤에는 `lake exe textbook`으로 다시 만들고 서버를 재시작하라.
+본문을 수정한 뒤에는 `lake exe textbook`과 `python scripts/prepare_pages.py`를 차례로 실행하고 브라우저를 새로고침하라.
 
 ## 연습문제
 
@@ -76,10 +76,6 @@ VS Code에 Lean 4 확장을 설치하고 이 프로젝트 폴더를 열어라.
 Windows의 `reset-exercises.bat`는 기존 풀이를 `exercise-backups/`에 백업한 뒤 전체 원본을 복사한다.
 한 절만 초기화하려면 `reset-exercises.bat Functions`처럼 파일 이름을 지정하라.
 `Exercises/`와 백업, 생성 결과는 Git에 포함하지 않는다.
-
-기존 전체 교재에서 풀던 군론 문제는 `full-book` 브랜치의 모듈을 사용한다.
-개인 풀이 파일은 브랜치를 바꾸어도 보존되며, 군론 풀이를 계속할 때는 `git switch full-book`으로 전환하라.
-전체 교재 브랜치는 형제 폴더 `../Ample`을 사용하므로 그 브랜치의 설치 안내를 따른다.
 
 ## PDF
 
@@ -104,7 +100,6 @@ python tests/AutomationTrace.Tests.py
 GitHub Pages용 문서는 `python scripts/prepare_pages.py`로 `_out/pages/`에 준비한다.
 공개 편집기는 브라우저 안에서 Lean 4.35와 Ample을 실행하며 코드를 실행 서버로 보내지 않는다.
 처음 `풀기`를 누르면 실행 파일을 불러온다. 현재 자동완성은 제공하지 않는다.
-`python scripts/prepare_pages.py`도 같은 WASM 실행 환경을 준비한다.
 `python tests/Pages.Tests.py`로 저장소 이름이 붙은 URL에서도 링크가 연결되는지 검사할 수 있다.
 
 Ample의 전술과 수학 모듈은 독립된 공개 라이브러리이며, Ample의 빌드에는 이 교재가 필요하지 않다.
@@ -125,4 +120,5 @@ Ample의 새 기능이 필요하면 라이브러리에서 릴리스한 뒤 `lake
 본문은 Pretendard, 코드는 Cascadia Code, 수학 기호는 Noto Sans Math로 표시한다.
 글꼴은 저장소에 포함되어 있으며 독자의 기기에 설치할 필요는 없다.
 Windows 빌드를 위한 MD4Lean 수정본은 `vendor/MD4Lean`에 보관한다.
+보조 증명의 단계 표시를 수정한 SubVerso는 `vendor/subverso`에 있으며 수정 내용과 원본 버전을 함께 기록했다.
 외부 코드와 글꼴의 출처·라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 정리했다.

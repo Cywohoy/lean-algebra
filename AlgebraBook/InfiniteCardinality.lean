@@ -308,6 +308,22 @@ example :
 `cardinal Nat = cardinal (Elem positives)`이다.
 이들을 반대 방향으로 사용하여 양변을 `cardinal Nat`로 바꾸면 원하는 등식을 얻는다.
 
+## 연습문제: 자연수의 꼬리
+%%%
+tag := "cardinality-countable-practice"
+%%%
+
+양의 자연수에 사용한 대응을 바꾸어 다음 집합의 크기를 확인해 보자.
+
+*문제 1* $`\{n\in\mathbb{N}:2\leq n\}`이 가산무한집합임을 증명하라.
+
+```savedLean -keep
+theorem exercise_from_two_countably_infinite {n : Nat} :
+    IsCountablyInfinite
+    (Elem (fun n : Nat => 2 ≤ n)) := by
+  sorry
+```
+
 ## Advanced: 무한집합과 자연수의 단사
 %%%
 tag := "cardinality-infinite-converse"
@@ -443,7 +459,7 @@ tag := "cardinality-infinite-lemmas"
 
 단사함수의 구성에 필요한 두 보조정리를 증명하라.
 
-*문제 1* 무한집합 $`A`로 가는 단사함수 $`f:\operatorname{Fin}(n)\to A`가 주어졌다고 하자.
+*보충 문제 1* 무한집합 $`A`로 가는 단사함수 $`f:\operatorname{Fin}(n)\to A`가 주어졌다고 하자.
 $`f`의 상에 속하지 않는 원소가 $`A`에 존재함을 증명하라.
 
 ```savedLean -keep
@@ -458,7 +474,7 @@ theorem fresh_element_exists {A : Type} {n : Nat}
 *힌트* 결론을 부정하면 `f`가 전사임을 보일 수 있다.
 단사이기도 한 `f`는 전단사이므로 `A`가 유한하다는 결론을 얻는다.
 
-*문제 2* 무한집합 $`A`의 유한한 목록에 새 원소를 하나 덧붙여
+*보충 문제 2* 무한집합 $`A`의 유한한 목록에 새 원소를 하나 덧붙여
 기존 번호의 함수값을 보존하는 목록을 만들 수 있음을 증명하라.
 
 ```savedLean -keep
@@ -673,6 +689,12 @@ theorem nat_least_infinite :
 
 end InfiniteConstruction
 ```
+
+여기까지의 구성에는 목록을 한 칸 늘릴 수 있다는 증명 `extend`가 인수로 남아 있다.
+앞의 연습문제 `finite_listing_extension`을 완성하면
+`infinite_has_nat_injection finite_listing_extension hA`로 원하는 단사함수의 존재를 얻고,
+`nat_least_infinite finite_listing_extension`으로 자연수의 최소성까지 얻는다.
+따라서 이 절의 완전한 증명에는 두 보조정리의 풀이도 포함된다.
 
 # 멱집합과 칸토어 정리
 %%%
@@ -937,15 +959,6 @@ file := "exercises"
 
 각 문제의 `sorry`를 증명으로 바꾸어 완성하라.
 
-*문제 1* $`\{n\in\mathbb{N}:2\leq n\}`이 가산무한집합임을 증명하라.
-
-```savedLean -keep
-theorem exercise_from_two_countably_infinite {n : Nat} :
-    IsCountablyInfinite
-    (Elem (fun n : Nat => 2 ≤ n)) := by
-  sorry
-```
-
 *문제 2* 다음 멱집합의 등식을 증명하라.
 
 ```savedLean -keep
@@ -957,8 +970,11 @@ theorem exercise_powerSet_inter {A : Type} (S T : Set A) :
 *문제 3* (등차수열과 가산무한집합)
 
 집합 $`S=\{1,4,7,10,\ldots\}`을 $`3k+1` 꼴의 자연수로 정의한다.
+
 (1) 아래 함수가 자연수에서 $`S`의 원소 타입으로 가는 전단사임을 증명하라.
+
 (2) 첫 결과로 $`S`가 가산무한집합임을 보이라.
+
 (3) $`S`가 자연수 전체와 같은 집합은 아님을 보이라.
 집합의 같음과 크기의 같음을 구별하라.
 
@@ -998,7 +1014,9 @@ theorem exercise_nat_pairs_infinite :
 *문제 5* (멱집합의 포함 관계)
 
 (1) $`S\subseteq T`이면 $`\mathcal{P}(S)\subseteq\mathcal{P}(T)`임을 증명하라.
+
 (2) 반대 방향도 증명하여 이 두 포함 관계가 동치임을 보이라.
+
 (3) 첫 결과와 `twoThree_subset_positives`를 사용하여
 $`\mathcal{P}(\{2,3\})\subseteq\mathcal{P}(\mathbb{N}_{>0})`임을 보이라.
 
@@ -1021,8 +1039,11 @@ theorem exercise_powerSet_twoThree_positives :
 *문제 6* (한 원소 집합들을 나열한 경우)
 
 $`f(n)=\{n\}`으로 부분집합들을 나열하자.
+
 (1) 이 나열의 대각선 집합 $`D=\{n:n\notin f(n)\}`이 공집합임을 보이라.
+
 (2) 공집합이 이 함수의 상에 속하지 않음을 직접 증명하라.
+
 (3) 둘째 결과로 이 함수가 전사가 아님을 보이라.
 
 ```savedLean -keep

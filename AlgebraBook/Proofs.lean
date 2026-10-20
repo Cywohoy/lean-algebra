@@ -66,15 +66,6 @@ theorem add_two_three : add 2 3 = 5 := by
 
 앞의 `#eval`은 함수값을 계산했고, 이번 선언은 등식의 증명에 이름을 붙였다.
 따라서 같은 등식을 다시 증명할 때는 `exact add_two_three`로 이 증명을 제시할 수 있다.
-`exact`는 정의를 펼쳤을 때 같은 명제가 되는 표현도 받아들인다.
-예를 들어 `positive n`의 뜻은 `0 < n`이므로 `positive n`의 증명을 목표 `0 < n`에 사용할 수 있다.
-
-```savedLean
-example (n : Nat)
-    (h : positive n) :
-    0 < n := by
-  exact h
-```
 
 # 정리의 사용
 %%%
@@ -85,6 +76,19 @@ file := "named-theorems"
 부등식의 양변에 같은 수를 더하면 대소관계가 유지된다.
 예를 들어 $`a<b`를 알고 있을 때 양변에 $`2`를 더하면 $`a+2<b+2`를 얻는다.
 이 성질을 Lean에서는 `Nat.add_lt_add_right`라는 이름의 정리로 사용할 수 있다.
+
+`#check` 뒤에 정리의 이름을 적으면 그 정리가 어떤 명제를 증명하는지 확인할 수 있다.
+
+```lean (name := addLtAddRightType)
+#check Nat.add_lt_add_right
+```
+
+```leanOutput addLtAddRightType
+Nat.add_lt_add_right {n m : Nat} (h : n < m) (k : Nat) : n + k < m + k
+```
+
+여기서 `h : n < m`은 알고 있는 부등식의 증명이고 `k`는 더할 수이다.
+중괄호의 `{n m : Nat}`와 소괄호의 `(k : Nat)`가 다른 이유를 먼저 살펴보자.
 
 ## 정리와 함수의 인수
 %%%
@@ -144,19 +148,7 @@ Lean이 인수를 추론할 정보가 부족할 때도 같은 방법으로 지�
 tag := "proofs-applying-named-theorems"
 %%%
 
-다시 양변에 같은 수를 더하는 정리로 돌아가자.
-먼저 이 정리가 어떤 인수를 받으며 어떤 결론을 주는지 살펴보자.
-`#check` 뒤에 정리의 이름을 적으면 그 정리가 어떤 명제를 증명하는지 확인할 수 있다.
-
-```lean (name := addLtAddRightType)
-#check Nat.add_lt_add_right
-```
-
-```leanOutput addLtAddRightType
-Nat.add_lt_add_right {n m : Nat} (h : n < m) (k : Nat) : n + k < m + k
-```
-
-앞에서 함수의 인수와 함수값의 타입을 읽었던 것처럼 정리의 타입도 읽을 수 있다.
+이제 `Nat.add_lt_add_right`의 타입에서 각 인수의 역할을 확인하자.
 
 - `{n m : Nat}`의 `n`, `m`은 비교할 두 자연수이며 암시적 인수이다.
 - `h : n < m`은 전제인 부등식의 증명이다.
@@ -215,6 +207,30 @@ example (a b : Nat)
 두 번째 적용 뒤에는 `a < b`가 목표가 된다.
 마지막 전제의 증명으로 `h`를 제시하면 두 번의 정리 적용으로 원래 결론을 얻는다.
 
+아래 문제에서 `sorry`를 증명으로 바꾸어 방금 배운 정리 적용을 연습하라.
+
+*문제 1* 자연수의 부등식 양변에 $`3`을 더해도 부등식이 성립함을
+앞에서 배운 정리 `Nat.add_lt_add_right`로 증명하라.
+
+```savedLean -keep
+theorem exercise_add_three_preserves_lt (a b : Nat)
+    (h : a < b) :
+    a + 3 < b + 3 := by
+  sorry
+```
+
+:::solution
+양변에 더할 수를 $`3`으로 지정하면 필요한 전제는 주어진 부등식이다.
+
+```tryLean -keep
+example (a b : Nat)
+    (h : a < b) :
+    a + 3 < b + 3 := by
+  apply Nat.add_lt_add_right (k := 3)
+  exact h
+```
+:::
+
 # 증명 안의 보조정리
 %%%
 tag := "proofs-naming-proofs"
@@ -248,6 +264,15 @@ section Pythagoras
 variable (c : Nat) (rightAngled : Prop)
 variable (pythagoras : rightAngled → c * c = 3 * 3 + 4 * 4)
 include pythagoras
+```
+
+이 증명에서 미리 주어진 원소와 정리는 다음과 같다.
+정리의 인수 `hRight`는 이 삼각형이 직각이라는 증명이다.
+
+```
+c : Nat
+rightAngled : Prop
+pythagoras : rightAngled → c * c = 3 * 3 + 4 * 4
 ```
 
 {anchor "intro-pythagoras-lean"}[]`have hSquare : c * c = 25 := by` 아래에서 중간 등식을 증명하자.
@@ -488,6 +513,28 @@ example
 두 코드에서 `hQ`는 모두 명제 `Q`의 증명이며,
 짧은 코드에서도 중간 명제와 그 증명은 `:=`를 기준으로 구별된다.
 
+*문제 2* $`P`, $`P \Rightarrow Q`, $`Q \Rightarrow R`을 차례로 가정하여 $`R`을 얻으라.
+
+```savedLean -keep
+theorem exercise_implication_chain
+    (P Q R : Prop) :
+    P → (P → Q) → (Q → R) → R := by
+  sorry
+```
+
+:::solution
+마지막 결론 $`R`에서 출발하면 먼저 $`Q`가 필요하고, 이를 얻으려면 $`P`가 필요하다.
+
+```tryLean -keep
+example (P Q R : Prop) :
+    P → (P → Q) → (Q → R) → R := by
+  intro hP hPQ hQR
+  apply hQR
+  apply hPQ
+  exact hP
+```
+:::
+
 # 전칭명제의 증명과 사용
 %%%
 tag := "proofs-universal-statements"
@@ -676,53 +723,10 @@ tag := "proofs-exercises"
 file := "exercises"
 %%%
 
-다음 코드의 `sorry`는 아직 작성하지 않은 증명이므로 각 빈 증명을 완성하라.
+앞의 문제 1, 2에 이어 전칭명제와 여러 정리의 사용을 연습하자.
+다음 코드의 `sorry`를 증명으로 바꾸어 완성하라.
 정리를 사용하는 단계는 먼저 `apply`와 `exact`로 나누어 적으라.
 그런 다음 `exact h a`처럼 증명에 인수를 넣는 식으로도 같은 단계를 적어 보라.
-
-*문제 1* 자연수의 부등식 양변에 $`3`을 더해도 부등식이 성립함을
-앞에서 배운 정리 `Nat.add_lt_add_right`로 증명하라.
-
-```savedLean -keep
-theorem exercise_add_three_preserves_lt (a b : Nat)
-    (h : a < b) :
-    a + 3 < b + 3 := by
-  sorry
-```
-
-:::solution
-양변에 더할 수를 $`3`으로 지정하면 필요한 전제는 주어진 부등식이다.
-
-```tryLean -keep
-example (a b : Nat)
-    (h : a < b) :
-    a + 3 < b + 3 := by
-  apply Nat.add_lt_add_right (k := 3)
-  exact h
-```
-:::
-
-*문제 2* $`P`, $`P \Rightarrow Q`, $`Q \Rightarrow R`을 차례로 가정하여 $`R`을 얻으라.
-
-```savedLean -keep
-theorem exercise_implication_chain
-    (P Q R : Prop) :
-    P → (P → Q) → (Q → R) → R := by
-  sorry
-```
-
-:::solution
-마지막 결론 $`R`에서 출발하면 먼저 $`Q`가 필요하고, 이를 얻으려면 $`P`가 필요하다.
-
-```tryLean -keep
-example (P Q R : Prop) :
-    P → (P → Q) → (Q → R) → R := by
-  intro hP hPQ hQR
-  apply hQR
-  apply hPQ
-  exact hP
-```
-:::
 
 *문제 3* 두 원소에 관한 술어 `R : A → A → Prop`를 생각하자.
 모든 원소 `x`, `y`에서 `R x y`가 성립한다는 사실을 주어진 원소 `a`, `b`에서 사용하라.
@@ -775,7 +779,9 @@ example (A : Type) (P Q : A → Prop) :
 *문제 5* (대소 관계를 보존하는 함수)
 
 자연수 함수 $`f`, $`g`가 각각 $`a<b`이면 $`f(a)<f(b)`, $`g(a)<g(b)`를 만족한다고 하자.
+
 (1) $`a<b`이면 $`g(f(a))<g(f(b))`임을 증명하라.
+
 (2) 첫 결과와 `comparisonProof`를 사용하여 $`g(f(3))<g(f(5))`를 보이라.
 
 ```savedLean -keep
@@ -811,6 +817,7 @@ theorem exercise_function_bound (f g : Nat → Nat)
 *문제 7* (부등식과 연속된 덧셈)
 
 (1) $`a<b`이면 임의의 자연수 $`c`에 대하여 $`a+c<b+c`임을 증명하라.
+
 (2) 첫 결과를 두 번 사용하여 $`(a+c)+d<(b+c)+d`를 보이라.
 
 ```savedLean -keep
@@ -829,7 +836,9 @@ theorem exercise_two_shifts_lt (a b c d : Nat)
 
 함수 $`f:A\to A`가 조건 $`P`를 유지한다고 하자.
 즉 $`P(x)`이면 $`P(f(x))`이다.
+
 (1) $`P(x)`이면 $`P(f(f(x)))`임을 증명하라.
+
 (2) 첫 결과를 사용하여 $`f`를 네 번 적용한 뒤에도 $`P`가 성립함을 보이라.
 
 ```savedLean -keep

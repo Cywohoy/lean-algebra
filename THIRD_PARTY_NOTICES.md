@@ -69,3 +69,11 @@ The static Pages build serves Verso's existing marked 11.1.1 dependency from
 It is copied without modification from the version pinned by Verso; its MIT
 copyright and license are preserved in `licenses/Marked-MIT.txt`. Serving this
 file locally avoids a third-party script request in the isolated browser editor.
+
+## SubVerso
+
+`vendor/subverso` contains SubVerso at revision
+`892d6dc520270b5fb8c1291dd1b131e8c16255ed`, from
+https://github.com/leanprover/subverso, under its included Apache-2.0 license.
+The local nested-proof highlighting fix is documented in
+`vendor/subverso/TEXTBOOK-PATCH.md`. Original copyright notices are preserved.

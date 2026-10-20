@@ -66,7 +66,16 @@ def prepare(site, bundle=None, download=False, config=None):
     manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
     contexts_path = target / 'contexts.json'
     contexts = json.loads(contexts_path.read_text()) if contexts_path.is_file() else {}
+    historical_keys = json.loads((ROOT / 'web/exercise-storage.json').read_text(encoding='utf-8'))
+    exercise_names = set()
     for key, snippet in manifest.items():
+        if snippet.get('exercise'):
+            name = re.search(r'^theorem\s+(\w+)', snippet['code'], re.M)
+            if not name or name[1] in exercise_names:
+                raise ValueError('Exercises need distinct named declarations for stable saved work')
+            exercise_names.add(name[1])
+            snippet['storageKey'] = 'exercise:' + name[1]
+            snippet['legacyKeys'] = list(dict.fromkeys([key, *historical_keys.get(name[1], [])]))
         snippet['before'] = translate(snippet['before'])
         digest = hashlib.sha256(snippet['before'].encode()).hexdigest()
         if snippet.get('exercise') and digest in contexts:

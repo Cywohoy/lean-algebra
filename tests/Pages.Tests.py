@@ -67,4 +67,20 @@ if 'content="wasm"' in (site / 'index.html').read_text(encoding='utf-8'):
     assert (site / 'assets/web/exercise-model.js').is_file()
     assert not any('AlgebraBook.' in item['before'] for item in json.loads((site / 'playground.json').read_text()).values())
 assert not (site / 'operations-and-groups').exists()
+# Reading does not require opening another page for each small subsection.
+reading_pages = [p for p in (site / 'foundations').rglob('index.html')
+                 if '<main>' in p.read_text(encoding='utf-8')]
+assert len(reading_pages) == 9, reading_pages  # chapter landing + eight learning units
+assert all(len(p.relative_to(site).parts) <= 3 for p in reading_pages)
+sections = json.loads((site / 'xref.json').read_text(encoding='utf-8'))[
+    'Verso.Genre.Manual.section']['contents']
+for entries in sections.values():
+    for entry in entries:
+        address = entry['address'].strip('/')
+        page = site / address / 'index.html'
+        assert page.is_file(), address
+        if address.startswith('foundations/'):
+            assert len(address.split('/')) == 2, address
+            if len(entry['data']['context']) > 3:
+                assert f'id="{entry["id"]}"' in page.read_text(encoding='utf-8'), entry
 print(f'PASS: {len(pages)} static pages and {checked} local links work below {prefix}')

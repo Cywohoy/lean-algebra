@@ -5,7 +5,7 @@
 - 본문과 새 연습문제는 `Ample`, `Ample.Auto`, `ample_*`를 사용한다. 기존 개인 풀이의 `Course` 이름은 `AlgebraBook/Compatibility.lean`에서만 지원한다. 수학 단원 끝의 숨긴 `export_course_compat` 명령은 이전 이름을 연결하며 라이브러리로 내보내지 않는다.
 
 - `../Ample/`은 교재와 별도 Git 저장소인 공개 전술·수학 라이브러리이며 Lean의 표준 기초 체계를 사용한다. 해당 디렉터리의 `AGENTS.md`를 따른다. 교재 `main`은 Ample의 공개 Git 릴리스를 Lake로 가져오며 Verso 문서 생성은 라이브러리 밖에 둔다. `../Ample`은 수학 코드 동기화를 위한 개발용 체크아웃이다. 의존 버전을 바꾸면 Lake manifest도 갱신한다.
-- 이전 Cubical 실험은 `C:/Users/Cywohoy/Documents/AmpleCTT`에 보관했다. 현재 Ample에서 이를 가져오거나 사용자의 재개 요청 없이 건전성 증명을 계속하지 않는다.
+- 이전 Cubical 실험은 이 작업 공간 밖의 별도 `AmpleCTT` 프로젝트에 보관했다. 현재 Ample에서 이를 가져오거나 사용자의 재개 요청 없이 건전성 증명을 계속하지 않는다.
 
 - 사용자의 주장에 무조건 동조하지 말고 논리적 근거를 검토한다.
 - 한국어 본문을 작성하거나 수정하기 전에 `STYLE.md`를 읽고 따른다.

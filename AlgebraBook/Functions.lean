@@ -304,6 +304,16 @@ $`f(1)`이 $`f(S)`에 속함을 보이려면 $`S` 안에서 같은 함수값을 
 그 원소로 $`0`을 택하면 $`0\in S`이고 $`f(0)=f(1)`이다.
 원래 집합 밖의 원소도 집합 안의 원소와 같은 함수값을 가지면 이 역상에 들어간다.
 
+*문제 1* $`S \subseteq T`이면 $`f^{-1}(S) \subseteq f^{-1}(T)`임을 증명하라.
+
+```savedLean -keep
+theorem exercise_preimage_subset {A B : Type}
+    (f : A → B) (S T : Set B)
+    (hST : S ⊆ T) :
+    preimage f S ⊆ preimage f T := by
+  sorry
+```
+
 # 단사, 전사, 전단사
 %%%
 tag := "functions-mapping-properties"
@@ -508,6 +518,24 @@ theorem identity_bijective (A : Type) :
   constructor
   · exact identity_injective A
   · exact identity_surjective A
+```
+
+*문제 2* (두 원소 집합의 상과 역상)
+
+(1) $`\operatorname{double}(\{2,3\})=\{4,6\}`임을 증명하라.
+
+(2) 첫 결과와 `preimage_image_of_injective`를 사용하여
+$`\operatorname{double}^{-1}(\{4,6\})=\{2,3\}`임을 보이라.
+
+```savedLean -keep
+def practiceFourSix : Set Nat := fun n => n = 4 ∨ n = 6
+theorem exercise_image_double_twoThree :
+    image double twoThree = practiceFourSix := by
+  sorry
+
+theorem exercise_preimage_double_fourSix :
+    preimage double practiceFourSix = twoThree := by
+  sorry
 ```
 
 # 집합 위의 함수
@@ -1003,6 +1031,25 @@ theorem compose_of_pointwise_equal {A B C : Type}
   exact functions_compose_of_pointwise_equal f g h hgh x
 ```
 
+*문제 3* $`f(n) = n + 1`, $`g(n) = 2n`인 두 자연수 함수에 대하여
+$`(g \circ f)(3)`과 $`(f \circ g)(3)`을 계산하고 두 합성함수가 서로 다름을 증명하라.
+세 번째 증명에서는 앞의 두 계산 결과를 사용하라.
+
+```savedLean -keep
+theorem exercise_double_after_successor_at_three :
+    (double ∘ (fun n : Nat => n + 1)) 3 = 8 := by
+  sorry
+
+theorem exercise_successor_after_double_at_three :
+    ((fun n : Nat => n + 1) ∘ double) 3 = 7 := by
+  sorry
+
+theorem exercise_double_successor_noncommute :
+    double ∘ (fun n : Nat => n + 1) ≠
+    (fun n : Nat => n + 1) ∘ double := by
+  sorry
+```
+
 ## 합성의 기본 성질
 %%%
 tag := "functions-associativity"
@@ -1280,6 +1327,16 @@ example {A B : Type}
 ```
 
 
+*문제 4* $`(a,b)\in S\times T`이면 $`(b,a)\in T\times S`임을 증명하라.
+
+```savedLean -keep
+theorem exercise_setProduct_swap {A B : Type}
+    (S : Set A) (T : Set B) (a : A) (b : B)
+    (h : (a, b) ∈ setProduct S T) :
+    (b, a) ∈ setProduct T S := by
+  sorry
+```
+
 ## 성분별 함수의 단사·전사
 %%%
 tag := "functions-product-maps"
@@ -1483,7 +1540,15 @@ tag := "functions-existence-and-values"
 Lean에서도 존재한다는 사실을 바탕으로 원소를 고른 뒤,
 그 원소가 조건을 만족한다는 증명을 사용하여 역함수의 성질을 보인다.
 
-먼저 존재명제의 증명과 함수값으로 사용할 원소를 구별하자.
+전단사성의 증명을 `hf`라고 할 때, 구성할 역함수를 `inverseMap f hf : B → A`로 나타내자.
+이를 사용하여 계산할 때 필요한 성질은 다음 두 등식이다.
+
+- `inverseMap f hf (f x) = x`: 먼저 `f`를 적용했다가 역함수로 돌아오면 `x`를 얻는다.
+- `f (inverseMap f hf y) = y`: 역함수로 고른 원소에 `f`를 적용하면 `y`를 얻는다.
+
+예를 들어 `swapPair`의 역함수는 두 성분을 다시 바꾸므로
+`(b, a)`를 `(a, b)`로 보낸다. 일반적인 전단사에서도 이 두 등식을 만족하는 함수를
+만들 수 있는지 확인하기 위해, 먼저 존재명제의 증명과 함수값으로 사용할 원소를 구별하자.
 `hf.surj y`는 `∃ x, f x = y`의 증명이다.
 이 명제를 `unpack`이나 `rcases`로 분해하여 다른 명제를 증명할 수는 있지만,
 그 안의 원소를 꺼내 `A`의 값으로 반환할 수는 없다.
@@ -1710,7 +1775,8 @@ theorem inverseMap_bijective {A B : Type} (f : A → B)
       rw [hxy]
 
     -- f와 역함수를 차례로 적용하면 원래 원소이다.
-    rw [inverseMap_right f hf x, inverseMap_right f hf y] at h
+    rw [inverseMap_right f hf x,
+      inverseMap_right f hf y] at h
     exact h
 
   · intro x
@@ -1730,20 +1796,10 @@ tag := "functions-exercises"
 file := "exercises"
 %%%
 
+앞에서 익힌 상과 역상, 합성함수, 역함수의 성질을 함께 사용하라.
 각 문제의 `sorry`를 증명으로 바꾸어 완성하라.
 
-*문제 1* $`S \subseteq T`이면 $`f^{-1}(S) \subseteq f^{-1}(T)`임을 증명하라.
-
-```savedLean -keep
-theorem exercise_preimage_subset {A B : Type}
-    (f : A → B) (S T : Set B)
-    (hST : S ⊆ T) :
-    preimage f S ⊆ preimage f T := by
-  sorry
-```
-
-
-*문제 2* 합성함수 $`g \circ f`가 단사이면 $`f`도 단사임을 증명하라.
+*문제 5* 합성함수 $`g \circ f`가 단사이면 $`f`도 단사임을 증명하라.
 
 ```savedLean -keep
 theorem exercise_injective_of_compose {A B C : Type}
@@ -1754,7 +1810,7 @@ theorem exercise_injective_of_compose {A B C : Type}
 ```
 
 
-*문제 3* 합성함수 $`g \circ f`가 전사이면 $`g`도 전사임을 증명하라.
+*문제 6* 합성함수 $`g \circ f`가 전사이면 $`g`도 전사임을 증명하라.
 
 ```savedLean -keep
 theorem exercise_surjective_of_compose {A B C : Type}
@@ -1765,27 +1821,7 @@ theorem exercise_surjective_of_compose {A B C : Type}
 ```
 
 
-*문제 4* $`f(n) = n + 1`, $`g(n) = 2n`인 두 자연수 함수에 대하여
-$`(g \circ f)(3)`과 $`(f \circ g)(3)`을 계산하고 두 합성함수가 서로 다름을 증명하라.
-세 번째 증명에서는 앞의 두 계산 결과를 사용하라.
-
-```savedLean -keep
-theorem exercise_double_after_successor_at_three :
-    (double ∘ (fun n : Nat => n + 1)) 3 = 8 := by
-  sorry
-
-theorem exercise_successor_after_double_at_three :
-    ((fun n : Nat => n + 1) ∘ double) 3 = 7 := by
-  sorry
-
-theorem exercise_double_successor_noncommute :
-    double ∘ (fun n : Nat => n + 1) ≠
-    (fun n : Nat => n + 1) ∘ double := by
-  sorry
-```
-
-
-*문제 5* 전단사함수의 역함수에 다시 역함수를 취하면 원래 함수를 얻음을 증명하라.
+*문제 7* 전단사함수의 역함수에 다시 역함수를 취하면 원래 함수를 얻음을 증명하라.
 
 ```savedLean -keep
 theorem exercise_inverse_inverse {A B : Type}
@@ -1799,33 +1835,6 @@ theorem exercise_inverse_inverse {A B : Type}
 *힌트* `ext x`로 원소별 등식을 보인 뒤 역함수의 단사성을 사용하라.
 남은 두 함수값은 `inverseMap_right`과 `inverseMap_left`로 각각 `x`가 된다.
 
-
-*문제 6* $`(a,b)\in S\times T`이면 $`(b,a)\in T\times S`임을 증명하라.
-
-```savedLean -keep
-theorem exercise_setProduct_swap {A B : Type}
-    (S : Set A) (T : Set B) (a : A) (b : B)
-    (h : (a, b) ∈ setProduct S T) :
-    (b, a) ∈ setProduct T S := by
-  sorry
-```
-
-*문제 7* (두 원소 집합의 상과 역상)
-
-(1) $`\operatorname{double}(\{2,3\})=\{4,6\}`임을 증명하라.
-(2) 첫 결과와 `preimage_image_of_injective`를 사용하여
-$`\operatorname{double}^{-1}(\{4,6\})=\{2,3\}`임을 보이라.
-
-```savedLean -keep
-def practiceFourSix : Set Nat := fun n => n = 4 ∨ n = 6
-theorem exercise_image_double_twoThree :
-    image double twoThree = practiceFourSix := by
-  sorry
-
-theorem exercise_preimage_double_fourSix :
-    preimage double practiceFourSix = twoThree := by
-  sorry
-```
 
 *문제 8* (좌표 함수)
 
@@ -1891,6 +1900,7 @@ theorem exercise_image_union {A B : Type}
 *문제 12* (합성에서의 소거)
 
 (1) 단사함수 $`h`에 대하여 $`h\circ f=h\circ g`이면 $`f=g`임을 증명하라.
+
 (2) 전사함수 $`h`에 대하여 $`f\circ h=g\circ h`이면 $`f=g`임을 증명하라.
 두 증명에서 단사성과 전사성이 각각 어디에 쓰이는지 주석으로 적으라.
 

@@ -407,6 +407,34 @@ theorem threeNumbers_cardinal :
 목표는 `10 + (x.val - 10) = x.val`이며
 `hx`의 하한 조건 `10 ≤ x.val`이 있으므로 자연수의 뺄셈에서도 이 등식이 성립한다.
 
+## 연습문제: 두 원소 집합의 번호
+%%%
+tag := "cardinality-counting-practice"
+%%%
+
+앞의 세 원소 집합에서 사용한 번호 붙이기를 두 원소 집합에 적용해 보자.
+
+*문제 1* (두 원소 집합의 번호)
+
+집합 $`\{2,3\}`의 두 원소에 각각 번호 $`0`, $`1`을 붙인다.
+아래 함수가 전단사임을 증명한 뒤 그 결과로 집합의 원소 수가 $`2`임을 보이라.
+
+```savedLean -keep
+def practiceIndexTwo (i : Fin 2) : Elem twoThree :=
+  { val := i.val + 2
+    property := by
+      expand
+      arith }
+
+theorem exercise_indexTwo_bijective :
+    Bijective practiceIndexTwo := by
+  sorry
+
+theorem exercise_twoThree_cardinal :
+    cardinal (Elem twoThree) = cardinal (Fin 2) := by
+  sorry
+```
+
 ## 전단사와 원소 수
 %%%
 tag := "cardinality-transport"
@@ -653,6 +681,16 @@ file := "uniqueness"
 두 번호 집합 사이에도 전단사가 있다.
 따라서 원소 수가 하나로 정해짐을 보이려면 이러한 전단사에서 $`m=n`을 얻어야 한다.
 
+이 절의 결론은 다음과 같다.
+
+> 한 집합 `A`에 대해 `cardinal A = cardinal (Fin m)`과
+> `cardinal A = cardinal (Fin n)`이 모두 성립하면 `m = n`이다.
+
+예를 들어 앞에서 세 원소 집합으로 센 `threeNumbers`에 다른 번호를 붙여
+`cardinal (Elem threeNumbers) = cardinal (Fin n)`을 얻었다면 $`n=3`이어야 한다.
+이 결론을 사용할 때는 번호를 지우는 함수를 다시 구성할 필요 없이
+아래에서 증명할 `finite_cardinal_unique`에 두 등식의 증명을 주면 된다.
+
 증명은 다음 세 단계로 진행한다.
 
 1. `Fin (m + 1)`에서 `Fin (n + 1)`로 가는 단사함수에서
@@ -662,9 +700,9 @@ file := "uniqueness"
 3. 전단사와 그 역함수에 두 번째 결과를 적용하면 $`m\leq n`과 $`n\leq m`을 얻으므로 $`m=n`이다.
 
 먼저 첫 단계에 필요한 번호의 재배열을 구성하자.
-각 보조정리가 이 세 단계 중 어디에 쓰이는지 확인하며 읽으라.
-번호 변환의 세부 코드는 {ref "cardinality-number-unique"}[세는 방법과 원소 수]까지
-논증을 따라간 뒤 다시 살펴보아도 좋다.
+먼저 각 단계의 수학적 설명을 읽고 {ref "cardinality-number-unique"}[세는 방법과 원소 수]에서
+결론이 어떻게 이어지는지 확인해도 좋다. 번호의 재배열을 Lean으로 직접 구현하려면
+그 뒤에 각 코드 블록의 범위 조건과 귀납 가정을 살펴보면 된다.
 
 ## 번호의 재배열
 %%%
@@ -1072,6 +1110,16 @@ theorem finite_cardinal_unique {A : Type} {m n : Nat}
 `hm.symm`으로 첫 등식의 방향을 바꾸면 `cardinal (Fin m) = cardinal A`를 얻는다.
 여기에 `.trans hn`으로 두 번째 등식을 이어 붙이면 두 번호 타입의 기수가 같다는 등식이 된다.
 
+앞에서 센 집합에 이 정리를 적용하면 다음과 같다. 첫 번째 인수는 새로운 방법으로 센 결과이고,
+두 번째 인수는 이미 증명한 원소 수이다.
+
+```savedLean
+example (n : Nat)
+    (hn : cardinal (Elem threeNumbers) = cardinal (Fin n)) :
+    n = 3 := by
+  exact finite_cardinal_unique hn threeNumbers_cardinal
+```
+
 # 유한기수와 자연수
 %%%
 tag := "cardinality-natural-cardinals"
@@ -1324,7 +1372,7 @@ file := "exercises"
 
 각 문제의 `sorry`를 증명으로 바꾸어 완성하라.
 
-*문제 1* 원소가 하나씩 있는 두 집합은 크기가 같음을 증명하라.
+*문제 2* 원소가 하나씩 있는 두 집합은 크기가 같음을 증명하라.
 
 ```savedLean -keep
 theorem exercise_singletons_same_cardinal {A B : Type}
@@ -1335,18 +1383,19 @@ theorem exercise_singletons_same_cardinal {A B : Type}
 ```
 
 
-*문제 2* 크기가 같은 두 집합 $`A`, $`B`에 대하여
+*문제 3* 크기가 같은 두 집합 $`A`, $`B`에 대하여
 $`A`의 원소 수가 $`n`이라는 명제와 $`B`의 원소 수가 $`n`이라는 명제가 동치임을 증명하라.
 
 ```savedLean -keep
-theorem exercise_finite_cardinal_transport {A B : Type} {n : Nat}
+theorem exercise_finite_cardinal_transport
+    {A B : Type} {n : Nat}
     (hAB : cardinal A = cardinal B) :
     cardinal A = n ↔ cardinal B = n := by
   sorry
 ```
 
 
-*문제 3* $`n+1`개의 번호를 $`n`개의 번호에 단사로 대응시킬 수 없음을 증명하라.
+*문제 4* $`n+1`개의 번호를 $`n`개의 번호에 단사로 대응시킬 수 없음을 증명하라.
 
 ```savedLean -keep
 theorem exercise_fin_succ_not_injective
@@ -1356,7 +1405,7 @@ theorem exercise_fin_succ_not_injective
 ```
 
 
-*문제 4* 무한집합과 크기가 같은 집합도 무한집합임을 증명하라.
+*문제 5* 무한집합과 크기가 같은 집합도 무한집합임을 증명하라.
 
 ```savedLean -keep
 theorem exercise_infinite_transport {A B : Type}
@@ -1366,7 +1415,7 @@ theorem exercise_infinite_transport {A B : Type}
   sorry
 ```
 
-*문제 5* 유한집합 $`A`, $`B`의 원소 수가 각각 $`m`, $`n`이면
+*문제 6* 유한집합 $`A`, $`B`의 원소 수가 각각 $`m`, $`n`이면
 집합의 곱 $`A\times B`의 원소 수가 $`mn`임을 증명하라.
 즉 $`|A\times B|=|A||B|`이다.
 함수 절의 `productMap_bijective`를 사용하여 `Fin m × Fin n`에서 `A × B`로 가는 전단사를 구성하라.
@@ -1382,32 +1431,13 @@ theorem exercise_cardinal_product {A B : Type} {m n : Nat}
 *힌트* `finProduct_bijective`와 `productMap_bijective`를 합성하라. 기수의 등식에서 전단사를 꺼낼 때는 함수의 방향을 확인하라.
 
 
-*문제 6* (두 원소 집합의 번호)
-
-집합 $`\{2,3\}`의 두 원소에 각각 번호 $`0`, $`1`을 붙인다.
-아래 함수가 전단사임을 증명한 뒤 그 결과로 집합의 원소 수가 $`2`임을 보이라.
-
-```savedLean -keep
-def practiceIndexTwo (i : Fin 2) : Elem twoThree :=
-  { val := i.val + 2
-    property := by
-      expand
-      arith }
-
-theorem exercise_indexTwo_bijective :
-    Bijective practiceIndexTwo := by
-  sorry
-
-theorem exercise_twoThree_cardinal :
-    cardinal (Elem twoThree) = 2 := by
-  sorry
-```
-
 *문제 7* (색과 번호의 조합)
 
 (1) 두 성분을 바꾸는 함수를 사용하여 $`|A\times B|=|B\times A|`임을 증명하라.
+
 (2) 두 가지 색 중 하나와 세 가지 번호 중 하나를 고르는 방법이 모두 여섯 가지임을 보이라.
 색과 번호를 각각 `Fin 2`, `Fin 3`으로 나타낸다.
+
 (3) 앞의 두 결과를 사용하여 번호와 색의 순서로 나열해도 조합의 수는 같음을 보이라.
 
 ```savedLean -keep
@@ -1428,6 +1458,7 @@ theorem exercise_three_by_two_cardinal :
 
 (1) $`n+1`개의 번호를 $`n`개의 번호로 보내는 함수에서는
 서로 다른 두 번호의 함수값이 같음을 증명하라.
+
 (2) 열세 사람에게 태어난 달을 대응시키면 같은 달에 태어난 두 사람이 있음을 첫 결과로 보이라.
 사람과 달을 각각 `Fin 13`, `Fin 12`로 나타낸다.
 
@@ -1448,6 +1479,7 @@ theorem exercise_birth_month_collision
 *문제 9* (서로 다른 원소 수)
 
 (1) `Fin 2`와 `Fin 3` 사이에는 전단사가 존재하지 않음을 증명하라.
+
 (2) 본문에서 센 집합 $`\{10,11,12\}`의 원소 수가 $`4`일 수 없음을 보이라.
 원소 수의 유일성에 관한 정리들을 사용하라.
 

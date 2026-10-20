@@ -7,35 +7,7 @@ open Ample
 open scoped Ample.Auto Classical
 namespace Exercises.FiniteCardinality
 
-theorem exercise_singletons_same_cardinal {A B : Type}
-    (a : A) (b : B) :
-    cardinal (Elem (singleton a)) =
-      cardinal (Elem (singleton b)) := by
-  sorry
-
-theorem exercise_finite_cardinal_transport {A B : Type} {n : Nat}
-    (hAB : cardinal A = cardinal B) :
-    cardinal A = n ↔ cardinal B = n := by
-  sorry
-
-theorem exercise_fin_succ_not_injective
-    (n : Nat) (f : Fin (n + 1) → Fin n) :
-    ¬ Injective f := by
-  sorry
-
-theorem exercise_infinite_transport {A B : Type}
-    (hA : IsInfinite A)
-    (hAB : cardinal A = cardinal B) :
-    IsInfinite B := by
-  sorry
-
-theorem exercise_cardinal_product {A B : Type} {m n : Nat}
-    (hA : cardinal A = m)
-    (hB : cardinal B = n) :
-    cardinal (A × B) = m * n := by
-  sorry
-
--- 문제 6: 두 원소 집합의 번호
+-- 문제 1: 두 원소 집합의 번호
 -- 집합 \{2,3\}의 두 원소에 각각 번호 0, 1을 붙인다.
 -- 아래 함수가 전단사임을 증명한 뒤 그 결과로 집합의 원소 수가 2임을 보이라.
 def practiceIndexTwo (i : Fin 2) : Elem twoThree :=
@@ -49,7 +21,40 @@ theorem exercise_indexTwo_bijective :
   sorry
 
 theorem exercise_twoThree_cardinal :
-    cardinal (Elem twoThree) = 2 := by
+    cardinal (Elem twoThree) = cardinal (Fin 2) := by
+  sorry
+
+-- 문제 2
+theorem exercise_singletons_same_cardinal {A B : Type}
+    (a : A) (b : B) :
+    cardinal (Elem (singleton a)) =
+      cardinal (Elem (singleton b)) := by
+  sorry
+
+-- 문제 3
+theorem exercise_finite_cardinal_transport {A B : Type} {n : Nat}
+    (hAB : cardinal A = cardinal B) :
+    cardinal A = n ↔ cardinal B = n := by
+  sorry
+
+-- 문제 4
+theorem exercise_fin_succ_not_injective
+    (n : Nat) (f : Fin (n + 1) → Fin n) :
+    ¬ Injective f := by
+  sorry
+
+-- 문제 5
+theorem exercise_infinite_transport {A B : Type}
+    (hA : IsInfinite A)
+    (hAB : cardinal A = cardinal B) :
+    IsInfinite B := by
+  sorry
+
+-- 문제 6
+theorem exercise_cardinal_product {A B : Type} {m n : Nat}
+    (hA : cardinal A = m)
+    (hB : cardinal B = n) :
+    cardinal (A × B) = m * n := by
   sorry
 
 -- 문제 7: 색과 번호의 조합

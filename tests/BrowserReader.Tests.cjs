@@ -85,18 +85,26 @@ async function main() {
     await page.goto(new URL(selected.url, base).href);
     let wrapper = page.locator(`[data-snippet="${selected.key}"]`);
     assert.equal(await page.getByRole('button', {name: '편집', exact: true}).count(), 0);
-    await wrapper.getByRole('button', {name: '단계', exact: true}).click();
+    await wrapper.getByRole('button', {name: '단계 보기', exact: true}).click();
     assert(await wrapper.locator('.book-step-state').isVisible());
+    assert(await wrapper.locator('.book-example-body > .hl.lean.block').evaluate(code =>
+      parseFloat(getComputedStyle(code).paddingTop) <= 12
+    ), 'proof controls must overlay the code block without reserving a row above it');
     console.log('PASS: visible proof steps and no standalone edit controls');
 
     const exercise = example(code => code.startsWith('theorem exercise_add_three_preserves_lt'));
+    // An earlier edition saved by source position. Keep that proof after moving the problem.
+    await page.evaluate(({key, code}) => localStorage.setItem('lean-algebra.code.' + key, code), {
+      key: exercise.data.legacyKeys.at(-1),
+      code: exercise.data.code.replace('sorry', '-- retained from the previous edition\n  sorry')
+    });
     wrapper = await open(exercise);
     await status(wrapper, '증명 중');
     assert(await wrapper.locator('dialog').isVisible());
-    assert.equal(await wrapper.getByRole('button', {name: '단계', exact: true}).count(), 0);
-    assert((await wrapper.locator('.book-exercise-statement').innerText()).includes('문제 1'));
+    assert.equal(await wrapper.getByRole('button', {name: '단계 보기', exact: true}).count(), 0);
+    assert((await wrapper.locator('.book-exercise-heading').innerText()).includes('문제 1'));
     assert((await wrapper.locator('.book-live-editor > .book-exercise-declaration').innerText()).includes('a + 3 < b + 3'));
-    assert.equal(await wrapper.locator('textarea').inputValue(), 'sorry');
+    assert.equal(await wrapper.locator('textarea').inputValue(), '-- retained from the previous edition\nsorry');
     assert(await wrapper.locator('..').locator('.book-solve-button').evaluate(button => {
       const rect = button.getBoundingClientRect(); return rect.height >= 44 && rect.width <= 120;
     }));
@@ -146,7 +154,7 @@ async function main() {
     await wrapper.locator('textarea').fill(typedDeclaration + ' n : Nat, n = n := by\n  intro n\n  rfl');
     await wrapper.locator('textarea').press('Control+Enter');
     await status(wrapper, '코드 검사 통과');
-    assert((await page.evaluate(key => localStorage.getItem('lean-algebra.code.' + key), exercise.key)).includes('∀ n : Nat'));
+    assert((await page.evaluate(key => localStorage.getItem('lean-algebra.code.' + key), exercise.data.storageKey)).includes('∀ n : Nat'));
     await wrapper.locator('textarea').fill('theorem exercise_add_three_preserves_lt : True := by\n  trivial');
     await status(wrapper, '코드 검사 통과');
     await wrapper.locator('textarea').fill('axiom unproved : True\ntheorem exercise_add_three_preserves_lt : True := by\n  exact unproved');

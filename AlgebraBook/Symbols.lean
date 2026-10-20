@@ -22,22 +22,22 @@ number := false
   * 뜻
   * 입력
 *
-  * Lean의 기본 문법
+  * {ref "intro-function-application"}[Lean의 기본 문법: 함수의 적용]
   * `→`
   * 함수의 타입 또는 명제의 함의
   * `\to`
 *
-  * Lean의 기본 문법
+  * {ref "intro-defining-functions"}[Lean의 기본 문법: 함수의 정의]
   * `↦`
   * 수학식에서 원소와 함수값의 대응
   * `\mapsto`
 *
-  * Lean의 기본 문법
+  * {ref "intro-propositions-and-goals"}[Lean의 기본 문법: 명제와 술어]
   * `=`
   * 두 대상의 같음
   * 그대로 입력
 *
-  * Lean의 기본 문법
+  * {ref "intro-function-application"}[Lean의 기본 문법: 함수의 적용]
   * `×`
   * 순서쌍의 타입 또는 집합의 곱
   * `\times`
@@ -52,72 +52,72 @@ number := false
   * 모든 원소에 대한 전칭명제
   * `\forall`
 *
-  * 집합의 구성
+  * {ref "sets-sets-as-predicates"}[집합의 구성: 술어와 집합]
   * `ℕ`
   * 수학식에서 자연수 전체의 집합
   * `\N`
 *
-  * 집합의 구성
+  * {ref "sets-membership-notation"}[집합의 구성: 원소 표기]
   * `∈`
   * 원소 관계
   * `\in`
 *
-  * 집합의 구성
+  * {ref "sets-universal-and-empty-sets"}[집합의 구성: 전체집합과 공집합]
   * `∅`
   * 공집합
   * `\emptyset`
 *
-  * 집합의 구성
+  * {ref "sets-subsets"}[집합의 구성: 부분집합]
   * `⊆`
   * 포함 관계
   * `\subseteq`
 *
-  * 집합의 구성
+  * {ref "sets-equivalence"}[집합의 구성: 동치]
   * `↔`
   * 두 명제의 동치
   * `\iff`
 *
-  * 집합의 구성
+  * {ref "sets-equivalence"}[집합의 구성: 동치]
   * `·`
   * 목표별 증명의 시작
   * `\.`
 *
-  * 집합의 구성
+  * {ref "sets-intersections-and-conjunctions"}[교집합과 논리곱]
   * `∩`
   * 교집합
   * `\cap`
 *
-  * 집합의 구성
+  * {ref "sets-intersections-and-conjunctions"}[교집합과 논리곱]
   * `∧`
   * 논리곱
   * `\and`
 *
-  * 집합의 구성
+  * {ref "sets-unions-and-disjunctions"}[합집합과 논리합]
   * `∪`
   * 합집합
   * `\cup`
 *
-  * 집합의 구성
+  * {ref "sets-unions-and-disjunctions"}[합집합과 논리합]
   * `∨`
   * 논리합
   * `\or`
 *
-  * 집합의 구성
+  * {ref "sets-complements-and-negation"}[여집합과 부정]
   * `¬`
   * 명제의 부정
   * `\neg`
 *
-  * 집합의 구성
+  * {ref "sets-complements-and-negation"}[여집합과 부정]
   * `∉`
   * 원소 관계의 부정
   * `\notin`
 *
-  * 집합의 구성
+  * {ref "sets-complements-and-negation"}[여집합과 부정]
   * `ᶜ`
   * 여집합의 위첨자
   * `\^c`
 *
-  * 집합의 구성
+  * {ref "sets-differences"}[집합의 구성: 차집합]
   * `\`
   * 차집합
   * 역슬래시 하나를 그대로 입력
@@ -127,12 +127,12 @@ number := false
   * 묶인 대상의 성분을 분해하는 패턴
   * `\<`, `\>` (`\langle`, `\rangle`도 가능)
 *
-  * 함수
+  * {ref "functions-composition"}[함수: 합성함수]
   * `∘`
   * 함수의 합성
   * `\circ`
 *
-  * 함수
+  * {ref "sets-complements-and-negation"}[집합의 구성: 여집합과 부정]
   * `≠`
   * 두 대상이 같지 않음
   * `\ne`
@@ -142,27 +142,27 @@ number := false
   * 어떤 원소가 존재한다는 명제
   * `\exists`
 *
-  * 함수: 집합 위의 함수
+  * {ref "functions-subtypes"}[함수: 부분타입]
   * `//`
   * `{x : A // P x}`에서 부분타입의 원소 조건
   * 슬래시 두 개를 그대로 입력
 *
-  * 자연수와 정수
+  * {ref "preliminaries-divisibility"}[자연수와 정수: 정수의 계산]
   * `ℤ`
   * 정수의 집합이며 Lean에서는 `Int`로 쓴다
   * `\Z`
 *
-  * 자연수와 정수
+  * {ref "preliminaries-defining-divisibility"}[자연수와 정수: 나누어떨어짐]
   * `∣`
   * 정수의 나누어떨어짐
   * `\mid`
 *
-  * 자연수와 정수: 나머지와 합동
+  * {ref "preliminaries-congruence"}[자연수와 정수: 나머지와 합동]
   * `/`, `%`
   * 자연수와 정수의 몫, 나머지
   * 그대로 입력
 *
-  * 자연수와 정수
+  * {ref "preliminaries-congruence"}[자연수와 정수: 나머지와 합동]
   * `≡`
   * `a ≡ b [ZMOD n]`에서 정수의 합동
   * `\==`
@@ -177,17 +177,17 @@ number := false
   * 대표원에서 만든 몫 원소: `(⟦a⟧ : A / R)`
   * `\[[`, `\]]`
 *
-  * 집합의 크기: 자연수와 유한한 번호
+  * {ref "functions-fin"}[함수: 유한한 번호]
   * `↑`
   * 원소나 자연수를 다른 타입으로 옮기는 형변환
   * `\u` (`\coe`도 가능)
 *
-  * 집합의 크기: 전단사와 원소 수
+  * {ref "functions-injectivity"}[함수: 단사함수]
   * `←`
   * `rw`에서 등식을 반대 방향으로 사용
   * `\l` (`\leftarrow`도 가능)
 *
-  * 무한집합의 크기: 자연수와 같은 크기의 집합
+  * {ref "cardinality-countable-sets"}[무한집합의 크기: 자연수와 같은 크기의 집합]
   * `ℵ₀`
   * 수학식에서 자연수의 기수
   * `\aleph0`

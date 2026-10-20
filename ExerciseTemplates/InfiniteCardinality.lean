@@ -7,6 +7,12 @@ open Ample
 open scoped Ample.Auto Classical
 namespace Exercises.InfiniteCardinality
 
+-- 문제 1
+theorem exercise_from_two_countably_infinite {n : Nat} :
+    IsCountablyInfinite
+    (Elem (fun n : Nat => 2 ≤ n)) := by
+  sorry
+
 -- Advanced 보조정리, 문제 1: 무한집합 A로 가는 단사함수 f : Fin n → A가 주어졌다고 하자.
 -- f의 상에 속하지 않는 원소가 A에 존재함을 증명하라.
 theorem fresh_element_exists {A : Type} {n : Nat}
@@ -25,11 +31,7 @@ theorem finite_listing_extension {A : Type} {n : Nat}
       ∀ i : Fin n, t.val i.castSucc = s.val i := by
   sorry
 
-theorem exercise_from_two_countably_infinite {n : Nat} :
-    IsCountablyInfinite
-    (Elem (fun n : Nat => 2 ≤ n)) := by
-  sorry
-
+-- 문제 2
 theorem exercise_powerSet_inter {A : Type} (S T : Set A) :
     powerSet (S ∩ T) = powerSet S ∩ powerSet T := by
   sorry
@@ -42,6 +44,7 @@ theorem exercise_powerSet_inter {A : Type} (S T : Set A) :
 -- 집합의 같음과 크기의 같음을 구별하라.
 def practiceOneModThree : Set Nat :=
   fun n => ∃ k, n = 3 * k + 1
+
 def practiceToOneModThree (n : Nat) :
     Elem practiceOneModThree :=
   { val := 3 * n + 1
@@ -93,6 +96,7 @@ theorem exercise_powerSet_twoThree_positives :
 -- (3) 둘째 결과로 이 함수가 전사가 아님을 보이라.
 def practiceSingletonDiagonal : Set Nat :=
   fun n => n ∉ singleton n
+
 theorem exercise_singleton_diagonal_empty :
     practiceSingletonDiagonal = ∅ := by
   sorry

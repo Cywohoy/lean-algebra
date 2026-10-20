@@ -3,6 +3,7 @@ from pathlib import Path
 from html.parser import HTMLParser
 import re
 import sys
+import json
 from urllib.parse import urlsplit, unquote
 
 root=Path(__file__).resolve().parents[1]
@@ -60,6 +61,8 @@ for page in ['tactics/failures', 'tactics/failures/unpack',
 # relying on an old build's redirect pages being left in the destination.
 main=(root/'Main.lean').read_text(encoding='utf-8-sig')
 redirects=dict(re.findall(r'\("([^"\n]+)", "(/[^"\n]+)"\)',main))
+sections=json.loads((htmlroot/'xref.json').read_text(encoding='utf-8'))[
+    'Verso.Genre.Manual.section']['contents']
 for legacy in ['preliminaries/products', 'preliminaries/equivalence-relations']:
     assert legacy in redirects, legacy
 for old, target in redirects.items():
@@ -68,7 +71,12 @@ for old, target in redirects.items():
     assert destination.is_file(), (old,target)
     content=destination.read_text(encoding='utf-8')
     if url.fragment:
-        assert re.search(r'\bid=[\"\']'+re.escape(unquote(url.fragment))+r'[\"\']',content), (old,target)
+        tag=unquote(url.fragment)
+        # Legacy subsection pages now redirect into a continuous unit page.
+        if '<main>' not in content:
+            entry=sections[tag][0]
+            content=(htmlroot/entry['address'].strip('/')/'index.html').read_text(encoding='utf-8')
+        assert re.search(r'\bid=[\"\']'+re.escape(tag)+r'[\"\']',content), (old,target)
 
 for path in (root/'AlgebraBook').rglob('*.lean'):
     source=path.read_text(encoding='utf-8-sig')

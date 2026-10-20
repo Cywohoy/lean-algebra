@@ -7,24 +7,28 @@ open Ample
 open scoped Ample.Auto Classical
 namespace Exercises.Functions
 
+-- 문제 1
 theorem exercise_preimage_subset {A B : Type}
     (f : A → B) (S T : Set B)
     (hST : S ⊆ T) :
     preimage f S ⊆ preimage f T := by
   sorry
 
-theorem exercise_injective_of_compose {A B C : Type}
-    (f : A → B) (g : B → C)
-    (h : Injective (g ∘ f)) :
-    Injective f := by
+-- 문제 2: 두 원소 집합의 상과 역상
+-- (1) \operatorname{double}(\{2,3\})=\{4,6\}임을 증명하라.
+-- (2) 첫 결과와 preimage_image_of_injective를 사용하여
+-- \operatorname{double}^{-1}(\{4,6\})=\{2,3\}임을 보이라.
+def practiceFourSix : Set Nat := fun n => n = 4 ∨ n = 6
+
+theorem exercise_image_double_twoThree :
+    image double twoThree = practiceFourSix := by
   sorry
 
-theorem exercise_surjective_of_compose {A B C : Type}
-    (f : A → B) (g : B → C)
-    (h : Surjective (g ∘ f)) :
-    Surjective g := by
+theorem exercise_preimage_double_fourSix :
+    preimage double practiceFourSix = twoThree := by
   sorry
 
+-- 문제 3
 theorem exercise_double_after_successor_at_three {n : Nat} :
     (double ∘ (fun n : Nat => n + 1)) 3 = 8 := by
   sorry
@@ -38,6 +42,28 @@ theorem exercise_double_successor_noncommute {n : Nat} :
     (fun n : Nat => n + 1) ∘ double := by
   sorry
 
+-- 문제 4
+theorem exercise_setProduct_swap {A B : Type}
+    (S : Set A) (T : Set B) (a : A) (b : B)
+    (h : (a, b) ∈ setProduct S T) :
+    (b, a) ∈ setProduct T S := by
+  sorry
+
+-- 문제 5
+theorem exercise_injective_of_compose {A B C : Type}
+    (f : A → B) (g : B → C)
+    (h : Injective (g ∘ f)) :
+    Injective f := by
+  sorry
+
+-- 문제 6
+theorem exercise_surjective_of_compose {A B C : Type}
+    (f : A → B) (g : B → C)
+    (h : Surjective (g ∘ f)) :
+    Surjective g := by
+  sorry
+
+-- 문제 7
 theorem exercise_inverse_inverse {A B : Type}
     (f : A → B)
     (hf : Bijective f) :
@@ -45,30 +71,12 @@ theorem exercise_inverse_inverse {A B : Type}
       (inverseMap_bijective f hf) = f := by
   sorry
 
-theorem exercise_setProduct_swap {A B : Type}
-    (S : Set A) (T : Set B) (a : A) (b : B)
-    (h : (a, b) ∈ setProduct S T) :
-    (b, a) ∈ setProduct T S := by
-  sorry
-
--- 문제 7: 두 원소 집합의 상과 역상
--- (1) \operatorname{double}(\{2,3\})=\{4,6\}임을 증명하라.
--- (2) 첫 결과와 preimage_image_of_injective를 사용하여
--- \operatorname{double}^{-1}(\{4,6\})=\{2,3\}임을 보이라.
-def practiceFourSix : Set Nat := fun n => n = 4 ∨ n = 6
-theorem exercise_image_double_twoThree :
-    image double twoThree = practiceFourSix := by
-  sorry
-
-theorem exercise_preimage_double_fourSix :
-    preimage double practiceFourSix = twoThree := by
-  sorry
-
 -- 문제 8: 좌표 함수
 -- 첫 좌표를 꺼내는 함수 p:\mathbb{N}\times\mathbb{N}\to\mathbb{N}에 대하여
 -- 전사성을 증명하고 단사성이 성립하지 않음을 보이라.
 -- 단사성을 반박할 때에는 함수값이 같아지는 서로 다른 두 순서쌍을 찾으라.
 def practiceFirst : Nat × Nat → Nat := fun p => p.1
+
 theorem exercise_first_surjective :
     Surjective practiceFirst := by
   sorry
@@ -81,6 +89,7 @@ theorem exercise_first_not_injective :
 -- d(n)=(n,n)으로 정한 함수 d:\mathbb{N}\to\mathbb{N}\times\mathbb{N}의 단사성을 증명하라.
 -- 또한 이 함수는 전사가 아님을 증명하라.
 def practiceDiagonal : Nat → Nat × Nat := fun n => (n, n)
+
 theorem exercise_diagonal_injective :
     Injective practiceDiagonal := by
   sorry

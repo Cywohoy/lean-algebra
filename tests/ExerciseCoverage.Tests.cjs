@@ -59,7 +59,10 @@ async function main() {
     });
     const errors = [];
     page.on('pageerror', error => { errors.push(error.message); console.error(error.message); });
-    page.on('console', message => { if (message.type() === 'error' || process.env.TRACE_WASM) console.error('BROWSER:', message.text()); });
+    page.on('console', message => {
+      if (message.type() === 'error' || process.env.TRACE_WASM || message.text().startsWith('CHECK '))
+        console.error('BROWSER:', message.text());
+    });
     page.on('requestfailed', request => console.error('REQUEST:', request.url(), request.failure()?.errorText));
     page.on('request', request => { if (request.method() !== 'GET' || request.postData()) uploads.push(request.url()); });
     const exercises = Object.entries(manifest).filter(([, item]) => item.exercise);

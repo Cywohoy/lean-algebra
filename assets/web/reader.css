@@ -68,7 +68,10 @@
 /* Exercise workspace: keep the problem above a wide proof/state split. */
 .book-exercise-card { border: 1px solid #ddd; padding: 20px 24px; margin: 24px 0; }
 .book-exercise-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
-.book-exercise-card-heading > strong { font-size: 1.05rem; white-space: nowrap; flex: 0 0 auto; }
+.book-problem-title { display: flex; align-items: baseline; flex-wrap: wrap; gap: .25rem .8rem; min-width: 0; line-height: 1.6; }
+.book-problem-title > strong { font-size: 1.05rem; white-space: nowrap; }
+.book-problem-caption { font-size: 1rem; word-break: keep-all; }
+.book-exercise-card-heading .book-solve-button { flex: 0 0 auto; }
 .book-exercise-card-heading .book-solve-button { box-sizing: border-box; min-height: 44px; min-width: 56px; padding: .4rem .15rem; border: 0; border-bottom: 1px solid #aaa; background: transparent; color: #222; text-align: center; font-size: 1rem; text-decoration: none; }
 .book-exercise-card-heading .book-solve-button:hover { border-bottom-color: #222; }
 .book-exercise-card > p { margin: .5rem 0; }
@@ -104,3 +107,13 @@
   .book-exercise-workspace .book-code-input { min-height: 220px; }
 }
 @media print { .book-exercise-workspace { display: none !important; } }
+
+/* Both controls remain visible at the upper-right corner of the code. */
+.book-copy { opacity: 1; pointer-events: auto; color: #888; }
+.book-copy:hover { color: #222; }
+.book-proof-toolbar { position: absolute; top: .25rem; right: .3rem; gap: .85rem; }
+.book-proof-toolbar .book-step-button { color: #444; font-size: .875rem; min-height: 32px; }
+.book-example:has(> .book-proof-toolbar) > .book-example-body > .hl.lean.block { padding-right: 5rem; }
+@media print {
+  .book-example:has(> .book-proof-toolbar) > .book-example-body > .hl.lean.block { padding-top: .45rem; }
+}

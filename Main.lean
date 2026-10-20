@@ -10,6 +10,7 @@ import VersoManual
 import VersoUtil.BinFiles
 import AlgebraBook
 import AlgebraBook.Meta.Playground
+import AlgebraBook.Meta.ReaderCode
 
 open Verso Doc
 open Verso.Genre Manual
@@ -182,6 +183,7 @@ def buildRedirects (mode : Mode) (cfg : Config) (_state : TraverseState)
         ("cardinality-natural-cardinals", "/foundations/cardinality/natural-cardinals/"),
         ("cardinality-natural-value", "/foundations/cardinality/natural-cardinals/#cardinality-natural-value")])] : List (String × List (String × String))) do
     let page := root / old / "index.html"
+    if !(← page.pathExists) then continue
     let mapping := (Lean.Json.mkObj (targets.map fun (tag, url) => (tag, .str url))).compress
     let script := "<script>(()=>{const moved=" ++ mapping ++
       ";const target=moved[decodeURIComponent(location.hash.slice(1))];" ++
@@ -199,11 +201,57 @@ where
     let html := s!"<!doctype html><html lang=\"ko\"><head><meta charset=\"utf-8\"><meta http-equiv=\"refresh\" content=\"0;url={url}\"><link rel=\"canonical\" href=\"{url}\"><title>옮겨진 본문</title><script>const target={jsUrl};location.replace(target.includes('#') ? target : target+location.hash);</script></head><body><a href=\"{url}\">옮겨진 본문으로 이동</a></body></html>"
     IO.FS.writeFile target html
 
+/-- Preserve subsection bookmarks when a whole learning unit shares one page. -/
+def buildReadingRedirects (mode : Mode) (cfg : Config) (_state : TraverseState)
+    (_text : Part Manual) : BuildLogT IO Unit := do
+  let .multi := mode | pure ()
+  let root := cfg.destination / "html-multi"
+  let project := mainFileName.parent.getD "."
+  let parse (path : System.FilePath) : IO Lean.Json := do
+    match Lean.Json.parse (← IO.FS.readFile path) with
+    | .ok json => pure json
+    | .error error => throw <| IO.userError s!"{path}: {error}"
+  let history ← parse (project / "web/reading-redirects.json")
+  let xrefs ← parse (root / "xref.json")
+  let .ok sections := (do
+    let domain ← xrefs.getObjVal? "Verso.Genre.Manual.section"
+    (← domain.getObjVal? "contents").getObj?)
+    | throw <| IO.userError "Missing section references"
+  let mut destinations : List (String × Lean.Json) := []
+  for (tag, entries) in sections.toArray do
+    let .ok entries := entries.getArr? | continue
+    let some entry := entries[0]? | continue
+    let .ok address := entry.getObjValAs? String "address" | continue
+    let .ok id := entry.getObjValAs? String "id" | continue
+    destinations := (tag, .str (address ++ "#" ++ id)) :: destinations
+  let targets := Lean.Json.mkObj destinations
+  let .ok routes := history.getObj? | throw <| IO.userError "Invalid reading redirects"
+  for (old, tag) in routes.toArray do
+    let .ok tag := tag.getStr? | continue
+    let .ok target := targets.getObjValAs? String tag
+      | throw <| IO.userError s!"Missing destination for historical section {tag}"
+    -- A retained page must never be replaced by a redirect.
+    if destinations.any (fun (_, value) =>
+        value.getStr?.toOption.any (fun url => url.startsWith ("/" ++ old ++ "/#"))) then
+      continue
+    let path : System.FilePath := old / "index.html"
+    let output := root / path
+    if let some parent := output.parent then IO.FS.createDirAll parent
+    let rootPrefix := String.join (List.replicate (path.components.length - 1) "../")
+    let fallback := rootPrefix ++ (target.dropWhile (· == '/')).copy
+    let jsPrefix := (Lean.Json.str rootPrefix).compress
+    let jsTarget := (Lean.Json.str target).compress
+    let script := "const targets=" ++ targets.compress ++ ";const fallback=" ++ jsTarget ++
+      ";const hash=location.hash;let tag='';try{tag=decodeURIComponent(hash.slice(1));}catch{}" ++
+      "const target=targets[tag]||(hash?fallback.split('#')[0]+hash:fallback);" ++
+      "location.replace(" ++ jsPrefix ++ "+target.slice(1));"
+    IO.FS.writeFile output s!"<!doctype html><html lang=\"ko\"><head><meta charset=\"utf-8\"><title>옮겨진 본문</title><script>{script}</script><noscript><meta http-equiv=\"refresh\" content=\"0;url={fallback}\"></noscript><link rel=\"canonical\" href=\"{fallback}\"></head><body><a href=\"{fallback}\">본문으로 이동</a></body></html>"
+
 def config : RenderConfig where
   emitTeX := false
   emitHtmlSingle := .no
   emitHtmlMulti := .immediately
-  htmlDepth := 3
+  htmlDepth := 2
   extraDataFiles := {
     { filename := "PretendardVariable.woff2",
       contents := include_bin "assets/fonts/PretendardVariable.woff2" },
@@ -296,6 +344,6 @@ def main (args : List String) : IO UInt32 := do
       filename := "reader.css", contents := .mk css }
     extraJsFiles := config.extraJsFiles.insert {
       filename := "reader.js", contents := .mk js, defer := true, sourceMap? := none } }
-  manualMain (%doc AlgebraBook)
+  manualMain (readerCodeBlocks (%doc AlgebraBook))
     (options := args)
-    (extraSteps := [buildExercises, buildPlaygrounds, buildRedirects]) (config := current)
+    (extraSteps := [buildExercises, buildPlaygrounds, buildRedirects, buildReadingRedirects]) (config := current)

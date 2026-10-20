@@ -93,9 +93,14 @@ and memory exhaustion have not been validated. Some LibUV networking functions
 are unavailable; these proofs do not establish support for arbitrary OS or
 network APIs.
 
-The adapter rechecks the entire file and caches imported environments. It does
-not implement incremental LSP sessions, completion, hover, interruption, or a
-long-running memory policy. The remaining work includes smaller downloads,
+The adapter rechecks the entire file and caches imported environments. The
+browser transport replaces its worker before importing a fifth distinct header
+import set: Lean's retained compact regions otherwise accumulate as readers
+move between partial exercise contexts on a continuous page. Checked context
+files are restored from verified in-memory copies, and the editor keeps its
+source and saved work. Repeated checks with the same imports reuse the worker.
+It does not implement incremental LSP sessions, completion, hover, or interruption.
+The remaining work includes smaller downloads,
 persistent caching, mobile profiling, and the remaining editor interfaces.
 
 The browser build uses `EXIT_RUNTIME=0`: the Worker owns the runtime lifetime.

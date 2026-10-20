@@ -12,18 +12,18 @@ open scoped Classical
 
 namespace Exercises.Sets
 
--- 문제 1: 교집합은 두 번째 집합의 부분집합이다.
-theorem exercise_inter_subset_right
-    {A : Type} (S T : Set A) :
-    S ∩ T ⊆ T := by
-  sorry
-
--- 문제 2: 포함 관계의 추이성을 증명하라.
+-- 문제 1: 포함 관계의 추이성을 증명하라.
 -- 각 단계에 대응하는 수학적 문장을 -- 주석으로 적으라.
 theorem exercise_subset_trans {A : Type} (S T U : Set A)
     (hST : S ⊆ T)
     (hTU : T ⊆ U) :
     S ⊆ U := by
+  sorry
+
+-- 문제 2: 교집합은 두 번째 집합의 부분집합이다.
+theorem exercise_inter_subset_right
+    {A : Type} (S T : Set A) :
+    S ∩ T ⊆ T := by
   sorry
 
 -- 문제 3: S에서 S를 뺀 차집합은 공집합의 부분집합이다.
@@ -66,6 +66,7 @@ theorem exercise_inter_union_absorb {A : Type}
 -- 두 증명에서 3을 다루는 방식이 어떻게 다른지 비교하라.
 def practiceThreeFour : Set Nat :=
   fun n => n = 3 ∨ n = 4
+
 theorem exercise_twoThree_inter :
     twoThree ∩ practiceThreeFour = (fun n => n = 3) := by
   sorry

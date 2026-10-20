@@ -88,6 +88,15 @@ theorem zero_add_induction (n : Nat) : 0 + n = n := by
 `Nat.succ (0 + n) = Nat.succ n`이 된다.
 `rw [Nat.add_succ]`로 이 계산을 적용한 뒤 `rw [ih]`를 쓰면 양변이 같아져 증명이 끝난다.
 
+*문제 1* 모든 자연수 $`n`에 대하여 $`1+n=n+1`임을 귀납법으로 증명하라.
+
+```savedLean -keep
+theorem exercise_one_add_induction
+    (n : Nat) :
+    1 + n = n + 1 := by
+  sorry
+```
+
 # 짝수와 함수의 상
 %%%
 tag := "preliminaries-even-induction"
@@ -134,7 +143,10 @@ theorem even_ne_odd (m : Nat) :
       contradiction
 
   | succ m ih =>
+      -- ih : ∀ n, 2 * m ≠ 2 * n + 1
+      -- 목표: ∀ n, 2 * Nat.succ m ≠ 2 * n + 1
       intro n h
+      -- h : 2 * Nat.succ m = 2 * n + 1, 목표: False
       -- 오른쪽의 n이 0인지 양수인지 나눈다.
       cases n with
       | zero =>
@@ -154,6 +166,9 @@ theorem even_ne_odd (m : Nat) :
           exact Nat.succ.inj (Nat.succ.inj h)
 ```
 
+앞의 덧셈 예제에서 귀납 가정은 한 등식 `0 + n = n`이었다.
+여기서는 오른쪽의 홀수가 달라져도 귀납 가정을 써야 하므로
+모든 `n`에 관한 명제를 귀납 가정으로 남긴다.
 `∀ n`을 목표에 둔 채 `induction m`을 쓰면
 귀납 가정은 `ih : ∀ n, 2 * m ≠ 2 * n + 1`이 된다.
 각 경우의 `intro n h`는 자연수 `n`을 택하고 두 식이 같다는 가정을 도입한다.
@@ -595,16 +610,6 @@ file := "exercises"
 
 각 문제의 `sorry`를 증명으로 바꾸어 완성하라.
 
-*문제 1* 모든 자연수 $`n`에 대하여 $`1+n=n+1`임을 귀납법으로 증명하라.
-
-```savedLean -keep
-theorem exercise_one_add_induction
-    (n : Nat) :
-    1 + n = n + 1 := by
-  sorry
-```
-
-
 *문제 2* 모든 정수 $`a`에 대하여 $`a\mid0`임을 증명하라.
 
 ```savedLean -keep
@@ -641,6 +646,7 @@ theorem exercise_congruent_thirty_seven_twenty_three :
 *문제 5* (짝수의 합)
 
 (1) 짝수 두 개의 합은 짝수임을 정의로 증명하라.
+
 (2) 첫 결과와 `double_is_even`을 사용하여 $`a`가 짝수이면
 $`a+\operatorname{double}(7)`도 짝수임을 보이라.
 분배법칙은 `Nat.mul_add`로 사용할 수 있다.
@@ -694,6 +700,7 @@ theorem exercise_three_ne_negative_three :
 *문제 8* (법의 배수와 합동)
 
 (1) $`a\equiv b\pmod{nd}`이면 $`a\equiv b\pmod n`임을 증명하라.
+
 (2) $`20\equiv2\pmod6`을 직접 증명한 뒤 첫 결과를 사용하여
 $`20\equiv2\pmod3`을 보이라.
 
@@ -765,7 +772,7 @@ example
 `by` 뒤에서는 “`bound`가 성립하면 원래 목표를 얻는다”를 증명한다.
 그 뒤의 본문에서는 `bound`로 사용하려던 조건 `a < m` 자체를 증명한다.
 
-## 대칭성을 이용한 경우의 환원
+## Advanced: 대칭성을 이용한 경우의 환원
 %%%
 tag := "preliminaries-wlog"
 file := "without-loss-of-generality"

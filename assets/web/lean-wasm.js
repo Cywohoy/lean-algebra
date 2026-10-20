@@ -9,6 +9,11 @@ export function createLeanRuntime(baseURL, onProgress = () => {}) {
   let ready = false;
   const runtimeProfile = [];
   const loadedFiles = new Set();
+  // Lean retains imported compact regions for the lifetime of the worker.
+  // Bound distinct environments, including partial contexts on a continuous page.
+  const importSets = new Set();
+  const contextFiles = new Map();
+  const maxImportSets = 4;
   function request(message, expected, timeout = 180000, transfer = []) {
     if (pending) throw new Error('A compiler operation is already running');
     output = [];
@@ -115,7 +120,22 @@ export function createLeanRuntime(baseURL, onProgress = () => {}) {
 
   async function compile(code) {
     const started = performance.now();
-    if (/^(?:(?:public|meta)\s+)*import\s/m.test(code)) {
+    const imports = code.match(/^(?:(?:public|meta)\s+)*import\s[^\n]*/gm);
+    if (imports) {
+      const signature = imports.join('\n');
+      if (ready && !importSets.has(signature) && importSets.size >= maxImportSets) {
+        if (pending) throw new Error('Cannot replace a busy compiler');
+        worker.terminate();
+        worker = undefined;
+        ready = false;
+        loadedFiles.clear();
+        importSets.clear();
+        runtimeProfile.length = 0;
+        await boot();
+        // addFiles transfers its input buffers; retain independent copies for reuse.
+        await addFiles([...contextFiles].map(([name, data]) => ({name, data: data.slice(0)})));
+      }
+      importSets.add(signature);
       const additional = libraryManifest.filter(name => !loadedFiles.has(name));
       if (additional.length) {
         onProgress('Loading additional libraries…');
@@ -143,6 +163,7 @@ export function createLeanRuntime(baseURL, onProgress = () => {}) {
   async function addFiles(files) {
     const missing = files.filter(file => !loadedFiles.has(file.name));
     if (!missing.length) return;
+    for (const file of missing) contextFiles.set(file.name, file.data.slice(0));
     const result = await request({type: 'add_files', files: missing}, 'files_added', 180000, missing.map(file => file.data));
     if (result.count !== missing.length) throw new Error('Not all context files could be staged');
     missing.forEach(file => loadedFiles.add(file.name));

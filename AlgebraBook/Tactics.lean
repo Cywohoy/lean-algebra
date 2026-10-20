@@ -504,7 +504,21 @@ file := "conjunctions"
 
 `P ∧ Q`의 증명을 만들려면 `P`와 `Q`의 증명이 각각 필요하다.
 `constructor`는 이 구성 규칙을 목표에서 거꾸로 사용하여 두 증명 의무를 만든다.
-`with first second`로 이름을 붙이면 `case`로 각 목표를 선택할 수 있다.
+본문에서 사용하는 기본형은 다음과 같다. `constructor` 뒤의 첫 목표는 `P`, 둘째 목표는 `Q`이며,
+각각 `·` 아래에서 증명한다.
+
+```savedLean
+example (P Q : Prop)
+    (hP : P)
+    (hQ : Q) :
+    P ∧ Q := by
+  constructor
+  · exact hP
+  · exact hQ
+```
+
+목표에 이름을 붙여 선택하려면 `with first second`와 `case`를 사용한다.
+아래에서는 같은 구성을 보조정리로 만들거나 가정에 적용하는 형태까지 비교한다.
 
 ```savedLean
 example
@@ -555,8 +569,9 @@ example
     (h : P ∧ Q) :
     Q ∧ P := by
   unpack h with ⟨hP, hQ⟩
-  constructor at hQ hP with swapped
-  exact swapped
+  constructor
+  · exact hQ
+  · exact hP
 ```
 
 `unpack`의 분해 규칙을 목표에서 거꾸로 사용하면 두 목표를 논리곱 하나로 묶는다.
@@ -1626,6 +1641,19 @@ example (a b c d : Nat)
     (h1 : a = c)
     (h2 : b = d) :
     (a, b) = (c, d) := by
+  ext
+  · exact h1
+  · exact h2
+```
+
+`ext` 뒤에는 `a = c`와 `b = d`가 각각 목표로 남는다.
+같은 두 증명으로 이름 붙인 보조정리를 만들려면 아래 두 형태를 사용할 수 있다.
+
+```savedLean
+example (a b c d : Nat)
+    (h1 : a = c)
+    (h2 : b = d) :
+    (a, b) = (c, d) := by
   have h : (a, b) = (c, d) := by
     ext with first second
     case first => exact h1
@@ -1804,6 +1832,20 @@ file := "indisc"
 `with`를 사용하면 원래 등식을 유지하며 비교의 증명에 새 이름을 붙이고,
 생략하면 새 증명이 원래 가정을 대신한다.
 목표에 `indisc`를 사용하면 그 비교에 충분한 전체 등식을 새 목표로 삼는다.
+
+순서쌍의 등식에서 한 성분의 등식을 꺼내는 기본 사용은 다음과 같다.
+`indisc at h with ha hb` 뒤에는 `ha : a = c`와 `hb : b = d`가 추가되므로,
+필요한 첫 성분의 등식을 `exact ha`로 사용할 수 있다.
+
+```savedLean
+example (a b c d : Nat)
+    (h : (a, b) = (c, d)) :
+    a = c := by
+  indisc at h with ha hb
+  exact ha
+```
+
+아래에서는 같은 규칙을 함수와 집합에 적용하거나 목표 쪽에서 사용하는 형태를 살펴본다.
 
 #### 함수와 집합
 %%%

@@ -145,24 +145,9 @@ tag := "sets-membership-simplification"
 수학에서도 $`n \in \{m \in \mathbb{N} : 0 < m\}`이라고 하면 $`0 < n`이라는 뜻이므로
 $`3`이 이 집합에 속함을 보이려면 $`0 < 3`을 보이면 된다.
 
-`change`는 목표를 정의상 같은 명제로 바꾸는 전술이며,
-`decide`는 명제의 참과 거짓을 계산하여 참임을 확인하는 전술이다.
-아래에서는 먼저 원소 조건을 부등식으로 드러낸 뒤 두 구체적인 수를 비교한다.
-
-```savedLean
-example : 3 ∈ positives := by
-  change 0 < 3
-  decide
-```
-
-`change 0 < 3` 이후의 목표는 `0 < 3`이며 `decide`가 이 부등식을 확인하여 증명을 마친다.
-변수가 들어 있는 `2 ≤ x + 2`처럼 모든 자연수 `x`에서 성립함을 보여야 하는 부등식은
-구체적인 두 수를 비교하는 계산만으로 확인되지 않는다.
-이런 명제에는 자연수의 성질을 사용한 증명이 필요하다.
-
-집합을 `fun n => 2 ≤ n`으로 정하면 원소 `x`가 그 집합에 속한다는 조건은 `2 ≤ x`이다.
-이처럼 원소 표기를 실제 조건으로 풀 때는 전술 `dsimp`를 사용할 수 있다.
-`dsimp`는 교재에서 정한 원소 표기 `x ∈ S`를 함수 적용 `S x`로 풀어 계산한다.
+원소 조건을 확인할 때는 교재의 전술 `expand`를 사용하자.
+식의 각 부분에서 가장 바깥에 있는 교재나 현재 풀이 파일의 정의를 찾아 한 층 펼치고,
+인수 대입 같은 계산을 함께 처리한다. 새로 나타난 정의는 다음 `expand`까지 남겨 둔다.
 
 ```savedLean -show
 @[simp] theorem mem_def {A : Type} (S : Set A) (x : A) :
@@ -172,98 +157,83 @@ attribute [ample_arith_simp] mem_def positives positive
 
 ```
 
-`dsimp`는 정의를 풀거나 계산하는 규칙을 사용하여
-목표와 정의상 같은 조건을 드러낸다.
-펼칠 정의의 이름을 대괄호 안에 적으면 그 정의를 사용할 수 있으므로,
-아래에서는 집합 `positives`와 술어 `positive`를 차례로 펼쳐 보자.
+```savedLean
+example (n : Nat)
+    (h : 0 < n) :
+    n ∈ positives := by
+  expand
+  -- 목표: positive n
+  expand
+  -- 목표: 0 < n
+  exact h
+```
+
+첫 번째 `expand`는 집합 `positives`의 정의를 펼쳐 목표를 `positive n`으로 바꾸고,
+두 번째는 술어 `positive`를 펼쳐 `0 < n`을 얻는다.
+이제 가정 `h`가 목표의 증명이므로 `exact h`로 마친다.
+가정의 조건을 확인할 때는 `at h`를 붙인다.
 
 ```savedLean
-example
-    (n : Nat)
+example (n : Nat)
+    (h : n ∈ positives) :
+    0 < n := by
+  expand at h
+  expand at h
+  exact h
+```
+
+이때는 목표를 그대로 두고 가정이 `h : positive n`, `h : 0 < n`으로 차례로 바뀐다.
+앞으로 정의에서 원소 조건을 읽어 내는 증명에서는 이 방식을 주로 사용하겠다.
+
+펼칠 정의를 직접 지정하고 싶으면 `dsimp` 뒤의 대괄호에 그 이름을 적을 수 있다.
+다음 증명은 앞의 두 `expand`에서 펼친 정의를 각각 지정한 것이다.
+
+```savedLean
+example (n : Nat)
     (h : 0 < n) :
     n ∈ positives := by
   dsimp [positives]
   dsimp [positive]
   exact h
-
-example
-    (n : Nat)
-    (h : n ∈ positives) :
-    0 < n := by
-  dsimp [positives] at h
-  dsimp [positive] at h
-  exact h
 ```
 
-첫 증명에서 `dsimp [positives]`는 원소 표기를 풀고 `positives`의 정의를 펼쳐
-목표를 `positive n`으로 바꾼다.
-이어서 `dsimp [positive]`로 술어의 정의를 펼치면 목표가 `0 < n`이 되어
-가정 `h`로 증명을 마칠 수 있다.
-둘째 증명에서는 `at h`를 붙여 같은 과정을 가정에 적용하므로,
-`h : n ∈ positives`에서 `h : positive n`을 거쳐 `h : 0 < n`을 얻는다.
+`dsimp [positives]` 이후에는 `positive n`, `dsimp [positive]` 이후에는 `0 < n`이 남는다.
+가정에 사용할 때도 `dsimp [positives] at h`처럼 적는다.
 
-정의의 이름을 적지 않고 원소 조건을 한 층씩 확인하려면
-교재에서 준비한 전술 `expand`를 사용할 수 있다.
-이 전술은 식의 각 부분에서 가장 바깥에 있는 교재나 현재 풀이 파일의 정의를 찾아 펼치고,
-인수 대입 같은 계산을 함께 처리한다.
-새로 나타난 정의는 다음 `expand`까지 남겨 둔다.
-
-`change`, `dsimp`, `expand`는 표현을 바꾼 뒤 양변이 정의상 같은 등식이 남으면 증명을 마친다.
-아래에서는 부등식 `0 < n`이 남으므로 가정 `h`를 사용한다.
+바뀔 조건을 이미 알고 있다면 `change`로 그 조건을 직접 적을 수도 있다.
+`change`는 원래 목표와 새 목표가 정의상 같은지 확인하여 표현을 바꾼다.
+예를 들어 $`3`이 양의 자연수라는 명제는 `0 < 3`으로 적을 수 있다.
 
 ```savedLean
-example
-    (n : Nat)
-    (h : 0 < n) :
-    n ∈ positives := by
-  expand
-  expand
-  exact h
+example : 3 ∈ positives := by
+  change 0 < 3
+  decide
 ```
 
-첫 번째 `expand`는 원소 표기를 풀고 집합 `positives`의 정의를 펼쳐
-목표를 `positive n`으로 바꾼다.
-두 번째 `expand`는 술어 `positive`의 정의를 펼치고 `n`을 대입하여 `0 < n`을 얻는다.
-따라서 이 예제의 두 `expand`는 앞의 `dsimp [positives]`와 `dsimp [positive]`에 각각 대응한다.
-이제 가정 `h`로 증명을 마칠 수 있다.
-가정의 원소 조건을 펼칠 때는 `dsimp at h`와 같이 `expand at h`로 쓴다.
+`decide`는 구체적인 두 수를 비교하여 `0 < 3`을 확인한다.
+변수가 들어 있는 `2 ≤ x + 2`처럼 모든 자연수 `x`에 관한 부등식에는
+이러한 계산만으로 충분하지 않으므로 자연수의 성질을 사용한 증명이 필요하다.
 
-
-정의들을 이어서 펼치려면 `expand!`를 사용할 수도 있다.
-아래에서는 `positives`와 `positive`를 차례로 펼쳐 원소 조건을 얻는다.
-
-```savedLean
-example
-    (n : Nat)
-    (h : 0 < n) :
-    n ∈ positives := by
-  expand!
-  exact h
-```
-
-세 전술은 모두 정의상 같은 표현 사이에서 목표를 바꾸며 다음과 같이 구분할 수 있다.
+세 전술을 고르는 기준은 다음과 같다.
 
 :::table +header (align := left)
 *
   * 전술
-  * 정리 방법
-  * 위 원소 조건에서의 결과
-*
-  * `change 0 < n`
-  * 바꿀 목표를 직접 적는다.
-  * `0 < n`
-*
-  * `dsimp [positives]`, 이어서 `dsimp [positive]`
-  * 펼칠 정의를 지정한다.
-  * 첫 호출에서 `positive n`, 둘째 호출에서 `0 < n`
+  * 사용할 상황
 *
   * `expand`
-  * 정의를 자동으로 찾아 한 층만 펼친다.
-  * 첫 호출에서 `positive n`, 둘째 호출에서 `0 < n`
+  * 지금 보이는 정의의 뜻을 한 층 확인한다.
+*
+  * `dsimp [positives]`
+  * 펼칠 정의를 이름으로 지정한다.
+*
+  * `change 0 < n`
+  * 정의상 같은 새 목표를 직접 적는다.
 :::
 
-순서쌍의 성분과 함수값 등 다른 식을 정리하는 예제는
-{ref "tactic-unfold-auto"}[부록의 정의와 계산]에서 다룬다.
+이 전술들은 표현을 바꾼 뒤 양변이 정의상 같은 등식이 남으면 증명을 마친다.
+여러 정의를 반복하여 펼치는 `expand!`와 순서쌍·함수값을 계산하는 용법은
+{ref "tactic-unfold-auto"}[부록의 정의와 계산]에서 찾아볼 수 있다.
 
 ## 전체집합과 공집합
 %%%
@@ -499,6 +469,19 @@ example {A : Type} (S T U : Set A)
   have hxT : x ∈ T :=
     hST x hx
   exact hTU x hxT
+```
+
+아래 문제의 `sorry`를 증명으로 바꾸어 포함 관계의 사용을 연습하라.
+
+*문제 1* 포함 관계의 추이성을 다시 증명하고,
+{ref "intro-comments"}[주석 작성법]을 사용하여 각 증명 단계에 대응하는 수학적 문장을 `--` 주석으로 적으라.
+
+```savedLean -keep
+theorem exercise_subset_trans {A : Type} (S T U : Set A)
+    (hST : S ⊆ T)
+    (hTU : T ⊆ U) :
+    S ⊆ U := by
+  sorry
 ```
 
 # 동치와 두 방향의 함의
@@ -840,7 +823,17 @@ theorem inter_subset_left {A : Type} (S T : Set A) :
 
 가정 `hx`는 `x ∈ S ∧ x ∈ T`의 증명이므로
 `hx.left`로 `x ∈ S`를 얻고 `hx.right`로 `x ∈ T`를 얻는다.
-반대로 논리곱을 증명할 때는 두 사실을 각각 보여야 한다.
+
+*문제 2* 교집합이 두 번째 집합의 부분집합임을 증명하라.
+
+```savedLean -keep
+theorem exercise_inter_subset_right
+    {A : Type} (S T : Set A) :
+    S ∩ T ⊆ T := by
+  sorry
+```
+
+이번에는 두 조건을 모아 교집합에 속함을 증명해 보자.
 
 *정리* $`x \in S \cap T`이면 $`x \in T \cap S`이다.
 
@@ -1138,6 +1131,9 @@ example
 새 목표는 이미 주어진 증명 `hP`로 해결하므로 `exact hP`로 증명을 마친다.
 앞에서 배운 증명의 적용으로 두 단계를 줄여 쓰면,
 `hnotP hP`가 `False`의 증명이므로 `exact hnotP hP` 한 줄로도 같은 모순을 얻는다.
+
+등식의 부정 `¬ (a = b)`는 `a ≠ b`로 줄여 쓴다.
+따라서 두 집합이 다르다는 목표 `S ≠ T`에서도 `intro h`로 `h : S = T`를 가정하고 모순을 보이면 된다.
 
 이제 이 부정을 사용하여 여집합의 원소 조건을 `x ∉ S`로 정하자.
 
@@ -1437,28 +1433,8 @@ tag := "sets-exercises"
 file := "exercises"
 %%%
 
-각 문제의 `sorry`를 증명으로 바꾸어 완성하라.
-앞에서 증명한 정리는 이름으로 사용할 수 있다.
-
-*문제 1* 교집합이 두 번째 집합의 부분집합임을 증명하라.
-
-```savedLean -keep
-theorem exercise_inter_subset_right
-    {A : Type} (S T : Set A) :
-    S ∩ T ⊆ T := by
-  sorry
-```
-
-*문제 2* 포함 관계의 추이성을 다시 증명하고,
-{ref "intro-comments"}[주석 작성법]을 사용하여 각 증명 단계에 대응하는 수학적 문장을 `--` 주석으로 적으라.
-
-```savedLean -keep
-theorem exercise_subset_trans {A : Type} (S T U : Set A)
-    (hST : S ⊆ T)
-    (hTU : T ⊆ U) :
-    S ⊆ U := by
-  sorry
-```
+앞의 문제 1, 2에 이어 여러 집합 연산을 함께 사용하는 문제를 풀어 보자.
+각 문제의 `sorry`를 증명으로 바꾸어 완성하라. 앞에서 증명한 정리는 이름으로 사용할 수 있다.
 
 *문제 3* $`S \setminus S`가 공집합의 부분집합임을 증명하라.
 
@@ -1482,6 +1458,7 @@ theorem exercise_diff_antitone_right
 *문제 5* (포함 관계와 합집합)
 
 (1) $`S\subseteq T`이면 $`S\cup T=T`임을 증명하라.
+
 (2) 첫 결과와 본문의 `twoThree_subset_positives`를 사용하여
 $`\{2,3\}\cup\mathbb{N}_{>0}=\mathbb{N}_{>0}`임을 보이라.
 
@@ -1529,6 +1506,7 @@ theorem exercise_twoThree_diff :
 *문제 8* (포함 관계의 반례)
 
 (1) $`\mathbb{N}_{>0}\not\subseteq\{2,3\}`임을 증명하라.
+
 (2) 첫 결과를 사용하여 두 집합이 서로 다름을 보이라.
 
 ```savedLean -keep
@@ -1540,6 +1518,8 @@ theorem exercise_positives_ne_twoThree :
     positives ≠ twoThree := by
   sorry
 ```
+
+*힌트* (1)에서는 양수이면서 $`2`도 $`3`도 아닌 자연수를 하나 택하라.
 
 *문제 9* (드모르간 법칙)
 

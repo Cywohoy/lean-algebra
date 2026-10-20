@@ -60,7 +60,12 @@
       const children = [...label.querySelectorAll('.tactic')].filter(child => child.parentElement.closest('.tactic') === tactic);
       children.forEach(walk);
       const first = plain(label).trim().split('\n')[0].trim();
-      if (!children.length || /^(have|suffices)\b/.test(first)) steps.push({label, state, title: first});
+      let nested = false;
+      for (let parent = tactic.parentElement.closest('.tactic'); parent; parent = parent.parentElement.closest('.tactic')) {
+        const heading = parent.querySelector(':scope > label');
+        if (heading && /^(have|suffices|let|replace)\b/.test(plain(heading).trim())) nested = true;
+      }
+      if (!children.length || /^(have|suffices|let|replace)\b/.test(first)) steps.push({label, state, title: first, nested});
     };
     [...code.querySelectorAll('.tactic')].filter(node => !node.parentElement.closest('.tactic')).forEach(walk);
     return steps;
@@ -69,7 +74,6 @@
   function decorate(wrapper) {
     const source = wrapper.querySelector('.hl.lean.block');
     if (!source || wrapper.dataset.readerReady) return;
-    if (!/\b(def|theorem|lemma|example|structure|inductive|instance)\b/.test(plain(source))) return;
     wrapper.dataset.readerReady = 'true';
     const key = wrapper.dataset.snippet;
     const exercise = !!wrapper.dataset.exerciseUnit;
@@ -87,6 +91,8 @@
     body.append(panel);
     let workspace;
     const problemParagraphs = [];
+    let problemNumber = '연습문제';
+    let problemCaption = '';
     if (exercise) {
       workspace = element('dialog', 'book-exercise-workspace');
       const heading = element('div', 'book-exercise-heading');
@@ -97,8 +103,21 @@
       const statement = element('div', 'book-exercise-statement');
       for (let node = wrapper.previousElementSibling; node?.tagName === 'P'; node = node.previousElementSibling) {
         problemParagraphs.unshift(node);
-        if (/^문제\s*\d/.test(node.textContent.trim())) break;
+        if (/^(?:보충\s+)?문제\s*\d/.test(node.textContent.trim())) break;
       }
+      const first = problemParagraphs[0];
+      const number = first?.querySelector('strong');
+      if (number) {
+        problemNumber = number.textContent;
+        number.remove();
+        const caption = first.textContent.trim().match(/^\(([^\n]+)\)$/);
+        if (caption) {
+          problemCaption = caption[1];
+          problemParagraphs.shift();
+          first.remove();
+        }
+      }
+      title.textContent = problemCaption ? `${problemNumber} (${problemCaption})` : problemNumber;
       for (const paragraph of problemParagraphs) {
         const clone = paragraph.cloneNode(true);
         clone.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
@@ -125,7 +144,7 @@
     if (editButton && browserLean) editButton.title = '브라우저에서 Lean을 실행합니다. 첫 실행 시 약 300 MB를 내려받습니다.';
     const copyButton = button('', async () => {
       try {
-        const text = mode === 'edit' && editor ? editor.code() : (await snippet(key)).code;
+        const text = mode === 'edit' && editor ? editor.code() : key ? (await snippet(key)).code : plain(source);
         await navigator.clipboard.writeText(text);
         copyStatus('복사됨');
       } catch { copyStatus('복사 실패'); }
@@ -141,15 +160,20 @@
     outline.setAttribute('d', 'M8 8h12v13H8z M16 8V3H3v13h5');
     copyIcon.append(outline); copyButton.append(copyIcon);
     if (steps.length && !exercise) {
-      stepButton = button('단계', () => setMode(mode === 'steps' ? null : 'steps'));
+      stepButton = button('단계 보기', () => setMode(mode === 'steps' ? null : 'steps'), 'book-step-button');
+      stepButton.title = '각 전술에서 가정과 목표가 어떻게 바뀌는지 확인합니다.';
+      toolbar.classList.add('book-proof-toolbar');
+      body.before(toolbar);
       toolbar.prepend(stepButton);
+
     }
     if (exercise) {
       const card = element('section', 'book-exercise-card');
       const heading = element('div', 'book-exercise-card-heading');
-      const number = problemParagraphs[0]?.querySelector('strong');
-      heading.append(element('strong', '', number?.textContent || '연습문제'));
-      number?.remove();
+      const problemTitle = element('div', 'book-problem-title');
+      problemTitle.append(element('strong', '', problemNumber));
+      if (problemCaption) problemTitle.append(element('span', 'book-problem-caption', `(${problemCaption})`));
+      heading.append(problemTitle);
       editButton.classList.add('book-solve-button');
       if (!staticReading) heading.append(editButton);
       const disclosures = [];
@@ -194,7 +218,7 @@
         clone.removeAttribute('id');
         clone.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'));
         clone.style.display = 'block';
-        if (!clone.querySelector('.goal')) clone.textContent = '남은 목표 없음';
+        if (!clone.querySelector('.goal')) clone.textContent = step.nested ? '보조 증명 완료' : '남은 목표 없음';
         state.replaceChildren(clone);
         title.textContent = step.title;
         count.textContent = `${stepIndex + 1} / ${steps.length}`;
@@ -277,14 +301,17 @@
     input.autocapitalize = 'off';
     input.autocomplete = 'off';
     input.wrap = 'off';
-    const storageKey = `lean-algebra.code.${key}`;
-    const draft = stored(storageKey) ?? original.code.trimEnd();
+    const storageKey = `lean-algebra.code.${original.storageKey || key}`;
+    const legacyDraft = (original.legacyKeys || [key])
+      .map(oldKey => stored(`lean-algebra.code.${oldKey}`)).find(value => value != null);
+    const draft = stored(storageKey) ?? legacyDraft ?? original.code.trimEnd();
     const exercise = makeExercise?.(original.code, draft);
     let fullCode = exercise?.full || false;
     let selectedProof = 0;
     let unicodeInput;
     const declaration = element('pre', 'book-exercise-declaration');
     const support = element('details', 'book-exercise-support');
+    support.open = true;
     const supportCode = element('pre', 'book-exercise-declaration');
     support.append(element('summary', '', '사용할 정의'), supportCode);
     const proofControls = element('div', 'book-proof-controls');
@@ -604,6 +631,14 @@
   }
   function start() {
     foldLegacyHints();
+    // Plain Verso `lean` blocks have checked tactic states too, but no playground key.
+    // Give them the same reading controls without creating an execution context.
+    document.querySelectorAll('main .hl.lean.block').forEach(source => {
+      if (source.closest('.book-example, .tactic-state, .hover-container')) return;
+      const wrapper = element('div', 'book-example');
+      source.before(wrapper);
+      wrapper.append(source);
+    });
     document.querySelectorAll('.book-example').forEach(decorate);
     if (browserLean) {
       const reopen = sessionStorage.getItem('lean-algebra.reopen');
